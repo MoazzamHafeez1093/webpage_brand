@@ -53,8 +53,8 @@ export default function AdminPage() {
 
     // "Upload from Device" -> Triggers Cloudinary Widget
     const handleDeviceUpload = () => {
-        if (!window.cloudinary) {
-            alert("Cloudinary script not loaded yet. Refresh page.");
+        if (typeof window === 'undefined' || !window.cloudinary) {
+            alert("Cloudinary script is loading... please wait a moment and try again.");
             return;
         }
 

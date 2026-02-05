@@ -25,6 +25,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${workSans.variable} ${lato.variable}`}>
         {children}
+        <Script
+          src="https://upload-widget.cloudinary.com/global/all.js"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );

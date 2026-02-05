@@ -137,17 +137,23 @@ export default function AdminPage() {
             images: formattedImages
         };
 
-        await createProductAction(p);
-        await refreshProducts();
+        try {
+            await createProductAction(p);
+            await refreshProducts();
 
-        // Reset Form
-        setTitle('');
-        setDescription('');
-        setPrice('');
-        setCategory('');
-        setUploadedImages([]);
-        alert("Saved Successfully!");
-        setIsSubmitting(false);
+            // Reset Form and Success
+            setTitle('');
+            setDescription('');
+            setPrice('');
+            setCategory('');
+            setUploadedImages([]);
+            alert("Saved Successfully to MongoDB!");
+        } catch (err) {
+            console.error(err);
+            alert("SAVE FAILED: " + err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!isAuthenticated) return (

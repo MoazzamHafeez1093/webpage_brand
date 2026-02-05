@@ -101,8 +101,12 @@ export default function AdminPage() {
     // --- DELETE LOGIC ---
     const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this item?")) {
-            await deleteProductAction(id);
-            refreshProducts();
+            const res = await deleteProductAction(id);
+            if (res.success) {
+                refreshProducts();
+            } else {
+                alert("Delete Failed: " + res.error);
+            }
         }
     };
 
@@ -138,7 +142,13 @@ export default function AdminPage() {
         };
 
         try {
-            await createProductAction(p);
+            const res = await createProductAction(p);
+
+            if (!res.success) {
+                alert("SAVE FAILED: " + res.error);
+                return;
+            }
+
             await refreshProducts();
 
             // Reset Form and Success
@@ -150,7 +160,7 @@ export default function AdminPage() {
             alert("Saved Successfully to MongoDB!");
         } catch (err) {
             console.error(err);
-            alert("SAVE FAILED: " + err.message);
+            alert("Unexpected Error: " + err.message);
         } finally {
             setIsSubmitting(false);
         }

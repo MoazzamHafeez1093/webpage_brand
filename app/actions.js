@@ -13,3 +13,8 @@ export async function createProductAction(data) {
     const newItem = await db.createItem(data);
     return JSON.parse(JSON.stringify(newItem));
 }
+
+export async function deleteProductAction(id) {
+    await db.deleteItem(id);
+    return true;
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getProductsAction, createProductAction } from '@/app/actions';
+import { getProductsAction, createProductAction, deleteProductAction } from '@/app/actions';
 import styles from './admin.module.css';
 
 export default function AdminPage() {
@@ -20,21 +20,22 @@ export default function AdminPage() {
         'Shirts', 'Pants', 'Outerwear', 'Accessories', 'Shoes', 'Luxury', 'New Arrivals'
     ]);
 
-    // New Image Logic
-    const [inputMode, setInputMode] = useState('file');
+    // Images
     const [uploadedImages, setUploadedImages] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated) {
-            getProductsAction().then((data) => {
-                setProducts(data);
-                // Extract unique categories from DB
-                const dbCats = [...new Set(data.map(p => p.category))];
-                setExistingCategories(prev => [...new Set([...prev, ...dbCats])]);
-            });
+            refreshProducts();
         }
     }, [isAuthenticated]);
+
+    const refreshProducts = async () => {
+        const data = await getProductsAction();
+        setProducts(data);
+        const dbCats = [...new Set(data.map(p => p.category))];
+        setExistingCategories(prev => [...new Set([...prev, ...dbCats])]);
+    };
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -42,24 +43,7 @@ export default function AdminPage() {
         else alert('Access Denied');
     };
 
-    const handleFileUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
-        for (const file of files) {
-            const formData = new FormData();
-            formData.append('file', file);
-            try {
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    setUploadedImages(prev => [...prev, data.url]);
-                }
-            } catch (err) {
-                alert('Upload Error');
-            }
-        }
-    };
-
+    // --- UPLOAD LOGIC ---
     const handleUrlAdd = () => {
         const url = prompt("Enter Image URL:");
         if (url) {
@@ -67,8 +51,8 @@ export default function AdminPage() {
         }
     };
 
-    // --- CLOUDINARY WIDGET ---
-    const handleCloudinaryClick = () => {
+    // "Upload from Device" -> Triggers Cloudinary Widget
+    const handleDeviceUpload = () => {
         if (!window.cloudinary) {
             alert("Cloudinary script not loaded yet. Refresh page.");
             return;
@@ -78,7 +62,7 @@ export default function AdminPage() {
             {
                 cloudName: 'dk9pid4ec',
                 uploadPreset: 'my_unsigned_preset',
-                sources: ['local', 'url', 'camera'],
+                sources: ['local', 'camera'], // Limit to device sources
                 showAdvancedOptions: false,
                 cropping: false,
                 multiple: true,
@@ -114,6 +98,14 @@ export default function AdminPage() {
         setUploadedImages(uploadedImages.filter((_, i) => i !== index));
     };
 
+    // --- DELETE LOGIC ---
+    const handleDelete = async (id) => {
+        if (confirm("Are you sure you want to delete this item?")) {
+            await deleteProductAction(id);
+            refreshProducts();
+        }
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
         if (uploadedImages.length === 0) {
@@ -146,13 +138,7 @@ export default function AdminPage() {
         };
 
         await createProductAction(p);
-
-        // Refresh Data
-        const updatedProducts = await getProductsAction();
-        setProducts(updatedProducts);
-
-        // Update Categories locally
-        setExistingCategories([...new Set(updatedProducts.map(p => p.category))]);
+        await refreshProducts();
 
         // Reset Form
         setTitle('');
@@ -192,7 +178,6 @@ export default function AdminPage() {
                         <label>Product Details</label>
                         <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} className={styles.input} />
 
-                        {/* DESCRIPTION */}
                         <textarea
                             placeholder="Description (Required)"
                             value={description}
@@ -204,7 +189,6 @@ export default function AdminPage() {
                         <div className={styles.row}>
                             <input placeholder="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} className={styles.input} />
 
-                            {/* CUSTOM CATEGORY INPUT */}
                             <div style={{ flex: 1 }}>
                                 <input
                                     list="categoryOptions"
@@ -217,24 +201,22 @@ export default function AdminPage() {
                                     {existingCategories.map(c => <option key={c} value={c} />)}
                                 </datalist>
                             </div>
-
                         </div>
                     </div>
 
                     <div className={styles.fieldGroup}>
                         <label>Image Gallery</label>
+
+                        {/* Two Simple Options */}
                         <div className={styles.toggleRow}>
-                            <button className={inputMode === 'file' ? styles.modeBtnActive : styles.modeBtn} onClick={() => setInputMode('file')}>Local File</button>
-                            <button className={inputMode === 'url' ? styles.modeBtnActive : styles.modeBtn} onClick={() => setInputMode('url')}>Enter URL</button>
-                            <button className={styles.cloudBtn} type="button" onClick={handleCloudinaryClick}>☁️ Cloudinary (Pro)</button>
+                            <button className={styles.modeBtnActive} onClick={handleDeviceUpload}>
+                                📤 Upload from Device
+                            </button>
+                            <button className={styles.modeBtn} onClick={handleUrlAdd}>
+                                🔗 Enter URL
+                            </button>
                         </div>
-                        <div className={styles.uploadArea}>
-                            {inputMode === 'file' ? (
-                                <label className={styles.fileLabel}><span>+ Select Photos</span><input type="file" multiple accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} /></label>
-                            ) : (
-                                <button onClick={handleUrlAdd} className={styles.urlBtn}>+ Paste Image Link</button>
-                            )}
-                        </div>
+
                         <div className={styles.previewGrid}>
                             {uploadedImages.map((url, i) => (
                                 <div key={i} className={styles.previewCard}>
@@ -261,6 +243,7 @@ export default function AdminPage() {
                                     <span style={{ fontSize: '0.8rem', color: '#b08d55' }}>{p.category}</span>
                                     <span>${p.price}</span>
                                 </div>
+                                <button className={styles.deleteBtn} onClick={() => handleDelete(p._id)}>Delete</button>
                             </div>
                         ))}
                     </div>

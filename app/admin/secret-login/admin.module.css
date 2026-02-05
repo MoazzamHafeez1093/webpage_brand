@@ -289,3 +289,19 @@
     width: fit-content;
     margin-top: 2px;
 }
+
+.deleteBtn {
+    margin-left: auto;
+    background: #ffdbdb;
+    color: #d32f2f;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.deleteBtn:hover {
+    background: #ffbebe;
+}

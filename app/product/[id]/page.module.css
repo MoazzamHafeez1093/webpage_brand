@@ -1,0 +1,146 @@
+/* app/product/[id]/page.module.css */
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.backLink {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #666;
+    border-bottom: 1px solid transparent;
+}
+
+.backLink:hover {
+    border-bottom-color: #666;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+}
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+    }
+}
+
+/* Image Section */
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 130%;
+    /* Portrait 3:4 */
+    background: #f4f4f4;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+.mainImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.magnifier {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background-repeat: no-repeat;
+    transition: opacity 0.2s ease;
+}
+
+/* Details Section */
+.details {
+    padding-top: 1rem;
+}
+
+.category {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 0.1em;
+}
+
+.title {
+    font-size: 2.5rem;
+    margin: 0.5rem 0 1rem;
+    line-height: 1.2;
+}
+
+.price {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 2rem;
+}
+
+.label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.sizeList {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.sizeBtn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.sizeBtn:hover {
+    border-color: #000;
+}
+
+.description {
+    color: #555;
+    margin-bottom: 2rem;
+    line-height: 1.8;
+}
+
+.cta {
+    width: 100%;
+    padding: 1.2rem;
+    background: black;
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.cta:hover {
+    background: #333;
+}

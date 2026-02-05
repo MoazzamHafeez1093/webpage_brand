@@ -1,0 +1,183 @@
+/* ... existing contents ... */
+/* app/page.module.css - Appending new styles for NavbarDropdown */
+
+.menuWrapper {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  min-width: 180px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  animation: fadeIn 0.1s ease-out;
+  margin-top: 0.5rem;
+}
+
+.dropdown button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0.8rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.dropdown button:hover {
+  background: #f4f0e6;
+  /* Gold Highlight */
+  color: #b08d55;
+}
+
+/* ... existing ... */
+/* Retaining previous styles below just to be safe */
+
+.main {
+  min-height: 100vh;
+  padding-bottom: 6rem;
+}
+
+/* Sticky Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(253, 251, 247, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1rem 0;
+}
+
+.navContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--gap-mobile);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .navContainer {
+    padding: 0 var(--gap-desktop);
+  }
+}
+
+.brand {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.05em;
+  color: var(--accent-gold);
+  cursor: pointer;
+}
+
+.menuBtn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  color: var(--foreground-rgb);
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+}
+
+.menuBtn:hover {
+  border-color: #eee;
+  border-radius: 4px;
+}
+
+/* Hero */
+.hero {
+  padding: 4rem 0 3rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding: 6rem 0 5rem;
+  }
+}
+
+.heroTitle {
+  font-size: 2.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+  line-height: 1.1;
+  color: #2c2c2c;
+  text-transform: capitalize;
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 5rem;
+  }
+
+  .mobileBreak {
+    display: none;
+  }
+}
+
+.italic {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent-gold);
+}
+
+.heroSubtitle {
+  font-size: 1.1rem;
+  color: #666;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Grid Layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  /* 1 column on mobile */
+  gap: 2.5rem;
+  /* More space between items */
+  padding: 1rem 0;
+}
+
+@media (min-width: 500px) {
+
+  /* Small tablets overlap */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+}
+
+.footer {
+  text-align: center;
+  margin-top: 5rem;
+  color: #999;
+  font-size: 0.9rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 2rem;
+}

@@ -1,0 +1,291 @@
+/* app/admin/secret-login/admin.module.css */
+/* Reusing core styles... adding new specific classes */
+
+.loginWrapper {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fcfcfc;
+}
+
+.loginCard {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+.brandLogo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #b08d55;
+    margin-bottom: 2rem;
+}
+
+.loginInput {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.loginBtn {
+    width: 100%;
+    padding: 1rem;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Dashboard */
+.dashboard {
+    min-height: 100vh;
+    background: #fdfdfd;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background: white;
+    border-bottom: 1px solid #eee;
+}
+
+.navBrand {
+    font-weight: 700;
+    color: #b08d55;
+}
+
+.logoutBtn {
+    border: 1px solid #ddd;
+    background: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.content {
+    max-width: 1000px;
+    margin: 2rem auto;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2rem;
+    padding: 0 1rem;
+}
+
+@media(max-width: 800px) {
+    .content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.formSection,
+.listSection {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.sectionTitle {
+    border-bottom: 2px solid #b08d55;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.fieldGroup {
+    margin-bottom: 1.5rem;
+}
+
+.label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.input,
+.select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* TOGGLE & UPLOAD */
+.toggleRow {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.modeBtn {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #666;
+}
+
+.modeBtnActive {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #b08d55;
+    background: #fff8ee;
+    color: #b08d55;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.cloudBtn {
+    flex: 1;
+    padding: 0.8rem;
+    border: 1px solid #0078FF;
+    background: #eef6ff;
+    color: #0078FF;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.cloudBtn:hover {
+    background: #dceeff;
+}
+
+.uploadArea {
+    margin-bottom: 1rem;
+}
+
+.fileLabel {
+    display: block;
+    border: 2px dashed #ccc;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.fileLabel:hover {
+    border-color: #b08d55;
+    background: #fafafa;
+    color: #b08d55;
+}
+
+.urlBtn {
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed #ccc;
+    background: none;
+    color: #666;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+/* PREVIEW GRID */
+.previewGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.8rem;
+}
+
+.previewCard {
+    position: relative;
+    aspect-ratio: 1;
+}
+
+.previewCard img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.removeX {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: red;
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.submitBtn {
+    width: 100%;
+    padding: 1rem;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* LIST */
+.inventoryItem {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.listThumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.itemMeta {
+    display: flex;
+    flex-direction: column;
+}
+
+.badge {
+    background: #eee;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-top: 2px;
+}

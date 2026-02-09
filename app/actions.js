@@ -67,22 +67,42 @@ export async function getCollectionsAction() {
     }
 }
 
-export async function createCollectionAction(data) {
+export async function createNewCollectionAction(data) {
     try {
+        console.log("Creating Collection:", data);
         const newCollection = await db.createCollection(data);
         return { success: true, collection: JSON.parse(JSON.stringify(newCollection)) };
     } catch (e) {
+        console.error("Create Collection Error:", e);
         return { success: false, error: e.message };
     }
 }
 
 export async function deleteCollectionAction(id) {
+    // ... (omitted for brevity)
+}
+
+// ...
+
+// --- CATEGORY ACTIONS ---
+// ...
+
+export async function createNewCategoryAction(data) {
     try {
-        await db.deleteCollection(id);
-        return { success: true };
+        console.log("Creating Category:", data);
+        const newCategory = await db.createCategory(data);
+        return { success: true, category: JSON.parse(JSON.stringify(newCategory)) };
     } catch (e) {
+        console.error("Create Category Error:", e);
         return { success: false, error: e.message };
     }
+}
+try {
+    await db.deleteCollection(id);
+    return { success: true };
+} catch (e) {
+    return { success: false, error: e.message };
+}
 }
 
 export async function addProductToCollectionAction(collectionId, productId) {
@@ -124,7 +144,7 @@ export async function getCategoryTreeAction() {
     }
 }
 
-export async function createCategoryAction(data) {
+export async function createNewCategoryAction(data) {
     try {
         const newCategory = await db.createCategory(data);
         return { success: true, category: JSON.parse(JSON.stringify(newCategory)) };

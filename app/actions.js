@@ -3,6 +3,8 @@
 import { db } from '@/lib/db';
 
 // Wrapper actions to be called from Client Components
+
+// --- UTILS / SEEDING ---
 export async function seedCategoriesAction() {
     try {
         const res = await db.seedCategories();
@@ -12,6 +14,7 @@ export async function seedCategoriesAction() {
     }
 }
 
+// --- PRODUCT ACTIONS ---
 export async function getProductsAction(category) {
     try {
         const items = await db.getAllItems(category);
@@ -32,9 +35,6 @@ export async function createProductAction(data) {
             const categories = await db.getAllCategories();
             const exists = categories.find(c => c.name.toLowerCase() === data.category.toLowerCase());
             if (!exists) {
-                // Determine type based on some logic or default to 'general'
-                // Check if it looks like a sub-category? No, just make it top-level or general for now.
-                // Or better: The UI "Type New" is for quick addition.
                 await db.createCategory({ name: data.category, type: 'general' });
             }
         }
@@ -87,28 +87,6 @@ export async function deleteCollectionAction(id) {
     }
 }
 
-// --- CATEGORY ACTIONS ---
-
-export async function getCategoryTreeAction() {
-    try {
-        const tree = await db.getCategoryTree();
-        return JSON.parse(JSON.stringify(tree));
-    } catch (e) {
-        return [];
-    }
-}
-
-export async function createNewCategoryAction(data) {
-    try {
-        console.log("Creating Category:", data);
-        const newCategory = await db.createCategory(data);
-        return { success: true, category: JSON.parse(JSON.stringify(newCategory)) };
-    } catch (e) {
-        console.error("Create Category Error:", e);
-        return { success: false, error: e.message };
-    }
-}
-
 export async function addProductToCollectionAction(collectionId, productId) {
     try {
         const updatedCollection = await db.addProductToCollection(collectionId, productId);
@@ -150,9 +128,11 @@ export async function getCategoryTreeAction() {
 
 export async function createNewCategoryAction(data) {
     try {
+        console.log("Creating Category:", data);
         const newCategory = await db.createCategory(data);
         return { success: true, category: JSON.parse(JSON.stringify(newCategory)) };
     } catch (e) {
+        console.error("Create Category Error:", e);
         return { success: false, error: e.message };
     }
 }

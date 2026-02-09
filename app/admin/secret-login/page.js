@@ -85,7 +85,7 @@ export default function AdminPage() {
             {
                 cloudName: 'dk9pid4ec',
                 uploadPreset: 'my_unsigned_preset',
-                sources: ['local', 'camera'],
+                sources: ['local', 'url', 'camera'],
                 multiple: false,
                 styles: {
                     palette: { window: "#FFFFFF", sourceBg: "#E4EBF1", windowBorder: "#90A0B3", tabIcon: "#0078FF", inactiveTabIcon: "#0E2F5A", menuIcons: "#5A616A", link: "#0078FF", action: "#FF620C", inProgress: "#0078FF", complete: "#20B832", error: "#F44235", textDark: "#000000", textLight: "#FFFFFF" }
@@ -318,8 +318,24 @@ export default function AdminPage() {
                                 <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} className={styles.input} />
                                 <div className={styles.row}>
                                     <input placeholder="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} className={styles.input} />
-                                    <input list="cats" placeholder="Category" value={category} onChange={e => setCategory(e.target.value)} className={styles.input} />
-                                    <datalist id="cats">{existingCategories.map(c => <option key={c} value={c} />)}</datalist>
+                                    {/* Category Tree Selector */}
+                                    <select
+                                        value={category}
+                                        onChange={e => setCategory(e.target.value)}
+                                        className={styles.input}
+                                        style={{ fontFamily: 'monospace' }} // To align hierarchy dashes
+                                    >
+                                        <option value="">-- Select Category --</option>
+                                        {/* Flatten tree for dropdown options */}
+                                        {function flattenForSelect(nodes, depth = 0) {
+                                            return nodes.map(node => [
+                                                <option key={node._id} value={node.name}>
+                                                    {'\u00A0'.repeat(depth * 4) + (depth > 0 ? '└ ' : '') + node.name}
+                                                </option>,
+                                                ...flattenForSelect(node.children || [], depth + 1)
+                                            ]);
+                                        }(categoryTree)}
+                                    </select>
                                 </div>
 
                                 {/* Image Upload Section */}

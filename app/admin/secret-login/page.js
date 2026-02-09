@@ -328,13 +328,14 @@ export default function AdminPage() {
                                         >
                                             <option value="">-- Select Category --</option>
                                             {function flattenForSelect(nodes, depth = 0) {
+                                                if (!nodes || !Array.isArray(nodes)) return [];
                                                 return nodes.map(node => [
                                                     <option key={node._id} value={node.name}>
                                                         {'\u00A0'.repeat(depth * 4) + (depth > 0 ? '└ ' : '') + node.name}
                                                     </option>,
                                                     ...flattenForSelect(node.children || [], depth + 1)
                                                 ]);
-                                            }(categoryTree)}
+                                            }(categoryTree || [])}
                                         </select>
                                         <input
                                             placeholder="Or Type New"
@@ -386,52 +387,76 @@ export default function AdminPage() {
 
                 {activeTab === 'collections' && (
                     <>
-                        {/* Collections Logic (Same as before) */}
+                        {/* Collections Logic */}
                         {!managingCollection ? (
                             <section className={styles.listSection}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                     <h3>Collections</h3>
                                     <button className={styles.modeBtn} onClick={() => {
-                                        // Quick toggle to show create form if needed, or just standard UI
-                                        // implementing minimal here to fit context
+                                        // Toggle Create Form Visibility
+                                        const form = document.getElementById('new-collection-form');
+                                        if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
                                     }}>+ New</button>
                                 </div>
-                                {/* Simple Create Form */}
-                                <div className={styles.fieldGroup} style={{ marginTop: '1rem' }}>
-                                    <input placeholder="New Collection Title" value={colTitle} onChange={e => setColTitle(e.target.value)} className={styles.input} />
-                                    <button onClick={handleCreateCollection} className={styles.submitBtn}>Create</button>
+                                {/* Create Form - Hidden by default */}
+                                <div id="new-collection-form" className={styles.fieldGroup} style={{ display: 'none', marginBottom: '2rem', padding: '1rem', border: '1px solid #eee' }}>
+                                    <h4 style={{ marginTop: 0 }}>Create New Collection</h4>
+                                    <input placeholder="Title" value={colTitle} onChange={e => setColTitle(e.target.value)} className={styles.input} />
+                                    <textarea placeholder="Description" value={colDesc} onChange={e => setColDesc(e.target.value)} className={styles.input} style={{ height: 60 }} />
+
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '10px 0' }}>
+                                        <button type="button" onClick={handleCollectionImageUpload} className={styles.modeBtn}>
+                                            + Cover Image
+                                        </button>
+                                        {colImage && <img src={colImage} alt="Cover" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
+                                    </div>
+
+                                    <button onClick={handleCreateCollection} className={styles.submitBtn} disabled={isSubmitting}>Create Collection</button>
                                 </div>
+
                                 <div className={styles.inventoryList}>
+                                    {collections.length === 0 && <p style={{ color: '#999' }}>No collections found. Create one above.</p>}
                                     {collections.map(c => (
                                         <div key={c._id} className={styles.inventoryItem}>
-                                            <strong>{c.title}</strong>
-                                            <button className={styles.modeBtn} onClick={() => setManagingCollection(c)}>Manage</button>
-                                            <button className={styles.deleteBtn} onClick={() => handleDeleteCollection(c._id)}>Delete</button>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                {c.image && <img src={c.image} style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
+                                                <strong>{c.title}</strong>
+                                            </div>
+                                            <div>
+                                                <button className={styles.modeBtn} onClick={() => setManagingCollection(c)} style={{ marginRight: 5 }}>Manage Products</button>
+                                                <button className={styles.tinyBtnDanger} onClick={() => handleDeleteCollection(c._id)}>Delete</button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </section>
                         ) : (
                             <div className={styles.manageView}>
-                                <button onClick={() => setManagingCollection(null)} className={styles.backBtn}>Back</button>
-                                <h3>Manage: {managingCollection.title}</h3>
+                                <button onClick={() => setManagingCollection(null)} className={styles.backBtn}>← Back to Collections</button>
+                                <h3 style={{ marginTop: 10 }}>Manage: {managingCollection.title}</h3>
                                 <div className={styles.dualGrid}>
                                     <div className={styles.column}>
-                                        <h4>Available</h4>
+                                        <h4>Add Products</h4>
                                         <div className={styles.scrollList}>
                                             {products.filter(p => !managingCollection.products?.some(cp => cp._id === p._id)).map(p => (
                                                 <div key={p._id} className={styles.miniItem} onClick={() => handleAddToCollection(p._id)}>
-                                                    {p.title} <span className={styles.addIcon}>+</span>
+                                                    <div>
+                                                        <strong>{p.title}</strong>
+                                                        <br />
+                                                        <small>{p.category}</small>
+                                                    </div>
+                                                    <span className={styles.addIcon}>+</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                     <div className={styles.column}>
-                                        <h4>Included</h4>
+                                        <h4>In Collection</h4>
                                         <div className={styles.scrollList}>
                                             {managingCollection.products?.map(p => (
                                                 <div key={p._id} className={styles.miniItem} onClick={() => handleRemoveFromCollection(p._id)}>
-                                                    {p.title} <span className={styles.removeIcon}>-</span>
+                                                    <strong>{p.title}</strong>
+                                                    <span className={styles.removeIcon}>-</span>
                                                 </div>
                                             ))}
                                         </div>

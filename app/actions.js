@@ -26,6 +26,19 @@ export async function createProductAction(data) {
         if (!process.env.MONGODB_URI) {
             return { success: false, error: "MONGODB_URI is missing in Vercel Environment Variables." };
         }
+
+        // Auto-create category if it doesn't exist
+        if (data.category) {
+            const categories = await db.getAllCategories();
+            const exists = categories.find(c => c.name.toLowerCase() === data.category.toLowerCase());
+            if (!exists) {
+                // Determine type based on some logic or default to 'general'
+                // Check if it looks like a sub-category? No, just make it top-level or general for now.
+                // Or better: The UI "Type New" is for quick addition.
+                await db.createCategory({ name: data.category, type: 'general' });
+            }
+        }
+
         const newItem = await db.createItem(data);
         return { success: true, item: JSON.parse(JSON.stringify(newItem)) };
     } catch (e) {

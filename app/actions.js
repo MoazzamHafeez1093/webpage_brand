@@ -111,6 +111,15 @@ export async function createCategoryAction(data) {
     }
 }
 
+export async function updateCategoryAction(id, data) {
+    try {
+        const updated = await db.updateCategory(id, data);
+        return { success: true, category: JSON.parse(JSON.stringify(updated)) };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
 export async function deleteCategoryAction(id) {
     try {
         await db.deleteCategory(id);

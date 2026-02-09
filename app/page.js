@@ -47,7 +47,33 @@ export default async function Home(props) {
           </div>
         )}
       </section>
-
+      <section className="container" style={{ textAlign: 'center', padding: '6rem 1rem', background: '#fafafa', marginTop: '4rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '2.5rem', marginBottom: '1rem', color: '#333' }}>
+          Have a Design in Mind?
+        </h2>
+        <p style={{ maxWidth: '600px', margin: '0 auto 2rem', color: '#666', lineHeight: 1.6 }}>
+          Our atelier brings your vision to life. Share your inspiration or sketch, and let us craft a masterpiece just for you.
+        </p>
+        <a
+          href="https://wa.me/923211234567?text=Hi%2C%20I%20have%20a%20custom%20design%20request.%20I%27d%20like%20to%20send%20a%20photo%20for%20a%20quote."
+          target="_blank"
+          style={{
+            display: 'inline-block',
+            background: '#000',
+            color: '#b08d55',
+            padding: '1rem 2.5rem',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            fontSize: '0.9rem',
+            border: '1px solid #000',
+            borderRadius: '4px',
+            textDecoration: 'none',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          Get a Custom Quote
+        </a>
+      </section>
       <footer className={styles.footer}>
         <p>&copy; 2024 LUXE. Designed for Quality.</p>
       </footer>

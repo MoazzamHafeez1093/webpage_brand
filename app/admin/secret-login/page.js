@@ -5,7 +5,7 @@ import {
     getProductsAction, createProductAction, deleteProductAction,
     getCollectionsAction, createCollectionAction, deleteCollectionAction,
     addProductToCollectionAction, removeProductFromCollectionAction,
-    getCategoryTreeAction, createCategoryAction, deleteCategoryAction
+    getCategoryTreeAction, createCategoryAction, deleteCategoryAction, updateCategoryAction
 } from '@/app/actions';
 import styles from './admin.module.css';
 
@@ -212,6 +212,27 @@ export default function AdminPage() {
         }
     };
 
+    const [editingCategory, setEditingCategory] = useState(null); // { _id, name, parent, type }
+
+    const handleUpdateCategory = async () => {
+        if (!editingCategory || !editingCategory.name) return;
+        setIsSubmitting(true);
+        try {
+            const res = await updateCategoryAction(editingCategory._id, {
+                name: editingCategory.name,
+                parent: editingCategory.parent || null, // Ensure null if empty
+                type: editingCategory.type
+            });
+            if (!res.success) throw new Error(res.error);
+            await refreshCategories();
+            setEditingCategory(null);
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // Recursive Tree Renderer
     const renderTree = (nodes, depth = 0) => {
         return nodes.map(node => (
@@ -222,9 +243,40 @@ export default function AdminPage() {
                     </span>
                     <div className={styles.nodeActions}>
                         <button className={styles.tinyBtn} onClick={() => setNewCatParent(node._id)}>+ Sub</button>
+                        <button className={styles.tinyBtn} onClick={() => setEditingCategory({ ...node, parent: node.parent || '' })}>Edit</button>
                         <button className={styles.tinyBtnDanger} onClick={() => handleDeleteCategory(node._id)}>×</button>
                     </div>
                 </div>
+                {/* Inline Edit Form */}
+                {editingCategory && editingCategory._id === node._id && (
+                    <div style={{ marginLeft: depth * 20 + 20, padding: 10, background: '#f0f0f0', border: '1px solid #ccc', margin: '5px 0' }}>
+                        <div style={{ display: 'flex', gap: 5, marginBottom: 5 }}>
+                            <input
+                                value={editingCategory.name}
+                                onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                placeholder="Name"
+                            />
+                            <select
+                                value={editingCategory.type}
+                                onChange={e => setEditingCategory({ ...editingCategory, type: e.target.value })}
+                            >
+                                <option value="general">General</option>
+                                <option value="retail">Retail</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', gap: 5 }}>
+                            <input
+                                placeholder="New Parent ID (Optional)"
+                                value={editingCategory.parent || ''}
+                                onChange={e => setEditingCategory({ ...editingCategory, parent: e.target.value })}
+                                style={{ width: '100%' }}
+                            />
+                            <button onClick={handleUpdateCategory} disabled={isSubmitting}>Save</button>
+                            <button onClick={() => setEditingCategory(null)}>Cancel</button>
+                        </div>
+                    </div>
+                )}
                 {node.children && node.children.length > 0 && renderTree(node.children, depth + 1)}
             </div>
         ));

@@ -3,6 +3,15 @@
 import { db } from '@/lib/db';
 
 // Wrapper actions to be called from Client Components
+export async function seedCategoriesAction() {
+    try {
+        const res = await db.seedCategories();
+        return { success: true, message: res.message };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
 export async function getProductsAction(category) {
     try {
         const items = await db.getAllItems(category);

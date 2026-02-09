@@ -1,25 +1,26 @@
 :root {
-  /* Warm, Accessible Palette */
-  --foreground-rgb: 60, 60, 60;
-  /* Soft Charcoal, easier on eyes than black */
-  --background-rgb: 253, 251, 247;
-  /* "Cream" / Off-white */
-  --accent-color: #5d5c61;
-  /* Muted Slate */
-  --accent-gold: #b08d55;
-  /* Elegant Gold */
-  --highlight-bg: #f4f0e6;
-  /* Warmer highlight */
+  /* Editorial Luxury Palette */
+  --foreground-rgb: 40, 40, 40;
+  /* Charcoal */
+  --background-rgb: 250, 249, 246;
+  /* Ivory / Off-White */
 
-  --font-heading: 'Work Sans', sans-serif;
-  --font-body: 'Lato', sans-serif;
+  --accent-color: #333333;
+  /* Deep Charcoal */
+  --accent-gold: #C5A059;
+  /* Deep Gold */
+  --highlight-bg: #F5F5F0;
+  /* Soft Pearl Grey */
+
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Montserrat', sans-serif;
 
   --gap-mobile: 1.5rem;
-  /* More breathing room */
-  --gap-desktop: 3rem;
+  --gap-desktop: 4rem;
+  /* More white space */
 
-  --radius: 8px;
-  /* Softer corners */
+  --radius: 0px;
+  /* Sharp corners for editorial feel */
 }
 
 /* Premium Reset */
@@ -35,10 +36,11 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
   font-family: var(--font-body);
-  line-height: 1.7;
-  /* Better readability */
-  font-size: 17px;
-  /* Slightly larger text for mid-aged eyes */
+  line-height: 1.8;
+  /* Generous leading */
+  font-size: 15px;
+  /* Smaller, more refined type */
+  letter-spacing: 0.02em;
 }
 
 h1,
@@ -96,4 +98,15 @@ a:hover {
 button {
   touch-action: manipulation;
   /* Optimizes touch response */
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: var(--gap-mobile);
+}
+
+@media (min-width: 1024px) {
+  .masonry-item {
+    margin-bottom: var(--gap-desktop);
+  }
 }

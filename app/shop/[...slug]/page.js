@@ -87,7 +87,7 @@ export default async function CategoryPage({ params }) {
                 {products.length > 0 ? (
                     <div className={styles.grid}>
                         {products.map((product, index) => (
-                            <div key={product._id} className="fade-in" style={{ animationDelay: `${index * 50}ms` }}>
+                            <div key={product._id} className="fade-in masonry-item" style={{ animationDelay: `${index * 50}ms` }}>
                                 <ProductCard product={product} categoryType={category.type} />
                             </div>
                         ))}

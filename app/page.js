@@ -36,7 +36,7 @@ export default async function Home(props) {
         {products.length > 0 ? (
           <div className={styles.grid}>
             {products.map((product, index) => (
-              <div key={product._id} style={{ animationDelay: `${index * 100}ms` }} className="fade-in">
+              <div key={product._id} style={{ animationDelay: `${index * 100}ms` }} className="fade-in masonry-item">
                 <ProductCard product={product} />
               </div>
             ))}

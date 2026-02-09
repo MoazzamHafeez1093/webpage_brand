@@ -4,90 +4,40 @@ import { useState, useRef } from 'react';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, categoryType, onClick }) {
+    const { title, price, description, category, images } = product || {};
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [imgLoaded, setImgLoaded] = useState(false);
 
-    // Zoom State
-    const [isZooming, setIsZooming] = useState(false);
-    const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
-    const imageRef = useRef(null);
-
-    const {
-        title = "Unknown Product",
-        price = 0,
-        category = "General",
-        images = []
-    } = product || {};
-
-    // Safety check
-    const safeImages = images.length > 0 ? images : [{ thumbnail: '/placeholder.jpg', fullRes: '/placeholder.jpg' }];
-
+    // Safety check for images
+    const safeImages = images && images.length > 0 ? images : [{ thumbnail: '/placeholder.jpg', fullRes: '/placeholder.jpg' }];
     const activeImage = safeImages[currentImageIndex];
+
+    // Reset load state when image changes
+    if (activeImage !== safeImages[currentImageIndex]) {
+        // This is a bit risky in render, but safe if we are just deriving state. 
+        // Better to handle in the handlers.
+    }
 
     // --- CAROUSEL LOGIC ---
     const handleNext = (e) => {
-        e.preventDefault(); // Stop double-tap zoom
+        e.preventDefault();
         e.stopPropagation();
+        setImgLoaded(false);
         setCurrentImageIndex((prev) => (prev + 1) % safeImages.length);
     };
 
     const handlePrev = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        setImgLoaded(false);
         setCurrentImageIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
-    };
-
-    // --- ZOOM LOGIC ---
-    // Desktop: Hover to zoom. Mobile: Tap to toggle zoom lock.
-    const handleUnlocks = () => {
-        setIsZooming(false);
-    };
-
-    const handleMouseMove = (e) => {
-        // Desktop Hover Logic
-        if (!imageRef.current) return;
-        const { left, top, width, height } = imageRef.current.getBoundingClientRect();
-        const x = ((e.clientX - left) / width) * 100;
-        const y = ((e.clientY - top) / height) * 100;
-        setZoomPosition({ x, y });
-        setIsZooming(true);
-    };
-
-    const handleTouchMove = (e) => {
-        // Mobile Pan Logic (Only if zooming)
-        if (!isZooming || !imageRef.current) return;
-        const touch = e.touches[0];
-        const { left, top, width, height } = imageRef.current.getBoundingClientRect();
-
-        // Calculate percentage but constrain to 0-100 to prevent jerking
-        let x = ((touch.clientX - left) / width) * 100;
-        let y = ((touch.clientY - top) / height) * 100;
-
-        x = Math.max(0, Math.min(100, x));
-        y = Math.max(0, Math.min(100, y));
-
-        setZoomPosition({ x, y });
-        e.stopPropagation(); // Prevent page scrolling while panning
-    };
-
-    const toggleMobileZoom = (e) => {
-        // On mobile, tapping toggles the zoom state
-        e.stopPropagation();
-        // If we are already zooming, tap turns it off.
-        // If we are NOT zooming, current tap sets the initial position and turns it on.
-        if (isZooming) {
-            setIsZooming(false);
-        } else {
-            // Set initial position to center or touch point
-            setZoomPosition({ x: 50, y: 50 });
-            setIsZooming(true);
-        }
     };
 
     // WhatsApp Logic
     const handleWhatsApp = (e) => {
         e.stopPropagation();
         const phoneNumber = '923211234567'; // Replace with real number or env variable
-        const isCustom = categoryType === 'custom' || product.categoryType === 'custom' || category === 'custom';
+        const isCustom = categoryType === 'custom' || product?.categoryType === 'custom' || category === 'custom';
 
         let message = '';
         if (isCustom) {
@@ -102,45 +52,28 @@ export default function ProductCard({ product, categoryType, onClick }) {
 
     return (
         <article className={styles.card} onClick={onClick}>
-            <div
-                className={styles.imageWrapper}
-                ref={imageRef}
-
-                // Desktop Mouse Interaction
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleUnlocks}
-
-                // Mobile Touch Interaction
-                onTouchMove={handleTouchMove}
-                onClick={toggleMobileZoom}
-            >
-                {/* Placeholder (Main Image) */}
+            <div className={styles.imageWrapper}>
+                {/* Main Image - CSS Transform handles zoom now */}
                 <img
                     src={activeImage.thumbnail}
                     alt={title}
                     className={styles.placeholder}
                     draggable="false"
-                />
-
-                {/* Zoom Lens (Overlay) */}
-                <div
-                    className={styles.zoomLens}
+                    loading="lazy"
+                    onLoad={() => setImgLoaded(true)}
                     style={{
-                        opacity: isZooming ? 1 : 0,
-                        backgroundImage: `url(${activeImage.fullRes})`,
-                        backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                        backgroundSize: '250%',
-                        pointerEvents: 'none' // Let clicks pass through to container
+                        opacity: imgLoaded ? 1 : 0,
+                        transition: 'opacity 0.8s ease-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                     }}
                 />
 
-                {/* --- CAROUSEL CONTROLS --- */}
+                {/* --- CAROUSEL CONTROLS (Only show if multiple images) --- */}
                 {safeImages.length > 1 && (
                     <>
                         <button
                             className={styles.navBtnLeft}
                             onClick={handlePrev}
-                            onTouchEnd={(e) => { e.preventDefault(); handlePrev(e); }} // Robust touch handling
+                            onTouchEnd={(e) => { e.preventDefault(); handlePrev(e); }}
                         >‹</button>
                         <button
                             className={styles.navBtnRight}
@@ -156,16 +89,15 @@ export default function ProductCard({ product, categoryType, onClick }) {
                         </div>
                     </>
                 )}
-
             </div>
 
             <div className={styles.info}>
                 <div className={styles.category}>{category}</div>
                 <h3 className={styles.title}>{title}</h3>
-                <div className={styles.price}>${price.toFixed(2)}</div>
+                <div className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</div>
 
                 <button onClick={handleWhatsApp} className={styles.whatsappBtn}>
-                    WhatsApp Inquiry
+                    <span>Inquire via WhatsApp</span>
                 </button>
             </div>
         </article>

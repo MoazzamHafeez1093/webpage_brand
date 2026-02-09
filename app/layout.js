@@ -1,15 +1,15 @@
 import './globals.css';
 import Script from 'next/script';
-import { Work_Sans, Lato } from 'next/font/google';
+import { Playfair_Display, Montserrat } from 'next/font/google';
 
-const workSans = Work_Sans({
+const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-heading',
   display: 'swap',
 });
 
-const lato = Lato({
-  weight: ['300', '400', '700'],
+const montserrat = Montserrat({
+  weight: ['300', '400', '500'], // 300 for thin/minimalist look
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
@@ -23,7 +23,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${workSans.variable} ${lato.variable}`}>
+      <body className={`${playfair.variable} ${montserrat.variable}`}>
         {children}
         <Script
           src="https://upload-widget.cloudinary.com/global/all.js"

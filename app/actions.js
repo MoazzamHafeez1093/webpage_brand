@@ -33,3 +33,50 @@ export async function deleteProductAction(id) {
         return { success: false, error: e.message };
     }
 }
+
+// --- COLLECTION ACTIONS ---
+export async function getCollectionsAction() {
+    try {
+        const collections = await db.getAllCollections();
+        return JSON.parse(JSON.stringify(collections));
+    } catch (e) {
+        console.error("Get Collections Action Error:", e);
+        return [];
+    }
+}
+
+export async function createCollectionAction(data) {
+    try {
+        const newCollection = await db.createCollection(data);
+        return { success: true, collection: JSON.parse(JSON.stringify(newCollection)) };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function deleteCollectionAction(id) {
+    try {
+        await db.deleteCollection(id);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function addProductToCollectionAction(collectionId, productId) {
+    try {
+        const updatedCollection = await db.addProductToCollection(collectionId, productId);
+        return { success: true, collection: JSON.parse(JSON.stringify(updatedCollection)) };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function removeProductFromCollectionAction(collectionId, productId) {
+    try {
+        await db.removeProductFromCollection(collectionId, productId);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}

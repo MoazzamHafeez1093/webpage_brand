@@ -5,7 +5,7 @@ import {
     getProductsAction, createProductAction, deleteProductAction,
     getCollectionsAction, createCollectionAction, deleteCollectionAction,
     addProductToCollectionAction, removeProductFromCollectionAction,
-    getCategoryTreeAction, createCategoryAction, deleteCategoryAction, updateCategoryAction
+    getCategoryTreeAction, createCategoryAction, deleteCategoryAction, updateCategoryAction, seedCategoriesAction
 } from '@/app/actions';
 import styles from './admin.module.css';
 
@@ -319,23 +319,31 @@ export default function AdminPage() {
                                 <div className={styles.row}>
                                     <input placeholder="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} className={styles.input} />
                                     {/* Category Tree Selector */}
-                                    <select
-                                        value={category}
-                                        onChange={e => setCategory(e.target.value)}
-                                        className={styles.input}
-                                        style={{ fontFamily: 'monospace' }} // To align hierarchy dashes
-                                    >
-                                        <option value="">-- Select Category --</option>
-                                        {/* Flatten tree for dropdown options */}
-                                        {function flattenForSelect(nodes, depth = 0) {
-                                            return nodes.map(node => [
-                                                <option key={node._id} value={node.name}>
-                                                    {'\u00A0'.repeat(depth * 4) + (depth > 0 ? '└ ' : '') + node.name}
-                                                </option>,
-                                                ...flattenForSelect(node.children || [], depth + 1)
-                                            ]);
-                                        }(categoryTree)}
-                                    </select>
+                                    <div style={{ display: 'flex', gap: 5, flex: 1 }}>
+                                        <select
+                                            value={category}
+                                            onChange={e => setCategory(e.target.value)}
+                                            className={styles.input}
+                                            style={{ fontFamily: 'monospace' }}
+                                        >
+                                            <option value="">-- Select Category --</option>
+                                            {function flattenForSelect(nodes, depth = 0) {
+                                                return nodes.map(node => [
+                                                    <option key={node._id} value={node.name}>
+                                                        {'\u00A0'.repeat(depth * 4) + (depth > 0 ? '└ ' : '') + node.name}
+                                                    </option>,
+                                                    ...flattenForSelect(node.children || [], depth + 1)
+                                                ]);
+                                            }(categoryTree)}
+                                        </select>
+                                        <input
+                                            placeholder="Or Type New"
+                                            value={category}
+                                            onChange={e => setCategory(e.target.value)}
+                                            className={styles.input}
+                                            title="Type a new category name here to create on save"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Image Upload Section */}
@@ -437,7 +445,17 @@ export default function AdminPage() {
                 {activeTab === 'categories' && (
                     <div className={styles.singleCol}>
                         <section className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>Hierarchy Manager</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 className={styles.sectionTitle}>Hierarchy Manager</h3>
+                                <button onClick={async () => {
+                                    if (confirm("Generate default categories (Retail, Custom, Bridal, etc.)?")) {
+                                        await seedCategoriesAction();
+                                        refreshCategories();
+                                    }
+                                }} className={styles.modeBtn}>
+                                    + Seed Defaults
+                                </button>
+                            </div>
 
                             <div className={styles.fieldGroup}>
                                 <label className={styles.label}>

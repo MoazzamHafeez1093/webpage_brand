@@ -16,7 +16,6 @@ const ClothingItemSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ['Shirts', 'Pants', 'Outerwear', 'Accessories'],
         required: true,
     },
     sizes: {

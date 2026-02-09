@@ -321,7 +321,29 @@ export default function AdminPage() {
                                     <input list="cats" placeholder="Category" value={category} onChange={e => setCategory(e.target.value)} className={styles.input} />
                                     <datalist id="cats">{existingCategories.map(c => <option key={c} value={c} />)}</datalist>
                                 </div>
-                                <button onClick={handleCreateProduct} disabled={isSubmitting} className={styles.submitBtn}>Save Product</button>
+
+                                {/* Image Upload Section */}
+                                <div className={styles.row} style={{ marginTop: '1rem', alignItems: 'center' }}>
+                                    <button type="button" onClick={handleProductImageUpload} className={styles.modeBtn}>
+                                        + Upload Images
+                                    </button>
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                        {uploadedImages.map((img, idx) => (
+                                            <div key={idx} style={{ position: 'relative', width: 50, height: 50 }}>
+                                                <img src={img} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
+                                                <button
+                                                    onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== idx))}
+                                                    style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 15, height: 15, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                {uploadedImages.length === 0 && <small style={{ color: '#888', display: 'block', marginTop: 5 }}>At least 1 image required.</small>}
+
+                                <button onClick={handleCreateProduct} disabled={isSubmitting} className={styles.submitBtn} style={{ marginTop: '1rem' }}>Save Product</button>
                             </div>
                         </section>
                         <section className={styles.listSection}>

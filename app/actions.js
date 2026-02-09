@@ -80,3 +80,42 @@ export async function removeProductFromCollectionAction(collectionId, productId)
         return { success: false, error: e.message };
     }
 }
+
+// --- CATEGORY ACTIONS ---
+export async function getCategoriesAction() {
+    try {
+        const categories = await db.getAllCategories();
+        return JSON.parse(JSON.stringify(categories));
+    } catch (e) {
+        console.error("Get Categories Action Error:", e);
+        return [];
+    }
+}
+
+export async function getCategoryTreeAction() {
+    try {
+        const tree = await db.getCategoryTree();
+        return JSON.parse(JSON.stringify(tree));
+    } catch (e) {
+        console.error("Get Category Tree Action Error:", e);
+        return [];
+    }
+}
+
+export async function createCategoryAction(data) {
+    try {
+        const newCategory = await db.createCategory(data);
+        return { success: true, category: JSON.parse(JSON.stringify(newCategory)) };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}
+
+export async function deleteCategoryAction(id) {
+    try {
+        await db.deleteCategory(id);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
+}

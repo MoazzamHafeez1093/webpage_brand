@@ -9,9 +9,8 @@ export default async function Home(props) {
   const category = searchParams?.category || 'All';
   const products = await db.getAllItems(category);
 
-  // Get all unique categories for the menu
-  const allProducts = await db.getAllItems();
-  const categories = [...new Set(allProducts.map(p => p.category))];
+  // Get category tree for the menu
+  const categories = await db.getCategoryTree();
 
   return (
     <main className={styles.main}>

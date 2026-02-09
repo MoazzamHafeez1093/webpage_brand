@@ -431,16 +431,56 @@
     border-radius: 50%;
 }
 
-.removeIcon {
-    margin-left: auto;
-    color: #c62828;
-    font-weight: bold;
-    font-size: 1.2rem;
-    background: #ffebee;
-    width: 24px;
-    height: 24px;
+/* TREE VIEW */
+.singleCol {
+    grid-column: 1 / -1;
+}
+
+.treeContainer {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    border-radius: 8px;
+}
+
+.treeNode {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: white;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 2px;
+}
+
+.treeNode:hover {
+    background: #fff8ee;
+    border-color: #b08d55;
+}
+
+.nodeActions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tinyBtn {
+    background: #eef6ff;
+    color: #0078FF;
+    border: 1px solid #0078FF;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.tinyBtnDanger {
+    background: #ffdbdb;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
 }

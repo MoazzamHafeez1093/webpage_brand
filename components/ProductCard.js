@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import styles from './ProductCard.module.css';
 
-export default function ProductCard({ product, onClick }) {
+export default function ProductCard({ product, categoryType, onClick }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     // Zoom State
@@ -83,6 +83,23 @@ export default function ProductCard({ product, onClick }) {
         }
     };
 
+    // WhatsApp Logic
+    const handleWhatsApp = (e) => {
+        e.stopPropagation();
+        const phoneNumber = '923211234567'; // Replace with real number or env variable
+        const isCustom = categoryType === 'custom' || product.categoryType === 'custom' || category === 'custom';
+
+        let message = '';
+        if (isCustom) {
+            message = `Hi, I'm interested in a price estimate for a design like "${title}".`;
+        } else {
+            message = `Hi, I would like to check size availability for "${title}" (${category}).`;
+        }
+
+        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
     return (
         <article className={styles.card} onClick={onClick}>
             <div
@@ -146,6 +163,10 @@ export default function ProductCard({ product, onClick }) {
                 <div className={styles.category}>{category}</div>
                 <h3 className={styles.title}>{title}</h3>
                 <div className={styles.price}>${price.toFixed(2)}</div>
+
+                <button onClick={handleWhatsApp} className={styles.whatsappBtn}>
+                    WhatsApp Inquiry
+                </button>
             </div>
         </article>
     );

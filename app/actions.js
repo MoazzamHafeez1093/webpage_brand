@@ -79,13 +79,24 @@ export async function createNewCollectionAction(data) {
 }
 
 export async function deleteCollectionAction(id) {
-    // ... (omitted for brevity)
+    try {
+        await db.deleteCollection(id);
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: e.message };
+    }
 }
 
-// ...
-
 // --- CATEGORY ACTIONS ---
-// ...
+
+export async function getCategoryTreeAction() {
+    try {
+        const tree = await db.getCategoryTree();
+        return JSON.parse(JSON.stringify(tree));
+    } catch (e) {
+        return [];
+    }
+}
 
 export async function createNewCategoryAction(data) {
     try {
@@ -96,13 +107,6 @@ export async function createNewCategoryAction(data) {
         console.error("Create Category Error:", e);
         return { success: false, error: e.message };
     }
-}
-try {
-    await db.deleteCollection(id);
-    return { success: true };
-} catch (e) {
-    return { success: false, error: e.message };
-}
 }
 
 export async function addProductToCollectionAction(collectionId, productId) {

@@ -9,7 +9,7 @@ const playfair = Playfair_Display({
 });
 
 const montserrat = Montserrat({
-  weight: ['300', '400', '500'], // 300 for thin/minimalist look
+  weight: ['300', '400', '500'], // 300 IS CRITICAL for the "Thin/Modern" look
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',

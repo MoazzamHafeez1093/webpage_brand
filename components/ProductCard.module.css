@@ -132,23 +132,24 @@
     /* Editorial alignment usually left or center, let's try left for title/price */
 }
 
+/* Editorial Typography for Card */
 .category {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: #666;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.25em;
+    /* Very wide tracking */
+    color: #888;
+    margin-bottom: 0.7rem;
     font-weight: 500;
 }
 
 .title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 400;
-    /* Regular weight for serif */
     font-family: var(--font-heading);
-    margin: 0 0 0.2rem 0;
+    margin: 0 0 0.3rem 0;
     color: #111;
-    line-height: 1.3;
+    line-height: 1.25;
 }
 
 .price {
@@ -156,31 +157,41 @@
     color: #444;
     font-weight: 300;
     font-family: var(--font-body);
+    margin-bottom: 1rem;
 }
 
+/* ELEGANT WHATSAPP BUTTON */
 .whatsappBtn {
-    margin-top: 1rem;
     width: 100%;
-    padding: 0.8rem;
-    background: #1a1a1a;
-    /* Almost Black */
+    padding: 1rem 0;
+    /* Slim but tall enough for touch */
+    background: #000;
+    /* Pure Black */
     color: var(--accent-gold);
-    border: none;
+    border: 1px solid #000;
     border-radius: 0;
+    /* Sharp */
     cursor: pointer;
+    font-family: var(--font-body);
     font-weight: 400;
     font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    /* Premium spacing */
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    transition: all 0.3s ease;
+    gap: 0.8rem;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    /* Liquid */
+    opacity: 0.9;
 }
 
 .whatsappBtn:hover {
-    background: #000;
-    letter-spacing: 0.2em;
+    background: #1a1a1a;
+    color: #D4AF37;
+    /* Brighter gold on hover */
+    opacity: 1;
+    letter-spacing: 0.25em;
     /* Subtle expansion */
 }

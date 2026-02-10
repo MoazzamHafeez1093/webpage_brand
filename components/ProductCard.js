@@ -66,6 +66,45 @@ export default function ProductCard({ product, categoryType, onClick }) {
         });
     };
 
+    // Mobile Touch Logic (With Offset)
+    const handleTouchMove = (e) => {
+        // Prevent scrolling so user can drag lens
+        if (e.cancelable) e.preventDefault();
+
+        const touch = e.touches[0];
+        const rect = e.currentTarget.getBoundingClientRect();
+        const { width, height } = rect;
+
+        // Touch relative to image
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        // Check bounds
+        if (x < 0 || y < 0 || x > width || y > height) {
+            setLensState(prev => ({ ...prev, show: false }));
+            return;
+        }
+
+        // Lens Position (Centered on finger + OFFSET UPWARDS)
+        const OFFSET_Y = 120; // Shift lens up so finger doesn't hide it
+        const lensX = x - LENS_SIZE / 2;
+        const lensY = y - LENS_SIZE / 2 - OFFSET_Y;
+
+        // Background Position (Still targets the finger position x,y)
+        const bgX = (LENS_SIZE / 2) - (x * ZOOM_FACTOR);
+        const bgY = (LENS_SIZE / 2) - (y * ZOOM_FACTOR);
+
+        setLensState({
+            show: true,
+            x: lensX,
+            y: lensY,
+            bgX: bgX,
+            bgY: bgY,
+            imgW: width,
+            imgH: height
+        });
+    };
+
     const handleMouseLeave = () => {
         setLensState(prev => ({ ...prev, show: false }));
     };
@@ -108,6 +147,9 @@ export default function ProductCard({ product, categoryType, onClick }) {
                 className={styles.imageWrapper}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
+                onTouchStart={handleTouchMove} // Start zooming immediately
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleMouseLeave}
             >
                 {/* Main Image */}
                 <img

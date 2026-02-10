@@ -4,12 +4,17 @@ import { useState, useRef } from 'react';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, categoryType, onClick }) {
-    const { title, price, description, category, images } = product || {};
+    // Support new schema (name, collectionRef) and old schema (title, category)
+    const title = product?.name || product?.title;
+    const category = product?.collectionRef?.name || product?.category;
+    const { price, description, images } = product || {};
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imgLoaded, setImgLoaded] = useState(false);
 
-    // Safety check for images
-    const safeImages = images && images.length > 0 ? images : [{ thumbnail: '/placeholder.jpg', fullRes: '/placeholder.jpg' }];
+    // Safety check for images & normalize format
+    const safeImages = images && images.length > 0
+        ? images.map(img => typeof img === 'string' ? { thumbnail: img, fullRes: img } : img)
+        : [{ thumbnail: '/placeholder.jpg', fullRes: '/placeholder.jpg' }];
     const activeImage = safeImages[currentImageIndex];
 
     // Reset load state when image changes

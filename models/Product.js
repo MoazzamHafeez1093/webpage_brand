@@ -33,7 +33,8 @@ const ProductSchema = new mongoose.Schema({
     },
 
     // CRITICAL: Link to Collection instead of Category
-    collection: {
+    // CRITICAL: Link to Collection instead of Category
+    collectionRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Collection',
         required: [true, 'Collection is required'],
@@ -133,7 +134,7 @@ const ProductSchema = new mongoose.Schema({
 });
 
 // Indexes for performance
-ProductSchema.index({ collection: 1, order: 1 });
+ProductSchema.index({ collectionRef: 1, order: 1 });
 ProductSchema.index({ businessType: 1, isActive: 1 });
 ProductSchema.index({ isFeatured: 1, isActive: 1 });
 ProductSchema.index({ tags: 1 });

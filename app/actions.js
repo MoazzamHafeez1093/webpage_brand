@@ -12,28 +12,19 @@ import '@/models/Product';
 // COLLECTION ACTIONS
 // ============================================
 
-export async function createNewCollectionAction(formData) {
-    console.log('[CreateCollection] 1. START');
-
+export async function createCollectionAction(formData) {
     try {
-        // 1. CONNECT DB
         await dbConnect();
-        console.log('[CreateCollection] 2. DB Connected');
 
-        // 2. PARSE DATA
+        // Runtime Retrieval to avoid build issues
+        const Collection = mongoose.models.Collection;
+
         const name = formData.get('name');
         if (!name || name.trim() === '') {
             return { success: false, error: 'Collection name is required' };
         }
 
-        // 3. GET MODEL SAFELY
-        // We do not import Collection directly to avoid "a is not a function" bundler issues
-        const Collection = mongoose.models.Collection;
-        if (!Collection) {
-            throw new Error('Collection Model not registered even after side-effect import');
-        }
-
-        // 4. LOGIC
+        // Explicit Slug Logic (Moved from Model Hook)
         let baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         let slug = baseSlug;
         let counter = 1;
@@ -51,9 +42,7 @@ export async function createNewCollectionAction(formData) {
             parentCollection: formData.get('parentCollection') || null,
             order: 0
         });
-        console.log('[CreateCollection] Created:', newCollection._id);
 
-        // 5. REVALIDATE
         try {
             revalidatePath('/');
             revalidatePath('/admin/secret-login');
@@ -75,12 +64,10 @@ export async function createNewCollectionAction(formData) {
     }
 }
 
-export async function getAllCollections() {
+export async function getCollectionsAction() {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        if (!Collection) return [];
-
         const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(collections));
     } catch (error) {
@@ -89,12 +76,10 @@ export async function getAllCollections() {
     }
 }
 
-export async function getCollectionTree() {
+export async function getCollectionTreeAction() {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        if (!Collection) return [];
-
         const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
 
         const buildTree = (parentId = null) => {
@@ -118,7 +103,7 @@ export async function getCollectionTree() {
     }
 }
 
-export async function deleteCollection(id) {
+export async function deleteCollectionAction(id) {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
@@ -127,7 +112,7 @@ export async function deleteCollection(id) {
         const hasChildren = await Collection.findOne({ parentCollection: id });
         if (hasChildren) return { success: false, error: 'Cannot delete: Has subcollections' };
 
-        const hasProducts = await Product.findOne({ collection: id });
+        const hasProducts = await Product.findOne({ collectionRef: id });
         if (hasProducts) return { success: false, error: 'Cannot delete: Contains products' };
 
         await Collection.findByIdAndDelete(id);
@@ -144,7 +129,7 @@ export async function deleteCollection(id) {
 // PRODUCT ACTIONS
 // ============================================
 
-export async function createProduct(formData) {
+export async function createProductAction(formData) {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
@@ -161,7 +146,7 @@ export async function createProduct(formData) {
             description: formData.get('description'),
             price: parseFloat(formData.get('price')) || 0,
             images,
-            collection: collectionId,
+            collectionRef: collectionId, // UPDATED FIELD NAME
             businessType: formData.get('businessType') || 'retail',
             inspirationImage: formData.get('inspirationImage'),
         });
@@ -176,13 +161,11 @@ export async function createProduct(formData) {
     }
 }
 
-export async function getAllProducts() {
+export async function getAllProductsAction() {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
-        if (!Product) return [];
-
-        const products = await Product.find({ isActive: true }).populate('collection').sort({ order: 1 }).lean();
+        const products = await Product.find({ isActive: true }).populate('collectionRef').sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(products));
     } catch (error) {
         console.error('Get products error:', error);

@@ -91,27 +91,8 @@ CollectionSchema.methods.getFullPath = async function () {
     return path.join(' > ');
 };
 
-// Pre-save hook to generate slug automatically
-CollectionSchema.pre('save', async function (next) {
-    if (this.isModified('name')) {
-        let baseSlug = this.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '');
-
-        let slug = baseSlug;
-        let counter = 1;
-
-        // Ensure unique slug
-        while (await mongoose.model('Collection').findOne({ slug, _id: { $ne: this._id } })) {
-            slug = `${baseSlug}-${counter}`;
-            counter++;
-        }
-
-        this.slug = slug;
-    }
-    next();
-});
+// Pre-save hook REMOVED to avoid "a is not a function" error in minified builds.
+// Slug generation is now handled explicitly in the Server Action (app/actions.js).
 
 // Static method to get collection tree
 CollectionSchema.statics.getTree = async function (parentId = null) {
@@ -148,7 +129,7 @@ CollectionSchema.pre('remove', async function (next) {
 
     // Check for products
     const productCount = await Product.countDocuments({
-        collection: this._id
+        collectionRef: this._id
     });
 
     if (productCount > 0) {

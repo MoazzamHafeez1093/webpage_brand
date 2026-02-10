@@ -1,13 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react';
 import {
-    createNewCollectionAction, // NEW NAME
-    getAllCollections,
-    getCollectionTree,
-    deleteCollection,
-    createProduct,
-    getAllProducts
-} from '@/app/actions';
+    createCollectionAction,
+    getCollectionsAction,
+    getCollectionTreeAction,
+    deleteCollectionAction,
+    createProductAction,    // Updated Name
+    getAllProductsAction    // Updated Name
+} from '@/app/actions';     // Back to single file
 import styles from './admin.module.css';
 
 export default function AdminDashboard() {
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
             const [collectionsData, treeData, productsData] = await Promise.all([
                 getCollectionsAction(),
                 getCollectionTreeAction(),
-                getAllProducts()
+                getAllProductsAction()
             ]);
 
             setCollections(collectionsData || []);
@@ -111,7 +111,6 @@ export default function AdminDashboard() {
                 formData.append('parentCollection', collectionForm.parentCollection);
             }
 
-            // CALL NEW ACTION NAME
             const result = await createCollectionAction(formData);
 
             if (result.success) {
@@ -123,11 +122,7 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             console.error('Collection submission catch:', err);
-            setError(err.message || 'An error occurred while creating the collection');
-            // If error message mentions a stack trace, show part of it
-            if (err.message && err.message.length > 100) {
-                setError('Server Error (Check Console/Logs)');
-            }
+            setError('An error occurred while creating the collection');
         } finally {
             setLoading(false);
         }
@@ -192,7 +187,7 @@ export default function AdminDashboard() {
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
 
-            const result = await createProduct(formData);
+            const result = await createProductAction(formData);
 
             if (result.success) {
                 setSuccessMessage('Product created successfully!');

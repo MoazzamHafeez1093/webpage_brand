@@ -66,9 +66,10 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     draggable="false"
                     loading="lazy"
                     onLoad={() => setImgLoaded(true)}
+                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
                     style={{
-                        opacity: imgLoaded ? 1 : 0,
-                        transition: 'opacity 0.8s ease-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
+                        opacity: 1, // Force visible
+                        transition: 'transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                     }}
                 />
 

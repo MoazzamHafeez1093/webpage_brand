@@ -64,12 +64,9 @@
 .magnifier {
     position: absolute;
     width: 200px;
-    /* Fixed width */
     height: 200px;
-    /* Fixed height */
     pointer-events: none;
     background-repeat: no-repeat;
-    /* border: 1px solid #ccc; */
     border: 2px solid #fff;
     /* Distinct lens border */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.1);

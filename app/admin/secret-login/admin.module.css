@@ -294,45 +294,104 @@
     height: 50px;
 }
 
-/* Product Grid */
-.productGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+/* Product List (Table Style) */
+.productList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-top: 20px;
 }
 
-.productCard {
+.productRow {
+    display: grid;
+    grid-template-columns: 80px 2fr 1fr 1fr 150px;
+    align-items: center;
     background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.productCard:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.productCard img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-}
-
-.productCard h4 {
     padding: 15px;
-    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+    gap: 20px;
+    transition: box-shadow 0.2s;
+}
+
+.productRow:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.productImage {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    object-fit: cover;
+    background: #f5f5f5;
+}
+
+.productInfo strong {
+    display: block;
     font-size: 16px;
+    color: #2c2c2c;
+    margin-bottom: 4px;
+}
+
+.productMeta {
+    font-size: 13px;
+    color: #666;
+}
+
+.productType {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    text-transform: capitalize;
+}
+
+.priceTag {
+    font-weight: 600;
     color: #2c2c2c;
 }
 
-.productCard p {
-    padding: 0 15px 15px;
-    margin: 0;
+.actionButtons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.editBtn,
+.deleteBtn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
     font-size: 13px;
-    color: #666;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s;
+}
+
+.editBtn {
+    background: white;
+    border: 1px solid #ddd;
+    color: #2c2c2c;
+}
+
+.editBtn:hover {
+    border-color: #2c2c2c;
+    background: #f9f9f9;
+}
+
+.deleteBtn {
+    background: #fff0f0;
+    color: #c33;
+    border: 1px solid transparent;
+}
+
+.deleteBtn:hover {
+    background: #ffe0e0;
+    border-color: #fcc;
 }
 
 /* Animations */

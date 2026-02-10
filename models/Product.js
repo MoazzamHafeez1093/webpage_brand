@@ -186,23 +186,7 @@ ProductSchema.statics.getFeatured = async function (limit = 6) {
         .limit(limit);
 };
 
-// Ensure at least one image exists before saving
-ProductSchema.pre('save', function (next) {
-    if (this.images.length === 0) {
-        next(new Error('At least one product image is required'));
-    }
-    next();
-});
-
-// Auto-generate meta fields if not provided
-ProductSchema.pre('save', function (next) {
-    if (!this.metaTitle) {
-        this.metaTitle = this.name.substring(0, 60);
-    }
-    if (!this.metaDescription) {
-        this.metaDescription = this.description.substring(0, 160);
-    }
-    next();
-});
+// Pre-save hooks REMOVED to avoid "a is not a function" error in Next.js Server Actions.
+// Validation and default value logic is moved to app/actions.js
 
 export default mongoose.models.Product || mongoose.model('Product', ProductSchema);

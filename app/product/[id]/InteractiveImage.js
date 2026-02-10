@@ -16,44 +16,68 @@ export default function InteractiveImage({ product }) {
     const imageRef = useRef(null);
     const modalImageRef = useRef(null);
 
-    // Initial Zoom (Hover)
+    // Loupe State
+    const [loupeState, setLoupeState] = useState({
+        x: 0,
+        y: 0,
+        bgX: 0,
+        bgY: 0,
+        show: false
+    });
+    const LOUPE_SIZE = 200; // Match CSS
+    const ZOOM_LEVEL = 2.5; // magnification factor
+
+    // Loupe Zoom Handler
     const handleMouseMove = (e) => {
         if (!imageRef.current) return;
         const { left, top, width, height } = imageRef.current.getBoundingClientRect();
-        let x = ((e.clientX - left) / width) * 100;
-        let y = ((e.clientY - top) / height) * 100;
-        x = Math.max(0, Math.min(100, x));
-        y = Math.max(0, Math.min(100, y));
-        setZoomPosition({ x, y });
-        setIsZooming(true);
+
+        // Cursor position relative to image
+        const x = e.clientX - left;
+        const y = e.clientY - top;
+
+        // Check bounds
+        if (x < 0 || y < 0 || x > width || y > height) {
+            setLoupeState(prev => ({ ...prev, show: false }));
+            return;
+        }
+
+        // Loupe Position (Centered on cursor, but clamped to image bounds)
+        // We want the loupe to follow the cursor exactly
+        let loupeX = x - LOUPE_SIZE / 2;
+        let loupeY = y - LOUPE_SIZE / 2;
+
+        // Clamp Loupe within image? 
+        // User asked for "moving your cursor over the image shows an enlarged view of THAT specific area"
+        // Usually loupes can go slightly off-edge or stay inside. Let's keep center on cursor for natural feel.
+        // But preventing it from being totally outside is good.
+
+        // Background Position calculation
+        // bgX/bgY usually 0% to 100%. 
+        // Mathematical formula: -((x * zoom) - loupeSize/2)
+        const bgX = ((x / width) * 100);
+        const bgY = ((y / height) * 100);
+
+        setLoupeState({
+            x: loupeX,
+            y: loupeY,
+            bgX: bgX,
+            bgY: bgY,
+            show: true
+        });
     };
 
-    // Modal Zoom (Full Screen)
+    // ... existing modal handlers ...
     const handleModalMouseMove = (e) => {
+        // ... existing code ...
         if (!modalImageRef.current) return;
         const { left, top, width, height } = modalImageRef.current.getBoundingClientRect();
-        // Calculate position relative to the image container in modal
         let x = ((e.clientX - left) / width) * 100;
         let y = ((e.clientY - top) / height) * 100;
-        x = Math.max(0, Math.min(100, x));
-        y = Math.max(0, Math.min(100, y));
-
-        // We use CSS variables or direct style manipulation for the transform
         modalImageRef.current.style.transformOrigin = `${x}% ${y}%`;
     };
 
-    const nextImage = () => {
-        setActiveIndex((prev) => (prev + 1) % images.length);
-    };
-
-    const prevImage = () => {
-        setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-    };
-
-    const toggleModal = () => {
-        setIsModalOpen(!isModalOpen);
-        setIsZooming(false); // Reset hover zoom
-    };
+    // ... existing next/prev/toggle ...
 
     return (
         <>
@@ -62,12 +86,12 @@ export default function InteractiveImage({ product }) {
                 <div
                     className={styles.imageWrapper}
                     ref={imageRef}
-                    onMouseEnter={() => setIsZooming(true)}
-                    onMouseLeave={() => setIsZooming(false)}
+                    onMouseEnter={() => setLoupeState(prev => ({ ...prev, show: true }))}
+                    onMouseLeave={() => setLoupeState(prev => ({ ...prev, show: false }))}
                     onMouseMove={handleMouseMove}
                     onTouchMove={(e) => handleMouseMove(e.touches[0])}
-                    onClick={toggleModal} // Click to open modal
-                    title="Click to zoom"
+                    onClick={toggleModal}
+                    title="Click for Full Screen"
                 >
                     <img
                         src={images[activeIndex]}
@@ -75,14 +99,16 @@ export default function InteractiveImage({ product }) {
                         className={styles.mainImage}
                     />
 
-                    {/* Magnifier Lens / Zoom View (Desktop Hover) */}
+                    {/* Round/Square Loupe Lens */}
                     <div
                         className={styles.magnifier}
                         style={{
-                            opacity: isZooming ? 1 : 0,
+                            display: loupeState.show ? 'block' : 'none',
+                            top: `${loupeState.y}px`,
+                            left: `${loupeState.x}px`,
                             backgroundImage: `url(${images[activeIndex]})`,
-                            backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                            backgroundSize: '250%'
+                            backgroundSize: `${100 * ZOOM_LEVEL}%`, // Zoom relative to image size
+                            backgroundPosition: `${loupeState.bgX}% ${loupeState.bgY}%`
                         }}
                     />
 

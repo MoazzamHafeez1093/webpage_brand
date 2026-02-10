@@ -9,24 +9,35 @@ const DropdownItem = ({ category, onSelect }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const hasChildren = category.children && category.children.length > 0;
 
-    const handleClick = (e) => {
+    const handleTextClick = (e) => {
         e.stopPropagation();
-        if (hasChildren) {
-            setIsExpanded(!isExpanded);
-        } else {
-            onSelect(category.slug);
-        }
+        onSelect(category.slug);
+    };
+
+    const handleArrowClick = (e) => {
+        e.stopPropagation();
+        setIsExpanded(!isExpanded);
     };
 
     return (
         <div className={styles.navItem}>
-            <button
-                className={styles.dropdownBtn}
-                onClick={handleClick}
-                style={{ paddingLeft: isExpanded ? '0.5rem' : '0' }}
-            >
-                {category.name} {hasChildren && (isExpanded ? '▼' : '▶')}
-            </button>
+            <div className={styles.navRow}>
+                {/* Text CLick -> Selects Category */}
+                <span className={styles.navText} onClick={handleTextClick}>
+                    {category.name}
+                </span>
+
+                {/* Arrow Click -> Toggles Dropdown (only if children exist) */}
+                {hasChildren && (
+                    <span
+                        className={`${styles.navArrow} ${isExpanded ? styles.arrowExpanded : ''}`}
+                        onClick={handleArrowClick}
+                    >
+                        ▼
+                    </span>
+                )}
+            </div>
+
             {hasChildren && isExpanded && (
                 <div className={styles.nestedDropdown}>
                     {category.children.map(child => (

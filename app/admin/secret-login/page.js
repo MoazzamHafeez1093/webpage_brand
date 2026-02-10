@@ -553,17 +553,41 @@ export default function AdminDashboard() {
                     </form>
 
                     <h2>Products</h2>
-                    <div className={styles.productGrid}>
+                    <h2>Products</h2>
+                    <div className={styles.productList}>
                         {products.map(p => (
-                            <div key={p._id} className={styles.productCard}>
-                                <strong>{p.name}</strong>
-                                <p>{p.businessType}</p>
-                                <div className={styles.actionButtons} style={{ marginTop: 10 }}>
-                                    <button onClick={() => handleEditProduct(p)} className={styles.editBtn} style={{ marginRight: 5 }}>Edit</button>
+                            <div key={p._id} className={styles.productRow}>
+                                {/* Image Column */}
+                                <img
+                                    src={p.images && p.images[0] ? p.images[0] : '/placeholder.jpg'}
+                                    alt={p.name}
+                                    className={styles.productImage}
+                                />
+
+                                {/* Info Column */}
+                                <div className={styles.productInfo}>
+                                    <strong>{p.name}</strong>
+                                    <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
+                                </div>
+
+                                {/* Type Column */}
+                                <div>
+                                    <span className={styles.productType}>{p.businessType}</span>
+                                </div>
+
+                                {/* Price Column */}
+                                <div className={styles.priceTag}>
+                                    {p.price > 0 ? `$${p.price.toFixed(2)}` : '-'}
+                                </div>
+
+                                {/* Actions Column */}
+                                <div className={styles.actionButtons}>
+                                    <button onClick={() => handleEditProduct(p)} className={styles.editBtn}>Edit</button>
                                     <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
                                 </div>
                             </div>
                         ))}
+                        {products.length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>No products found.</p>}
                     </div>
                 </div>
             )}

@@ -24,35 +24,45 @@ export default function ProductCard({ product, categoryType, onClick }) {
     }
 
     // --- GRID ZOOM LENS LOGIC ---
-    const [lensState, setLensState] = useState({ show: false, x: 0, y: 0, bgX: 0, bgY: 0 });
-    const LENS_SIZE = 150; // px
-    const ZOOM_FACTOR = 3; // 300%
+    const [lensState, setLensState] = useState({
+        show: false,
+        x: 0, y: 0,
+        bgX: 0, bgY: 0,
+        imgW: 0, imgH: 0
+    });
+
+    // Config
+    const LENS_SIZE = 200; // Increased size "a little"
+    const ZOOM_FACTOR = 3;  // 3x Zoom
 
     const handleMouseMove = (e) => {
         const rect = e.currentTarget.getBoundingClientRect();
+        const { width, height } = rect;
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
         // Position lens centered on cursor
-        // We subtract half lens size to center it
-        // We clamp it? User didn't strictly ask for clamping but it looks better if lens doesn't fly off too much.
-        // For simplicity and fluid feel, let's just center it.
+        const lensX = x - LENS_SIZE / 2;
+        const lensY = y - LENS_SIZE / 2;
 
-        // Background position:
-        // We need to show the area under the cursor (x, y)
-        // If bg size is 300% (3x), then 1px in container = 3px in bg.
-        // We need to shift bg so that (x*3, y*3) is at the center of the lens.
-        // Formula: - (x * zoom - lensW/2)
+        // Background position calculation
+        // The background image size will be (width * ZOOM) x (height * ZOOM)
+        // We want the point (x, y) on the original image to be at the center of the lens (LENS_SIZE/2, LENS_SIZE/2)
+        // The point (x, y) maps to (x * ZOOM, y * ZOOM) on the background image.
+        // So: bgPos + (x * ZOOM) = LENS_SIZE / 2
+        // bgPos = (LENS_SIZE / 2) - (x * ZOOM)
 
-        const bgX = -((x * ZOOM_FACTOR) - LENS_SIZE / 2);
-        const bgY = -((y * ZOOM_FACTOR) - LENS_SIZE / 2);
+        const bgX = (LENS_SIZE / 2) - (x * ZOOM_FACTOR);
+        const bgY = (LENS_SIZE / 2) - (y * ZOOM_FACTOR);
 
         setLensState({
             show: true,
-            x: x - LENS_SIZE / 2,
-            y: y - LENS_SIZE / 2,
+            x: lensX,
+            y: lensY,
             bgX: bgX,
-            bgY: bgY
+            bgY: bgY,
+            imgW: width,
+            imgH: height
         });
     };
 
@@ -99,7 +109,7 @@ export default function ProductCard({ product, categoryType, onClick }) {
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
             >
-                {/* Main Image - CSS Transform handles zoom now */}
+                {/* Main Image */}
                 <img
                     src={activeImage.thumbnail}
                     alt={title}
@@ -109,7 +119,7 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     onLoad={() => setImgLoaded(true)}
                     onError={(e) => { e.target.src = '/placeholder.jpg'; }}
                     style={{
-                        opacity: 1, // Force visible
+                        opacity: 1,
                         transition: 'transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                     }}
                 />
@@ -121,7 +131,10 @@ export default function ProductCard({ product, categoryType, onClick }) {
                         display: lensState.show ? 'block' : 'none',
                         left: `${lensState.x}px`,
                         top: `${lensState.y}px`,
+                        width: `${LENS_SIZE}px`,
+                        height: `${LENS_SIZE}px`,
                         backgroundImage: `url(${activeImage.thumbnail})`,
+                        backgroundSize: `${lensState.imgW * ZOOM_FACTOR}px ${lensState.imgH * ZOOM_FACTOR}px`,
                         backgroundPosition: `${lensState.bgX}px ${lensState.bgY}px`
                     }}
                 />

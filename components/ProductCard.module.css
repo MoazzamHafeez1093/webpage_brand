@@ -50,24 +50,20 @@
 /* ZOOM LENS */
 .zoomLens {
     position: absolute;
-    width: 150px;
-    height: 150px;
-    border: 2px solid #fff;
-    /* White border looks cleaner on dark/light images */
-    border-radius: 50%;
-    /* Circular */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    /* Size set in JS now, but defaults here */
+    width: 200px;
+    height: 200px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    /* Slightly rounded square */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    /* Stronger shadow for "pop" */
     cursor: none;
-    /* Hide cursor inside lens */
     pointer-events: none;
-    /* Let clicks pass through so you can still click the card */
     background-repeat: no-repeat;
-    background-size: 300%;
-    /* 3x Zoom */
     background-color: white;
     z-index: 100;
     display: none;
-    /* JS toggles this */
 }
 
 /* CAROUSEL CONTROLS - Minimalist */

@@ -32,7 +32,7 @@ export default function ProductCard({ product, categoryType, onClick }) {
     });
 
     // Config
-    const LENS_SIZE = 200; // Increased size "a little"
+    const LENS_SIZE = 175; // Reduced from 200 as per "make it a very little small"
     const ZOOM_FACTOR = 3;  // 3x Zoom
 
     const handleMouseMove = (e) => {

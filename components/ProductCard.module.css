@@ -51,10 +51,11 @@
 .zoomLens {
     position: absolute;
     /* Size set in JS now, but defaults here */
-    width: 200px;
-    height: 200px;
+    width: 175px;
+    height: 175px;
     border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: 4px;
+    /* Slightly rounded square */
     /* Slightly rounded square */
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     /* Stronger shadow for "pop" */

@@ -7,9 +7,13 @@ export default function ProductCard({ product, categoryType, onClick }) {
     // Support new schema (name, collectionRef) and old schema (title, category)
     const title = product?.name || product?.title;
     const category = product?.collectionRef?.name || product?.category;
-    const { price, description, images } = product || {};
+    // Normalize businessType: check explicit field or infer from category/product
+    const isCustom = product?.businessType === 'custom' || categoryType === 'custom' || category === 'custom';
+
+    const { price, description, images, inspirationImage } = product || {};
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imgLoaded, setImgLoaded] = useState(false);
+    const [showInspiration, setShowInspiration] = useState(false); // Toggle state
 
     // Safety check for images & normalize format
     const safeImages = images && images.length > 0
@@ -17,92 +21,48 @@ export default function ProductCard({ product, categoryType, onClick }) {
         : [{ thumbnail: '/placeholder.jpg', fullRes: '/placeholder.jpg' }];
     const activeImage = safeImages[currentImageIndex];
 
-    // Reset load state when image changes
-    if (activeImage !== safeImages[currentImageIndex]) {
-        // This is a bit risky in render, but safe if we are just deriving state. 
-        // Better to handle in the handlers.
-    }
+    // ... (rest of state logic)
 
     // --- GRID ZOOM LENS LOGIC ---
+    // ... (Keep existing lens state & config)
     const [lensState, setLensState] = useState({
         show: false,
         x: 0, y: 0,
         bgX: 0, bgY: 0,
         imgW: 0, imgH: 0
     });
+    const LENS_SIZE = 175;
+    const ZOOM_FACTOR = 3;
 
-    // Config
-    const LENS_SIZE = 175; // Reduced from 200 as per "make it a very little small"
-    const ZOOM_FACTOR = 3;  // 3x Zoom
-
+    // ... (Keep handleMouseMove/TouchMove logic) ...
     const handleMouseMove = (e) => {
+        // ... (existing logic)
         const rect = e.currentTarget.getBoundingClientRect();
         const { width, height } = rect;
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
-        // Position lens centered on cursor
         const lensX = x - LENS_SIZE / 2;
         const lensY = y - LENS_SIZE / 2;
-
-        // Background position calculation
-        // The background image size will be (width * ZOOM) x (height * ZOOM)
-        // We want the point (x, y) on the original image to be at the center of the lens (LENS_SIZE/2, LENS_SIZE/2)
-        // The point (x, y) maps to (x * ZOOM, y * ZOOM) on the background image.
-        // So: bgPos + (x * ZOOM) = LENS_SIZE / 2
-        // bgPos = (LENS_SIZE / 2) - (x * ZOOM)
-
         const bgX = (LENS_SIZE / 2) - (x * ZOOM_FACTOR);
         const bgY = (LENS_SIZE / 2) - (y * ZOOM_FACTOR);
-
-        setLensState({
-            show: true,
-            x: lensX,
-            y: lensY,
-            bgX: bgX,
-            bgY: bgY,
-            imgW: width,
-            imgH: height
-        });
+        setLensState({ show: true, x: lensX, y: lensY, bgX, bgY, imgW: width, imgH: height });
     };
 
-    // Mobile Touch Logic (With Offset)
     const handleTouchMove = (e) => {
-        // Prevent scrolling so user can drag lens
+        // ... (existing logic)
         if (e.cancelable) e.preventDefault();
-
         const touch = e.touches[0];
         const rect = e.currentTarget.getBoundingClientRect();
         const { width, height } = rect;
-
-        // Touch relative to image
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
-
-        // Check bounds
-        if (x < 0 || y < 0 || x > width || y > height) {
-            setLensState(prev => ({ ...prev, show: false }));
-            return;
-        }
-
-        // Lens Position (Centered on finger + OFFSET UPWARDS)
-        const OFFSET_Y = 120; // Shift lens up so finger doesn't hide it
+        if (x < 0 || y < 0 || x > width || y > height) { setLensState(prev => ({ ...prev, show: false })); return; }
+        const OFFSET_Y = 120;
         const lensX = x - LENS_SIZE / 2;
         const lensY = y - LENS_SIZE / 2 - OFFSET_Y;
-
-        // Background Position (Still targets the finger position x,y)
         const bgX = (LENS_SIZE / 2) - (x * ZOOM_FACTOR);
         const bgY = (LENS_SIZE / 2) - (y * ZOOM_FACTOR);
-
-        setLensState({
-            show: true,
-            x: lensX,
-            y: lensY,
-            bgX: bgX,
-            bgY: bgY,
-            imgW: width,
-            imgH: height
-        });
+        setLensState({ show: true, x: lensX, y: lensY, bgX, bgY, imgW: width, imgH: height });
     };
 
     const handleMouseLeave = () => {
@@ -110,31 +70,29 @@ export default function ProductCard({ product, categoryType, onClick }) {
     };
 
     // --- CAROUSEL LOGIC ---
+    // ... (Keep handleNext/Prev) ...
     const handleNext = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setImgLoaded(false);
+        e.preventDefault(); e.stopPropagation(); setImgLoaded(false);
         setCurrentImageIndex((prev) => (prev + 1) % safeImages.length);
     };
-
     const handlePrev = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setImgLoaded(false);
+        e.preventDefault(); e.stopPropagation(); setImgLoaded(false);
         setCurrentImageIndex((prev) => (prev - 1 + safeImages.length) % safeImages.length);
     };
 
-    // WhatsApp Logic
+    // WhatsApp Logic (Contextual)
     const handleWhatsApp = (e) => {
         e.stopPropagation();
-        const phoneNumber = '923211234567'; // Replace with real number or env variable
-        const isCustom = categoryType === 'custom' || product?.categoryType === 'custom' || category === 'custom';
+        const phoneNumber = '923211234567';
 
+        // Contextual Message
         let message = '';
+        const currentImgUrl = activeImage.fullRes || activeImage.thumbnail;
+
         if (isCustom) {
-            message = `Hi, I'm interested in a price estimate for a design like "${title}".`;
+            message = `Hi, I'm interested in a price estimate for a design like "${title}".\nRef Image: ${currentImgUrl}`;
         } else {
-            message = `Hi, I would like to check size availability for "${title}" (${category}).`;
+            message = `Hi, I would like to check size availability for "${title}" (${category}).\nRef Image: ${currentImgUrl}`;
         }
 
         const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
@@ -143,17 +101,29 @@ export default function ProductCard({ product, categoryType, onClick }) {
 
     return (
         <article className={styles.card} onClick={onClick}>
+            {/* INSPIRATION TOGGLE (For Custom Only) */}
+            {isCustom && inspirationImage && (
+                <div className={styles.toggleWrapper}>
+                    <button
+                        className={showInspiration ? styles.toggleBtnActive : styles.toggleBtn}
+                        onClick={(e) => { e.stopPropagation(); setShowInspiration(!showInspiration); }}
+                    >
+                        {showInspiration ? 'Show Result' : 'View Inspiration'}
+                    </button>
+                </div>
+            )}
+
             <div
                 className={styles.imageWrapper}
-                onMouseMove={handleMouseMove}
+                onMouseMove={!showInspiration ? handleMouseMove : null} // Disable zoom on inspiration for simplicity? Or keep it. Let's keep it simple.
                 onMouseLeave={handleMouseLeave}
-                onTouchStart={handleTouchMove} // Start zooming immediately
-                onTouchMove={handleTouchMove}
+                onTouchStart={!showInspiration ? handleTouchMove : null}
+                onTouchMove={!showInspiration ? handleTouchMove : null}
                 onTouchEnd={handleMouseLeave}
             >
-                {/* Main Image */}
+                {/* Main Image OR Inspiration Image */}
                 <img
-                    src={activeImage.thumbnail}
+                    src={showInspiration ? inspirationImage : activeImage.thumbnail}
                     alt={title}
                     className={styles.placeholder}
                     draggable="false"
@@ -166,23 +136,25 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     }}
                 />
 
-                {/* ZOOM LENS */}
-                <div
-                    className={styles.zoomLens}
-                    style={{
-                        display: lensState.show ? 'block' : 'none',
-                        left: `${lensState.x}px`,
-                        top: `${lensState.y}px`,
-                        width: `${LENS_SIZE}px`,
-                        height: `${LENS_SIZE}px`,
-                        backgroundImage: `url(${activeImage.thumbnail})`,
-                        backgroundSize: `${lensState.imgW * ZOOM_FACTOR}px ${lensState.imgH * ZOOM_FACTOR}px`,
-                        backgroundPosition: `${lensState.bgX}px ${lensState.bgY}px`
-                    }}
-                />
+                {/* ZOOM LENS (Only on Main Image) */}
+                {!showInspiration && (
+                    <div
+                        className={styles.zoomLens}
+                        style={{
+                            display: lensState.show ? 'block' : 'none',
+                            left: `${lensState.x}px`,
+                            top: `${lensState.y}px`,
+                            width: `${LENS_SIZE}px`,
+                            height: `${LENS_SIZE}px`,
+                            backgroundImage: `url(${activeImage.thumbnail})`,
+                            backgroundSize: `${lensState.imgW * ZOOM_FACTOR}px ${lensState.imgH * ZOOM_FACTOR}px`,
+                            backgroundPosition: `${lensState.bgX}px ${lensState.bgY}px`
+                        }}
+                    />
+                )}
 
-                {/* --- CAROUSEL CONTROLS (Only show if multiple images) --- */}
-                {safeImages.length > 1 && (
+                {/* --- CAROUSEL CONTROLS (Only show if multiple images AND not viewing inspiration) --- */}
+                {!showInspiration && safeImages.length > 1 && (
                     <>
                         <button
                             className={styles.navBtnLeft}
@@ -203,15 +175,23 @@ export default function ProductCard({ product, categoryType, onClick }) {
                         </div>
                     </>
                 )}
+
+                {/* Side-by-Side Label */}
+                {showInspiration && (
+                    <div className={styles.inspirationLabel}>Original Concept</div>
+                )}
             </div>
 
             <div className={styles.info}>
-                <div className={styles.category}>{category}</div>
+                <div className={styles.category}>
+                    {isCustom ? "Custom Couture" : "Retail Collection"} • {category}
+                </div>
                 <h3 className={styles.title}>{title}</h3>
-                <div className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</div>
+                {/* Hide price for Custom, show for Retail */}
+                {!isCustom && <div className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</div>}
 
                 <button onClick={handleWhatsApp} className={styles.whatsappBtn}>
-                    <span>Inquire via WhatsApp</span>
+                    <span>{isCustom ? "Get a Quote" : "Check Availability"}</span>
                 </button>
             </div>
         </article>

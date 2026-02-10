@@ -64,7 +64,16 @@ export default function Navbar({ categories }) {
             <div className={styles.navContainer}>
                 <span className={styles.brand} onClick={() => router.push('/')}>LUXE.</span>
 
-                <div className={styles.menuWrapper}>
+                <div className={styles.menuWrapper} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {/* NEW: Design Upload Button */}
+                    <a
+                        href="https://wa.me/923211234567?text=Hi%2C%20I%20have%20a%20design%20I%20want%20to%20create.%20Sending%20photo%20now..."
+                        target="_blank"
+                        className={styles.uploadNavBtn}
+                    >
+                        Upload Design
+                    </a>
+
                     <button className={styles.menuBtn} onClick={() => setIsOpen(!isOpen)}>
                         {isOpen ? 'Close' : 'Collections'}
                     </button>

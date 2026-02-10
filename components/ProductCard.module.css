@@ -14,7 +14,49 @@
     transition: opacity 0.3s ease;
     break-inside: avoid;
     margin-bottom: 2rem;
-    /* Spacing for masonry items */
+}
+
+/* Comparison Toggle */
+.toggleWrapper {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 50;
+}
+
+.toggleBtn,
+.toggleBtnActive {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 6px 12px;
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 20px;
+    /* Pill shape */
+}
+
+.toggleBtnActive {
+    background: var(--accent-gold);
+    color: white;
+    border-color: var(--accent-gold);
+}
+
+.inspirationLabel {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    z-index: 20;
+    pointer-events: none;
 }
 
 .card:hover {

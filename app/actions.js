@@ -1,6 +1,6 @@
 'use server'
 
-import dbConnect from '@/lib/mongoose';
+import { dbConnect } from '@/lib/mongoose';
 import Collection from '@/models/Collection';
 import Product from '@/models/Product';
 import { revalidatePath } from 'next/cache';

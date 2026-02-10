@@ -45,7 +45,7 @@ export default function Navbar({ categories }) {
     const handleSelect = (slug) => {
         setIsOpen(false);
         if (slug === 'all') router.push('/');
-        else router.push(`/shop/${slug}`);
+        else router.push(`/?collection=${slug}`);
     };
 
     return (

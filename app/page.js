@@ -6,8 +6,9 @@ import styles from './page.module.css';
 // Server Component
 export default async function Home(props) {
   const searchParams = await props.searchParams;
-  const category = searchParams?.category || 'All';
-  const products = await db.getAllItems(category);
+  // Use 'collection' param instead of 'category', default to 'All'
+  const collectionSlug = searchParams?.collection || 'All';
+  const products = await db.getAllItems(collectionSlug);
 
   // Get category tree for the menu
   const categories = await db.getCategoryTree();
@@ -21,7 +22,7 @@ export default async function Home(props) {
       <section className={styles.hero}>
         <div className="container">
           <h1 className={styles.heroTitle}>
-            {category === 'All' ? 'Timeless' : category} <br className={styles.mobileBreak} />
+            {collectionSlug === 'All' ? 'Timeless' : collectionSlug.replace(/-/g, ' ')} <br className={styles.mobileBreak} />
             <span className={styles.italic}>Collection</span>
           </h1>
           <p className={styles.heroSubtitle}>

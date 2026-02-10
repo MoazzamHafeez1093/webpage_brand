@@ -1,82 +1,64 @@
 'use server'
 
 import { dbConnect } from '@/lib/mongoose';
-import Collection from '@/models/Collection';
-import Product from '@/models/Product';
 import { revalidatePath } from 'next/cache';
 import mongoose from 'mongoose';
+
+// SIDE EFFECT IMPORTS TO REGISTER MODELS
+import '@/models/Collection';
+import '@/models/Product';
 
 // ============================================
 // COLLECTION ACTIONS
 // ============================================
 
-/**
- * RENAMED FUNCTION to bust cache and ensure fresh deployment.
- * Includes massive logging to debug "a is not a function".
- */
 export async function createNewCollectionAction(formData) {
     console.log('[CreateCollection] 1. START');
 
     try {
-        // 0. CHECK DEPENDENCIES
-        if (typeof dbConnect !== 'function') {
-            throw new Error(`dbConnect is not a function, it is: ${typeof dbConnect}`);
-        }
-        console.log('[CreateCollection] 2. Dependencies checked');
-
         // 1. CONNECT DB
         await dbConnect();
-        console.log('[CreateCollection] 3. DB Connected');
+        console.log('[CreateCollection] 2. DB Connected');
 
         // 2. PARSE DATA
         const name = formData.get('name');
-        console.log('[CreateCollection] 4. Data received:', name);
-
         if (!name || name.trim() === '') {
             return { success: false, error: 'Collection name is required' };
         }
 
-        // 3. MODEL CHECK
-        // Dynamically check the model to ensure it's loaded correctly
-        const CollectionModel = mongoose.models.Collection || Collection;
-        if (!CollectionModel || typeof CollectionModel.create !== 'function') {
-            console.error('[CreateCollection] Model Error. mongoose.models.Collection:', mongoose.models.Collection);
-            throw new Error('Collection Model is not loaded correctly (create is not a function)');
+        // 3. GET MODEL SAFELY
+        // We do not import Collection directly to avoid "a is not a function" bundler issues
+        const Collection = mongoose.models.Collection;
+        if (!Collection) {
+            throw new Error('Collection Model not registered even after side-effect import');
         }
 
-        // 4. SLUG GENERATION
+        // 4. LOGIC
         let baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         let slug = baseSlug;
         let counter = 1;
 
-        while (await CollectionModel.findOne({ slug })) {
+        while (await Collection.findOne({ slug })) {
             slug = `${baseSlug}-${counter}`;
             counter++;
         }
-        console.log('[CreateCollection] 5. Slug generated:', slug);
 
-        // 5. CREATE DOCUMENT
-        const newCollection = await CollectionModel.create({
+        const newCollection = await Collection.create({
             name: name.trim(),
             description: (formData.get('description') || '').trim(),
             slug,
             coverImage: formData.get('coverImage') || '',
             parentCollection: formData.get('parentCollection') || null,
-            order: 0 // Default order
+            order: 0
         });
-        console.log('[CreateCollection] 6. Created:', newCollection._id);
+        console.log('[CreateCollection] Created:', newCollection._id);
 
-        // 6. REVALIDATE
+        // 5. REVALIDATE
         try {
-            if (typeof revalidatePath === 'function') {
-                revalidatePath('/');
-                revalidatePath('/admin/secret-login');
-                console.log('[CreateCollection] 7. Revalidated');
-            } else {
-                console.warn('[CreateCollection] revalidatePath is NOT a function');
-            }
+            revalidatePath('/');
+            revalidatePath('/admin/secret-login');
         } catch (e) {
-            console.error('[CreateCollection] Revalidation warning:', e);
+            console.warn('Revalidate warning:', e);
         }
 
         return {
@@ -85,8 +67,7 @@ export async function createNewCollectionAction(formData) {
         };
 
     } catch (error) {
-        console.error('[CreateCollection] FATAL ERROR:', error);
-        // Return full stack to UI for debugging
+        console.error('[CreateCollection] ERROR:', error);
         return {
             success: false,
             error: `Server Error: ${error.message}`
@@ -97,6 +78,9 @@ export async function createNewCollectionAction(formData) {
 export async function getAllCollections() {
     try {
         await dbConnect();
+        const Collection = mongoose.models.Collection;
+        if (!Collection) return [];
+
         const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(collections));
     } catch (error) {
@@ -108,6 +92,9 @@ export async function getAllCollections() {
 export async function getCollectionTree() {
     try {
         await dbConnect();
+        const Collection = mongoose.models.Collection;
+        if (!Collection) return [];
+
         const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
 
         const buildTree = (parentId = null) => {
@@ -134,6 +121,8 @@ export async function getCollectionTree() {
 export async function deleteCollection(id) {
     try {
         await dbConnect();
+        const Collection = mongoose.models.Collection;
+        const Product = mongoose.models.Product;
 
         const hasChildren = await Collection.findOne({ parentCollection: id });
         if (hasChildren) return { success: false, error: 'Cannot delete: Has subcollections' };
@@ -158,6 +147,7 @@ export async function deleteCollection(id) {
 export async function createProduct(formData) {
     try {
         await dbConnect();
+        const Product = mongoose.models.Product;
 
         const collectionId = formData.get('collection');
         if (!collectionId) return { success: false, error: 'Collection required' };
@@ -189,6 +179,9 @@ export async function createProduct(formData) {
 export async function getAllProducts() {
     try {
         await dbConnect();
+        const Product = mongoose.models.Product;
+        if (!Product) return [];
+
         const products = await Product.find({ isActive: true }).populate('collection').sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(products));
     } catch (error) {

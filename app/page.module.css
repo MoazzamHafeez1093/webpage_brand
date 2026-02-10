@@ -68,6 +68,17 @@
   }
 }
 
+
+.mobileBreak {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .mobileBreak {
+    display: none;
+  }
+}
+
 .footer {
   text-align: center;
   margin-top: 8rem;

@@ -11,7 +11,6 @@ export default function InteractiveImage({ product }) {
 
     const [activeIndex, setActiveIndex] = useState(0);
     const [isZooming, setIsZooming] = useState(false);
-    const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
     const imageRef = useRef(null);
     const modalImageRef = useRef(null);
@@ -22,7 +21,9 @@ export default function InteractiveImage({ product }) {
         y: 0,
         bgX: 0,
         bgY: 0,
-        show: false
+        show: false,
+        imgW: 0, // Track dimensions for accurate zoom
+        imgH: 0
     });
     const LOUPE_SIZE = 200; // Match CSS
     const ZOOM_LEVEL = 2.5; // magnification factor
@@ -55,7 +56,9 @@ export default function InteractiveImage({ product }) {
             y: loupeY,
             bgX: bgX,
             bgY: bgY,
-            show: true
+            show: true,
+            imgW: width,
+            imgH: height
         });
     };
 
@@ -67,64 +70,100 @@ export default function InteractiveImage({ product }) {
         setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
     };
 
+    const toggleModal = () => {
+        setIsModalOpen(!isModalOpen);
+    };
+
+    const handleModalMouseMove = (e) => {
+        if (!modalImageRef.current) return;
+        const { left, top, width, height } = modalImageRef.current.getBoundingClientRect();
+        let x = ((e.clientX - left) / width) * 100;
+        let y = ((e.clientY - top) / height) * 100;
+        modalImageRef.current.style.transformOrigin = `${x}% ${y}%`;
+    };
+
     return (
-        <div className={styles.galleryContainer}>
-            {/* Main Image Area */}
-            <div
-                className={styles.imageWrapper}
-                ref={imageRef}
-                onMouseEnter={() => setLoupeState(prev => ({ ...prev, show: true }))}
-                onMouseLeave={() => setLoupeState(prev => ({ ...prev, show: false }))}
-                onMouseMove={handleMouseMove}
-                onTouchMove={(e) => handleMouseMove(e.touches[0])}
-            >
-                <img
-                    src={images[activeIndex]}
-                    alt={`${product.name} - View ${activeIndex + 1}`}
-                    className={styles.mainImage}
-                    style={{ cursor: 'crosshair' }}
-                />
-
-                {/* Square Loupe Lens */}
+        <>
+            <div className={styles.galleryContainer}>
+                {/* Main Image Area */}
                 <div
-                    className={styles.magnifier}
-                    style={{
-                        display: loupeState.show ? 'block' : 'none',
-                        top: `${loupeState.y}px`,
-                        left: `${loupeState.x}px`,
-                        backgroundImage: `url(${images[activeIndex]})`,
-                        backgroundSize: `${100 * ZOOM_LEVEL}%`,
-                        backgroundPosition: `${loupeState.bgX}% ${loupeState.bgY}%`
-                    }}
-                />
+                    className={styles.imageWrapper}
+                    ref={imageRef}
+                    onMouseEnter={() => setLoupeState(prev => ({ ...prev, show: true }))}
+                    onMouseLeave={() => setLoupeState(prev => ({ ...prev, show: false }))}
+                    onMouseMove={handleMouseMove}
+                    onTouchMove={(e) => handleMouseMove(e.touches[0])}
+                    onClick={toggleModal}
+                    title="Click for Full Screen"
+                >
+                    <img
+                        src={images[activeIndex]}
+                        alt={`${product.name} - View ${activeIndex + 1}`}
+                        className={styles.mainImage}
+                        style={{ cursor: 'crosshair' }}
+                    />
 
-                {/* Navigation Arrows */}
+                    {/* Square Loupe Lens */}
+                    <div
+                        className={styles.magnifier}
+                        style={{
+                            display: loupeState.show ? 'block' : 'none',
+                            top: `${loupeState.y}px`,
+                            left: `${loupeState.x}px`,
+                            backgroundImage: `url(${images[activeIndex]})`,
+                            // CRITICAL FIX: Background size based on MAIN IMAGE dimensions * ZOOM
+                            backgroundSize: `${loupeState.imgW * ZOOM_LEVEL}px ${loupeState.imgH * ZOOM_LEVEL}px`,
+                            backgroundPosition: `${loupeState.bgX}% ${loupeState.bgY}%`
+                        }}
+                    />
+
+                    {/* Navigation Arrows */}
+                    {images.length > 1 && (
+                        <>
+                            <button className={`${styles.navBtn} ${styles.prevBtn}`} onClick={(e) => { e.stopPropagation(); prevImage(); }}>
+                                &#10094;
+                            </button>
+                            <button className={`${styles.navBtn} ${styles.nextBtn}`} onClick={(e) => { e.stopPropagation(); nextImage(); }}>
+                                &#10095;
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Thumbnails */}
                 {images.length > 1 && (
-                    <>
-                        <button className={`${styles.navBtn} ${styles.prevBtn}`} onClick={(e) => { e.stopPropagation(); prevImage(); }}>
-                            &#10094;
-                        </button>
-                        <button className={`${styles.navBtn} ${styles.nextBtn}`} onClick={(e) => { e.stopPropagation(); nextImage(); }}>
-                            &#10095;
-                        </button>
-                    </>
+                    <div className={styles.thumbnails}>
+                        {images.map((img, idx) => (
+                            <div
+                                key={idx}
+                                className={`${styles.thumbnail} ${idx === activeIndex ? styles.activeThumb : ''}`}
+                                onClick={() => setActiveIndex(idx)}
+                            >
+                                <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
 
-            {/* Thumbnails */}
-            {images.length > 1 && (
-                <div className={styles.thumbnails}>
-                    {images.map((img, idx) => (
-                        <div
-                            key={idx}
-                            className={`${styles.thumbnail} ${idx === activeIndex ? styles.activeThumb : ''}`}
-                            onClick={() => setActiveIndex(idx)}
-                        >
-                            <img src={img} alt={`Thumbnail ${idx + 1}`} />
-                        </div>
-                    ))}
+            {/* FULL SCREEN MODAL */}
+            {isModalOpen && (
+                <div className={styles.modalOverlay} onClick={toggleModal}>
+                    <button className={styles.closeBtn} onClick={toggleModal}>×</button>
+                    <div
+                        className={styles.modalContent}
+                        onMouseMove={handleModalMouseMove}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            ref={modalImageRef}
+                            src={images[activeIndex]}
+                            alt="Full Screen Zoom"
+                            className={styles.modalImage}
+                        />
+                    </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

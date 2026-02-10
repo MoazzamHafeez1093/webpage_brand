@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function InteractiveImage({ product }) {
+    const [activeIndex, setActiveIndex] = useState(0);
+
     // Ensure images is an array
     const images = Array.isArray(product.images) && product.images.length > 0
         ? product.images

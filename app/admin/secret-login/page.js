@@ -6,12 +6,14 @@ import {
     getCollectionTreeAction,
     deleteCollectionAction,
     updateCollectionAction,
-    createProductAction,    // Updated Name
-    getAllProductsAction,    // Updated Name
+    createProductAction,
+    getAllProductsAction,
     updateProductAction,
     deleteProductAction
-} from '@/app/actions';     // Back to single file
+} from '@/app/actions';
 import styles from './admin.module.css';
+
+const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
 
 export default function AdminDashboard() {
     // ============ AUTH STATE ============
@@ -191,6 +193,7 @@ export default function AdminDashboard() {
             inspirationImage: p.inspirationImage || '',
             availableSizes: p.availableSizes || []
         });
+        setActiveTab('products');
         window.scrollTo(0, 0);
     };
 
@@ -237,6 +240,7 @@ export default function AdminDashboard() {
             formData.append('collection', productForm.collection);
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
+            formData.append('availableSizes', productForm.availableSizes.join(','));
 
             let result;
             if (editingProductId) {
@@ -274,6 +278,15 @@ export default function AdminDashboard() {
         });
     };
 
+    const toggleSize = (size) => {
+        setProductForm(prev => ({
+            ...prev,
+            availableSizes: prev.availableSizes.includes(size)
+                ? prev.availableSizes.filter(s => s !== size)
+                : [...prev.availableSizes, size]
+        }));
+    };
+
     // ============ CLOUDINARY ============
     const openCloudinaryWidget = (onSuccess, multiple = true) => {
         if (typeof window === 'undefined' || !window.cloudinary) {
@@ -297,17 +310,33 @@ export default function AdminDashboard() {
         widget.open();
     };
 
+    // ============ HELPER: Flat list with indentation for parent dropdown ============
+    const getCollectionOptions = (tree, level = 0) => {
+        let options = [];
+        tree.forEach(col => {
+            options.push({ _id: col._id, name: '\u00A0\u00A0'.repeat(level) + col.name, level });
+            if (col.children && col.children.length > 0) {
+                options = options.concat(getCollectionOptions(col.children, level + 1));
+            }
+        });
+        return options;
+    };
+
     // ============ HELPER: RECURSIVE TREE RENDER ============
     const renderCollectionTree = (tree, level = 0) => {
         return tree.map(col => (
             <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
                 <div className={styles.collectionItem}>
-                    <strong>{col.name}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {col.coverImage && (
+                            <img src={col.coverImage} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                        )}
+                        <strong>{col.name}</strong>
+                    </div>
                     <div className={styles.actionButtons}>
                         <button
                             onClick={() => handleEditCollection(col)}
                             className={styles.editBtn}
-                            style={{ marginRight: '10px' }}
                         >
                             Edit
                         </button>
@@ -384,6 +413,8 @@ export default function AdminDashboard() {
         );
     }
 
+    const nestedCollectionOptions = getCollectionOptions(collectionTree);
+
     // ============ DASHBOARD UI ============
     return (
         <div className={styles.container}>
@@ -398,13 +429,13 @@ export default function AdminDashboard() {
             {error && (
                 <div className={styles.errorMessage}>
                     {error}
-                    <button onClick={() => setError('')}>×</button>
+                    <button onClick={() => setError('')}>&times;</button>
                 </div>
             )}
             {successMessage && (
                 <div className={styles.successMessage}>
                     {successMessage}
-                    <button onClick={() => setSuccessMessage('')}>×</button>
+                    <button onClick={() => setSuccessMessage('')}>&times;</button>
                 </div>
             )}
 
@@ -437,7 +468,7 @@ export default function AdminDashboard() {
                                 type="text"
                                 value={collectionForm.name}
                                 onChange={(e) => setCollectionForm({ ...collectionForm, name: e.target.value })}
-                                placeholder="e.g. Bridal"
+                                placeholder="e.g. Bridal, Evening Wear, 2026 Velvet Series"
                                 required
                             />
                         </div>
@@ -446,21 +477,25 @@ export default function AdminDashboard() {
                             <textarea
                                 value={collectionForm.description}
                                 onChange={(e) => setCollectionForm({ ...collectionForm, description: e.target.value })}
+                                placeholder="Brief description of this collection"
                             />
                         </div>
                         <div className={styles.formGroup}>
-                            <label>Parent Collection</label>
+                            <label>Parent Collection (for nesting)</label>
                             <select
                                 value={collectionForm.parentCollection}
                                 onChange={(e) => setCollectionForm({ ...collectionForm, parentCollection: e.target.value })}
                             >
-                                <option value="">-- Top Level --</option>
-                                {collections
-                                    .filter(c => c._id !== editingCollectionId) // Prevent selecting self as parent
+                                <option value="">-- Top Level (No Parent) --</option>
+                                {nestedCollectionOptions
+                                    .filter(c => c._id !== editingCollectionId)
                                     .map(col => (
                                         <option key={col._id} value={col._id}>{col.name}</option>
                                     ))}
                             </select>
+                            <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                Select a parent to nest this inside another collection. E.g. Custom Couture &rarr; Bridal &rarr; 2026 Velvet Series
+                            </small>
                         </div>
                         <div className={styles.formGroup}>
                             <label>Cover Image</label>
@@ -471,7 +506,7 @@ export default function AdminDashboard() {
                             >
                                 {collectionForm.coverImage ? 'Change Image' : 'Upload Image'}
                             </button>
-                            {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '50px', marginTop: '10px' }} />}
+                            {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '80px', marginTop: '10px', borderRadius: '4px' }} />}
                         </div>
                         <button type="submit" disabled={loading} className={styles.submitBtn}>
                             {loading ? 'Processing...' : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
@@ -480,7 +515,7 @@ export default function AdminDashboard() {
 
                     <h2>Existing Collections</h2>
                     <div className={styles.collectionTree}>
-                        {collectionTree.length ? renderCollectionTree(collectionTree) : <p>No collections found.</p>}
+                        {collectionTree.length ? renderCollectionTree(collectionTree) : <p>No collections found. Create your first collection above.</p>}
                     </div>
                 </div>
             )}
@@ -493,38 +528,94 @@ export default function AdminDashboard() {
                         <button onClick={resetProductForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
                     )}
                     <form onSubmit={handleProductSubmit} className={styles.form}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className={styles.formGroup}>
+                                <label>Name *</label>
+                                <input
+                                    type="text"
+                                    value={productForm.name}
+                                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                                    placeholder="Product name"
+                                    required
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Collection *</label>
+                                <select
+                                    value={productForm.collection}
+                                    onChange={e => setProductForm({ ...productForm, collection: e.target.value })}
+                                    required
+                                >
+                                    <option value="">-- Select Collection --</option>
+                                    {nestedCollectionOptions.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
                         <div className={styles.formGroup}>
-                            <label>Name *</label>
-                            <input
-                                type="text"
-                                value={productForm.name}
-                                onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                                required
+                            <label>Description</label>
+                            <textarea
+                                value={productForm.description}
+                                onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                                placeholder="Product description"
                             />
                         </div>
-                        <div className={styles.formGroup}>
-                            <label>Collection *</label>
-                            <select
-                                value={productForm.collection}
-                                onChange={e => setProductForm({ ...productForm, collection: e.target.value })}
-                                required
-                            >
-                                <option value="">-- Select Collection --</option>
-                                {collections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                            </select>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className={styles.formGroup}>
+                                <label>Business Type</label>
+                                <select
+                                    value={productForm.businessType}
+                                    onChange={e => setProductForm({ ...productForm, businessType: e.target.value })}
+                                >
+                                    <option value="retail">Retail</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Price {productForm.businessType === 'custom' ? '(optional for custom)' : ''}</label>
+                                <input
+                                    type="number"
+                                    value={productForm.price}
+                                    onChange={e => setProductForm({ ...productForm, price: e.target.value })}
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                />
+                            </div>
                         </div>
+
+                        {/* Sizes - only show for retail */}
+                        {productForm.businessType === 'retail' && (
+                            <div className={styles.formGroup}>
+                                <label>Available Sizes</label>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    {AVAILABLE_SIZES.map(size => (
+                                        <button
+                                            key={size}
+                                            type="button"
+                                            onClick={() => toggleSize(size)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                border: productForm.availableSizes.includes(size) ? '2px solid #2c2c2c' : '1px solid #ddd',
+                                                background: productForm.availableSizes.includes(size) ? '#2c2c2c' : 'white',
+                                                color: productForm.availableSizes.includes(size) ? 'white' : '#333',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: productForm.availableSizes.includes(size) ? '600' : '400',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {size}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className={styles.formGroup}>
-                            <label>Business Type</label>
-                            <select
-                                value={productForm.businessType}
-                                onChange={e => setProductForm({ ...productForm, businessType: e.target.value })}
-                            >
-                                <option value="retail">Retail</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Images *</label>
+                            <label>Product Images *</label>
                             <button
                                 type="button"
                                 onClick={() => openCloudinaryWidget((url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
@@ -535,59 +626,79 @@ export default function AdminDashboard() {
                             <div className={styles.imageGallery}>
                                 {productForm.images.map((img, i) => (
                                     <div key={i} style={{ position: 'relative', display: 'inline-block', marginRight: 5 }}>
-                                        <img src={img} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                                        <img src={img} alt="Product" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                                         <button
                                             type="button"
                                             onClick={() => setProductForm(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
-                                            style={{ position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 15, height: 15, fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                         >
-                                            x
+                                            &times;
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         </div>
+
+                        {/* Inspiration Image - only show for custom */}
+                        {productForm.businessType === 'custom' && (
+                            <div className={styles.formGroup}>
+                                <label>Customer Inspiration Image (for side-by-side comparison)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => openCloudinaryWidget((url) => setProductForm(prev => ({ ...prev, inspirationImage: url })), false)}
+                                    className={styles.uploadBtn}
+                                >
+                                    {productForm.inspirationImage ? 'Change Inspiration Image' : 'Upload Inspiration Image'}
+                                </button>
+                                {productForm.inspirationImage && (
+                                    <div style={{ position: 'relative', display: 'inline-block', marginTop: '10px' }}>
+                                        <img src={productForm.inspirationImage} alt="Inspiration" style={{ height: '100px', borderRadius: '4px' }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductForm(prev => ({ ...prev, inspirationImage: '' }))}
+                                            style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
+                                )}
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Upload the customer&apos;s inspiration photo. It will be shown side-by-side with your creation on the website.
+                                </small>
+                            </div>
+                        )}
+
                         <button type="submit" disabled={loading} className={styles.submitBtn}>
                             {loading ? 'Processing...' : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
                         </button>
                     </form>
 
-                    <h2>Products</h2>
-                    <h2>Products</h2>
+                    <h2>Existing Products</h2>
                     <div className={styles.productList}>
                         {products.map(p => (
                             <div key={p._id} className={styles.productRow}>
-                                {/* Image Column */}
                                 <img
                                     src={p.images && p.images[0] ? p.images[0] : '/placeholder.jpg'}
                                     alt={p.name}
                                     className={styles.productImage}
                                 />
-
-                                {/* Info Column */}
                                 <div className={styles.productInfo}>
                                     <strong>{p.name}</strong>
                                     <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
                                 </div>
-
-                                {/* Type Column */}
                                 <div>
                                     <span className={styles.productType}>{p.businessType}</span>
                                 </div>
-
-                                {/* Price Column */}
                                 <div className={styles.priceTag}>
                                     {p.price > 0 ? `$${p.price.toFixed(2)}` : '-'}
                                 </div>
-
-                                {/* Actions Column */}
                                 <div className={styles.actionButtons}>
                                     <button onClick={() => handleEditProduct(p)} className={styles.editBtn}>Edit</button>
                                     <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
                                 </div>
                             </div>
                         ))}
-                        {products.length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>No products found.</p>}
+                        {products.length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>No products found. Create your first product above.</p>}
                     </div>
                 </div>
             )}

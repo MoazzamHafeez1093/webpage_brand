@@ -183,7 +183,8 @@ export async function updateProductAction(id, formData) {
             images,
             collectionRef: collectionId,
             businessType: formData.get('businessType') || 'retail',
-            inspirationImage: formData.get('inspirationImage'),
+            inspirationImage: formData.get('inspirationImage') || '',
+            availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
         });
 
         revalidatePath('/');
@@ -227,9 +228,10 @@ export async function createProductAction(formData) {
             description: formData.get('description'),
             price: parseFloat(formData.get('price')) || 0,
             images,
-            collectionRef: collectionId, // UPDATED FIELD NAME
+            collectionRef: collectionId,
             businessType: formData.get('businessType') || 'retail',
-            inspirationImage: formData.get('inspirationImage'),
+            inspirationImage: formData.get('inspirationImage') || '',
+            availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
         });
 
         revalidatePath('/');

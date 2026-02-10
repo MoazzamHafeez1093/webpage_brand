@@ -39,18 +39,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
   font-family: var(--font-body);
   font-weight: 300;
-  /* Light/Thin for modern feel */
   line-height: 1.8;
-  /* Generous leading */
   font-size: 15px;
-  /* Refined size */
   letter-spacing: 0.03em;
-  /* Wide tracking */
 }
 
 h1,
@@ -124,4 +124,21 @@ button {
   .masonry-item {
     margin-bottom: var(--gap-desktop);
   }
+}
+
+/* Lazy-load image soft entrance */
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+}
+
+img[loading="lazy"].loaded,
+img[loading="lazy"][complete] {
+  opacity: 1;
+}
+
+/* Selection styling */
+::selection {
+  background: var(--accent-gold);
+  color: white;
 }

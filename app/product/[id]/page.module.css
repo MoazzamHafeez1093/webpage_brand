@@ -174,16 +174,83 @@
 }
 
 .cta {
+    display: block;
     width: 100%;
     padding: 1.2rem;
-    background: black;
-    color: white;
-    border: none;
+    background: #000;
+    color: var(--accent-gold);
+    border: 1px solid #000;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    font-weight: 400;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    text-align: center;
+    text-decoration: none;
+    margin-top: 2rem;
+}
+
+.cta:hover {
+    background: #1a1a1a;
+    color: #D4AF37;
+    letter-spacing: 0.2em;
+}
+
+/* Side-by-Side Comparison Section */
+.comparisonSection {
+    margin: 2rem 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid #eee;
+}
+
+.comparisonGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.comparisonItem {
+    position: relative;
+    overflow: hidden;
+}
+
+.comparisonItem img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.comparisonItem:hover img {
+    transform: scale(1.05);
+}
+
+.comparisonLabel {
+    display: block;
+    text-align: center;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #888;
+    font-family: var(--font-body);
+}
+
+.mainImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.imageWrapper:hover .mainImage {
+    transform: scale(1.05);
 }
 
 /* Modal Styles */

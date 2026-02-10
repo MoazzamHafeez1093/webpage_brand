@@ -34,12 +34,15 @@ export async function createCollectionAction(formData) {
             counter++;
         }
 
+        const parentId = formData.get('parentCollection');
+        const parentCollection = (parentId && parentId !== 'null' && parentId !== '') ? parentId : null;
+
         const newCollection = await Collection.create({
             name: name.trim(),
             description: (formData.get('description') || '').trim(),
             slug,
             coverImage: formData.get('coverImage') || '',
-            parentCollection: formData.get('parentCollection') || null,
+            parentCollection,
             order: 0
         });
 
@@ -63,6 +66,7 @@ export async function createCollectionAction(formData) {
         };
     }
 }
+
 
 export async function getCollectionsAction() {
     try {
@@ -103,6 +107,38 @@ export async function getCollectionTreeAction() {
     }
 }
 
+export async function updateCollectionAction(id, formData) {
+    try {
+        await dbConnect();
+        const Collection = mongoose.models.Collection;
+
+        const name = formData.get('name');
+        if (!name || !name.trim()) return { success: false, error: 'Name required' };
+
+        const parentId = formData.get('parentCollection');
+        const parentCollection = (parentId && parentId !== 'null' && parentId !== '') ? parentId : null;
+
+        // Prevent circular dependency
+        if (parentCollection === id) {
+            return { success: false, error: 'Cannot set collection as its own parent' };
+        }
+
+        await Collection.findByIdAndUpdate(id, {
+            name: name.trim(),
+            description: (formData.get('description') || '').trim(),
+            coverImage: formData.get('coverImage') || '',
+            parentCollection
+        });
+
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[UpdateCollection] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function deleteCollectionAction(id) {
     try {
         await dbConnect();
@@ -128,6 +164,51 @@ export async function deleteCollectionAction(id) {
 // ============================================
 // PRODUCT ACTIONS
 // ============================================
+
+export async function updateProductAction(id, formData) {
+    try {
+        await dbConnect();
+        const Product = mongoose.models.Product;
+
+        const collectionId = formData.get('collection');
+        if (!collectionId) return { success: false, error: 'Collection required' };
+
+        const imagesString = formData.get('images') || '';
+        const images = imagesString.split(',').filter(x => x);
+
+        await Product.findByIdAndUpdate(id, {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            price: parseFloat(formData.get('price')) || 0,
+            images,
+            collectionRef: collectionId,
+            businessType: formData.get('businessType') || 'retail',
+            inspirationImage: formData.get('inspirationImage'),
+        });
+
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[UpdateProduct] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function deleteProductAction(id) {
+    try {
+        await dbConnect();
+        const Product = mongoose.models.Product;
+        await Product.findByIdAndDelete(id);
+
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[DeleteProduct] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
 
 export async function createProductAction(formData) {
     try {

@@ -5,8 +5,11 @@ import {
     getCollectionsAction,
     getCollectionTreeAction,
     deleteCollectionAction,
+    updateCollectionAction,
     createProductAction,    // Updated Name
-    getAllProductsAction    // Updated Name
+    getAllProductsAction,    // Updated Name
+    updateProductAction,
+    deleteProductAction
 } from '@/app/actions';     // Back to single file
 import styles from './admin.module.css';
 
@@ -25,9 +28,11 @@ export default function AdminDashboard() {
     // Collections state
     const [collections, setCollections] = useState([]);
     const [collectionTree, setCollectionTree] = useState([]);
+    const [editingCollectionId, setEditingCollectionId] = useState(null);
 
     // Products state
     const [products, setProducts] = useState([]);
+    const [editingProductId, setEditingProductId] = useState(null);
 
     // Collection form
     const [collectionForm, setCollectionForm] = useState({
@@ -89,6 +94,17 @@ export default function AdminDashboard() {
     }
 
     // ============ COLLECTION HANDLERS ============
+    const handleEditCollection = (col) => {
+        setEditingCollectionId(col._id);
+        setCollectionForm({
+            name: col.name,
+            description: col.description || '',
+            coverImage: col.coverImage || '',
+            parentCollection: col.parentCollection || ''
+        });
+        window.scrollTo(0, 0);
+    };
+
     const handleCollectionSubmit = async (e) => {
         e.preventDefault();
 
@@ -111,24 +127,30 @@ export default function AdminDashboard() {
                 formData.append('parentCollection', collectionForm.parentCollection);
             }
 
-            const result = await createCollectionAction(formData);
+            let result;
+            if (editingCollectionId) {
+                result = await updateCollectionAction(editingCollectionId, formData);
+            } else {
+                result = await createCollectionAction(formData);
+            }
 
             if (result.success) {
-                setSuccessMessage('Collection created successfully!');
+                setSuccessMessage(editingCollectionId ? 'Collection updated!' : 'Collection created!');
                 resetCollectionForm();
                 await loadAllData();
             } else {
-                setError(result.error || 'Failed to create collection');
+                setError(result.error || 'Operation failed');
             }
         } catch (err) {
             console.error('Collection submission catch:', err);
-            setError('An error occurred while creating the collection');
+            setError('An error occurred');
         } finally {
             setLoading(false);
         }
     };
 
     const resetCollectionForm = () => {
+        setEditingCollectionId(null);
         setCollectionForm({
             name: '',
             description: '',
@@ -157,6 +179,35 @@ export default function AdminDashboard() {
     };
 
     // ============ PRODUCT HANDLERS ============
+    const handleEditProduct = (p) => {
+        setEditingProductId(p._id);
+        setProductForm({
+            name: p.name,
+            description: p.description || '',
+            price: p.price || '',
+            images: p.images || [],
+            collection: p.collectionRef?._id || p.collectionRef || '',
+            businessType: p.businessType || 'retail',
+            inspirationImage: p.inspirationImage || '',
+            availableSizes: p.availableSizes || []
+        });
+        window.scrollTo(0, 0);
+    };
+
+    const handleDeleteProduct = async (id) => {
+        if (!confirm('Are you sure?')) return;
+        setLoading(true);
+        try {
+            await deleteProductAction(id);
+            setSuccessMessage('Product deleted');
+            await loadAllData();
+        } catch (e) {
+            setError('Failed to delete');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleProductSubmit = async (e) => {
         e.preventDefault();
 
@@ -187,14 +238,19 @@ export default function AdminDashboard() {
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
 
-            const result = await createProductAction(formData);
+            let result;
+            if (editingProductId) {
+                result = await updateProductAction(editingProductId, formData);
+            } else {
+                result = await createProductAction(formData);
+            }
 
             if (result.success) {
-                setSuccessMessage('Product created successfully!');
+                setSuccessMessage(editingProductId ? 'Product updated!' : 'Product created!');
                 resetProductForm();
                 await loadAllData();
             } else {
-                setError(result.error || 'Failed to create product');
+                setError(result.error || 'Operation failed');
             }
         } catch (err) {
             console.error('Product submission error:', err);
@@ -205,6 +261,7 @@ export default function AdminDashboard() {
     };
 
     const resetProductForm = () => {
+        setEditingProductId(null);
         setProductForm({
             name: '',
             description: '',
@@ -246,12 +303,21 @@ export default function AdminDashboard() {
             <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
                 <div className={styles.collectionItem}>
                     <strong>{col.name}</strong>
-                    <button
-                        onClick={() => handleDeleteCollection(col._id)}
-                        className={styles.deleteBtn}
-                    >
-                        Delete
-                    </button>
+                    <div className={styles.actionButtons}>
+                        <button
+                            onClick={() => handleEditCollection(col)}
+                            className={styles.editBtn}
+                            style={{ marginRight: '10px' }}
+                        >
+                            Edit
+                        </button>
+                        <button
+                            onClick={() => handleDeleteCollection(col._id)}
+                            className={styles.deleteBtn}
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
                 {col.children && col.children.length > 0 && (
                     <div style={{ paddingLeft: '10px', borderLeft: '2px solid #eee' }}>
@@ -360,7 +426,10 @@ export default function AdminDashboard() {
             {/* COLLECTIONS TAB */}
             {activeTab === 'collections' && (
                 <div className={styles.tabContent}>
-                    <h2>Create New Collection</h2>
+                    <h2>{editingCollectionId ? 'Edit Collection' : 'Create New Collection'}</h2>
+                    {editingCollectionId && (
+                        <button onClick={resetCollectionForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
+                    )}
                     <form onSubmit={handleCollectionSubmit} className={styles.form}>
                         <div className={styles.formGroup}>
                             <label>Collection Name *</label>
@@ -386,9 +455,11 @@ export default function AdminDashboard() {
                                 onChange={(e) => setCollectionForm({ ...collectionForm, parentCollection: e.target.value })}
                             >
                                 <option value="">-- Top Level --</option>
-                                {collections.map(col => (
-                                    <option key={col._id} value={col._id}>{col.name}</option>
-                                ))}
+                                {collections
+                                    .filter(c => c._id !== editingCollectionId) // Prevent selecting self as parent
+                                    .map(col => (
+                                        <option key={col._id} value={col._id}>{col.name}</option>
+                                    ))}
                             </select>
                         </div>
                         <div className={styles.formGroup}>
@@ -403,7 +474,7 @@ export default function AdminDashboard() {
                             {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '50px', marginTop: '10px' }} />}
                         </div>
                         <button type="submit" disabled={loading} className={styles.submitBtn}>
-                            {loading ? 'Creating...' : 'CREATE COLLECTION'}
+                            {loading ? 'Processing...' : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
                         </button>
                     </form>
 
@@ -417,7 +488,10 @@ export default function AdminDashboard() {
             {/* PRODUCTS TAB */}
             {activeTab === 'products' && (
                 <div className={styles.tabContent}>
-                    <h2>Create New Product</h2>
+                    <h2>{editingProductId ? 'Edit Product' : 'Create New Product'}</h2>
+                    {editingProductId && (
+                        <button onClick={resetProductForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
+                    )}
                     <form onSubmit={handleProductSubmit} className={styles.form}>
                         <div className={styles.formGroup}>
                             <label>Name *</label>
@@ -460,12 +534,21 @@ export default function AdminDashboard() {
                             </button>
                             <div className={styles.imageGallery}>
                                 {productForm.images.map((img, i) => (
-                                    <img key={i} src={img} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                                    <div key={i} style={{ position: 'relative', display: 'inline-block', marginRight: 5 }}>
+                                        <img src={img} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductForm(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
+                                            style={{ position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 15, height: 15, fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            x
+                                        </button>
+                                    </div>
                                 ))}
                             </div>
                         </div>
                         <button type="submit" disabled={loading} className={styles.submitBtn}>
-                            {loading ? 'Creating...' : 'CREATE PRODUCT'}
+                            {loading ? 'Processing...' : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
                         </button>
                     </form>
 
@@ -475,7 +558,10 @@ export default function AdminDashboard() {
                             <div key={p._id} className={styles.productCard}>
                                 <strong>{p.name}</strong>
                                 <p>{p.businessType}</p>
-                                <button onClick={() => {/* Delete stub */ }} className={styles.deleteBtn}>Delete</button>
+                                <div className={styles.actionButtons} style={{ marginTop: 10 }}>
+                                    <button onClick={() => handleEditProduct(p)} className={styles.editBtn} style={{ marginRight: 5 }}>Edit</button>
+                                    <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
+                                </div>
                             </div>
                         ))}
                     </div>

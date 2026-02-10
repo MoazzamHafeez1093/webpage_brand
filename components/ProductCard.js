@@ -23,6 +23,43 @@ export default function ProductCard({ product, categoryType, onClick }) {
         // Better to handle in the handlers.
     }
 
+    // --- GRID ZOOM LENS LOGIC ---
+    const [lensState, setLensState] = useState({ show: false, x: 0, y: 0, bgX: 0, bgY: 0 });
+    const LENS_SIZE = 150; // px
+    const ZOOM_FACTOR = 3; // 300%
+
+    const handleMouseMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Position lens centered on cursor
+        // We subtract half lens size to center it
+        // We clamp it? User didn't strictly ask for clamping but it looks better if lens doesn't fly off too much.
+        // For simplicity and fluid feel, let's just center it.
+
+        // Background position:
+        // We need to show the area under the cursor (x, y)
+        // If bg size is 300% (3x), then 1px in container = 3px in bg.
+        // We need to shift bg so that (x*3, y*3) is at the center of the lens.
+        // Formula: - (x * zoom - lensW/2)
+
+        const bgX = -((x * ZOOM_FACTOR) - LENS_SIZE / 2);
+        const bgY = -((y * ZOOM_FACTOR) - LENS_SIZE / 2);
+
+        setLensState({
+            show: true,
+            x: x - LENS_SIZE / 2,
+            y: y - LENS_SIZE / 2,
+            bgX: bgX,
+            bgY: bgY
+        });
+    };
+
+    const handleMouseLeave = () => {
+        setLensState(prev => ({ ...prev, show: false }));
+    };
+
     // --- CAROUSEL LOGIC ---
     const handleNext = (e) => {
         e.preventDefault();
@@ -57,7 +94,11 @@ export default function ProductCard({ product, categoryType, onClick }) {
 
     return (
         <article className={styles.card} onClick={onClick}>
-            <div className={styles.imageWrapper}>
+            <div
+                className={styles.imageWrapper}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+            >
                 {/* Main Image - CSS Transform handles zoom now */}
                 <img
                     src={activeImage.thumbnail}
@@ -70,6 +111,18 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     style={{
                         opacity: 1, // Force visible
                         transition: 'transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
+                    }}
+                />
+
+                {/* ZOOM LENS */}
+                <div
+                    className={styles.zoomLens}
+                    style={{
+                        display: lensState.show ? 'block' : 'none',
+                        left: `${lensState.x}px`,
+                        top: `${lensState.y}px`,
+                        backgroundImage: `url(${activeImage.thumbnail})`,
+                        backgroundPosition: `${lensState.bgX}px ${lensState.bgY}px`
                     }}
                 />
 

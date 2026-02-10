@@ -44,6 +44,30 @@
 
 .imageWrapper:hover .placeholder {
     transform: scale(1.08);
+    /* Keep the slight zoom on hover for base image */
+}
+
+/* ZOOM LENS */
+.zoomLens {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border: 2px solid #fff;
+    /* White border looks cleaner on dark/light images */
+    border-radius: 50%;
+    /* Circular */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    cursor: none;
+    /* Hide cursor inside lens */
+    pointer-events: none;
+    /* Let clicks pass through so you can still click the card */
+    background-repeat: no-repeat;
+    background-size: 300%;
+    /* 3x Zoom */
+    background-color: white;
+    z-index: 100;
+    display: none;
+    /* JS toggles this */
 }
 
 /* CAROUSEL CONTROLS - Minimalist */

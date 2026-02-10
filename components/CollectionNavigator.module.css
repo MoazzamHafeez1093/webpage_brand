@@ -1,0 +1,151 @@
+/* CollectionNavigator.module.css */
+
+.container {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: #111;
+}
+
+.closeBtn {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #333;
+    transition: all 0.2s;
+}
+
+.closeBtn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.content {
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.sectionLabel {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.8rem 1.5rem;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px solid #f9f9f9;
+}
+
+.sectionLabel:hover {
+    background: #f5f5f5;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* Item Styles */
+.itemWrapper {
+    width: 100%;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 8px 0;
+    /* Left padding set dynamically in JS */
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.row:hover {
+    background: #f9f9f9;
+}
+
+.arrowBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.7rem;
+    /* Smaller arrow */
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: transform 0.2s;
+    border-radius: 4px;
+}
+
+.arrowBtn:hover {
+    color: #000;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.nameBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: #333;
+    text-align: left;
+    flex: 1;
+    padding: 4px 0;
+    transition: color 0.2s;
+}
+
+.nameBtn:hover {
+    color: #000;
+    font-weight: 500;
+}
+
+.children {
+    animation: slideDown 0.2s ease-out;
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}

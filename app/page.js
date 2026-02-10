@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import Navbar from '@/components/Navbar';
+import HeroCTA from '@/components/HeroCTA';
 import styles from './page.module.css';
 
 // Server Component
@@ -30,29 +31,9 @@ export default async function Home(props) {
             Touch to explore the finest details.
           </p>
 
+
           {/* NEW: Hero Design Upload CTA */}
-          <div style={{ marginTop: '2rem' }}>
-            <a
-              href="https://wa.me/923211234567?text=Hi%2C%20I%20have%20a%20design%20in%20mind.%20Sending%20photo%20now..."
-              target="_blank"
-              style={{
-                display: 'inline-block',
-                border: '1px solid #111',
-                padding: '0.8rem 1.5rem',
-                fontSize: '0.85rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#111',
-                textDecoration: 'none',
-                transition: 'all 0.3s ease',
-                background: 'transparent'
-              }}
-              onMouseOver={(e) => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#fff'; }}
-              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#111'; }}
-            >
-              Have a design in mind? Send it to us for a quote.
-            </a>
-          </div>
+          <HeroCTA />
         </div>
       </section>
 

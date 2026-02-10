@@ -1,553 +1,597 @@
-'use client';
-// Build Timestamp: 2026-02-10T03:10:00
-
+'use client'
 import { useState, useEffect } from 'react';
 import {
-    getProductsAction, createProductAction, deleteProductAction,
-    getCollectionsAction, createNewCollectionAction, deleteCollectionAction,
-    addProductToCollectionAction, removeProductFromCollectionAction,
-    getCategoryTreeAction, createNewCategoryAction, deleteCategoryAction, updateCategoryAction, seedCategoriesAction
+    createCollection,
+    getAllCollections,
+    getCollectionTree,
+    updateCollection,
+    deleteCollection,
+    createProduct,
+    getAllProducts,
+    getProductsByCollection
 } from '@/app/actions';
-import styles from './admin.module.css';
+import styles from './admin.module.css'; // Create this CSS file
 
-export default function AdminPage() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [password, setPassword] = useState('');
-    const [activeTab, setActiveTab] = useState('products'); // 'products' | 'collections' | 'categories'
+export default function AdminDashboard() {
+    // ============ STATE MANAGEMENT ============
+    const [activeTab, setActiveTab] = useState('collections');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
-    // --- PRODUCT STATE ---
-    const [products, setProducts] = useState([]);
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
-    const [existingCategories, setExistingCategories] = useState([]);
-    const [uploadedImages, setUploadedImages] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // --- COLLECTION STATE ---
+    // Collections state
     const [collections, setCollections] = useState([]);
-    const [colTitle, setColTitle] = useState('');
-    const [colDesc, setColDesc] = useState('');
-    const [colImage, setColImage] = useState('');
-    const [managingCollection, setManagingCollection] = useState(null);
+    const [collectionTree, setCollectionTree] = useState([]);
+    const [selectedCollectionId, setSelectedCollectionId] = useState('');
 
-    // --- CATEGORY STATE ---
-    const [categoryTree, setCategoryTree] = useState([]);
-    const [newCatName, setNewCatName] = useState('');
-    const [newCatParent, setNewCatParent] = useState(null); // ID or null
-    const [newCatType, setNewCatType] = useState('general');
+    // Products state
+    const [products, setProducts] = useState([]);
 
+    // Collection form
+    const [collectionForm, setCollectionForm] = useState({
+        name: '',
+        description: '',
+        coverImage: '',
+        parentCollection: ''
+    });
+
+    // Product form
+    const [productForm, setProductForm] = useState({
+        name: '',
+        description: '',
+        price: '',
+        images: [],
+        collection: '',
+        businessType: 'retail',
+        inspirationImage: '',
+        availableSizes: []
+    });
+
+    // ============ LOAD DATA ON MOUNT ============
     useEffect(() => {
-        if (isAuthenticated) {
-            refreshData();
+        loadAllData();
+    }, []);
+
+    // ============ DATA LOADING FUNCTIONS ============
+    async function loadAllData() {
+        setLoading(true);
+        setError('');
+
+        try {
+            const [collectionsData, treeData, productsData] = await Promise.all([
+                getAllCollections(),
+                getCollectionTree(),
+                getAllProducts()
+            ]);
+
+            setCollections(collectionsData || []);
+            setCollectionTree(treeData || []);
+            setProducts(productsData || []);
+        } catch (err) {
+            console.error('Error loading data:', err);
+            setError('Failed to load data. Please refresh the page.');
+        } finally {
+            setLoading(false);
         }
-    }, [isAuthenticated]);
+    }
 
-    const refreshData = async () => {
-        await Promise.all([refreshProducts(), refreshCollections(), refreshCategories()]);
-    };
+    // ============ COLLECTION HANDLERS ============
 
-    const refreshProducts = async () => {
-        const data = await getProductsAction();
-        setProducts(data);
-        // Fallback for old string categories if needed, but we should eventually use the tree
-        const dbCats = [...new Set(data.map(p => p.category))];
-        setExistingCategories(prev => [...new Set([...prev, ...dbCats])]);
-    };
+    // FIX FOR "a is not a function" ERROR - Properly defined handler
+    const handleCollectionSubmit = async (e) => {
+        e.preventDefault(); // CRITICAL: Prevent default form behavior
 
-    const refreshCollections = async () => {
-        const data = await getCollectionsAction();
-        setCollections(data);
-        if (managingCollection) {
-            const updated = data.find(c => c._id === managingCollection._id);
-            if (updated) setManagingCollection(updated);
-        }
-    };
-
-    const refreshCategories = async () => {
-        const tree = await getCategoryTreeAction();
-        setCategoryTree(tree);
-    };
-
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (password === '1234') setIsAuthenticated(true);
-        else alert('Access Denied');
-    };
-
-    // --- CLOUDINARY WIDGET ---
-    const openCloudinaryWidget = (onSuccess) => {
-        if (typeof window === 'undefined' || !window.cloudinary) {
-            alert("Cloudinary script is loading... please wait a moment and try again.");
+        if (!collectionForm.name.trim()) {
+            setError('Collection name is required');
             return;
         }
+
+        setLoading(true);
+        setError('');
+        setSuccessMessage('');
+
+        try {
+            const formData = new FormData();
+            formData.append('name', collectionForm.name.trim());
+            formData.append('description', collectionForm.description.trim());
+            formData.append('coverImage', collectionForm.coverImage);
+
+            if (collectionForm.parentCollection) {
+                formData.append('parentCollection', collectionForm.parentCollection);
+            }
+
+            const result = await createCollection(formData);
+
+            if (result.success) {
+                setSuccessMessage('Collection created successfully!');
+                resetCollectionForm();
+                await loadAllData(); // Reload all data
+            } else {
+                setError(result.error || 'Failed to create collection');
+            }
+        } catch (err) {
+            console.error('Collection submission error:', err);
+            setError('An error occurred while creating the collection');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetCollectionForm = () => {
+        setCollectionForm({
+            name: '',
+            description: '',
+            coverImage: '',
+            parentCollection: ''
+        });
+    };
+
+    const handleDeleteCollection = async (id) => {
+        if (!confirm('Are you sure you want to delete this collection?')) {
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const result = await deleteCollection(id);
+
+            if (result.success) {
+                setSuccessMessage('Collection deleted successfully!');
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to delete collection');
+            }
+        } catch (err) {
+            console.error('Delete error:', err);
+            setError('An error occurred while deleting');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ============ PRODUCT HANDLERS ============
+
+    // FIX FOR "a is not a function" ERROR - Properly defined handler
+    const handleProductSubmit = async (e) => {
+        e.preventDefault(); // CRITICAL: Prevent default form behavior
+
+        if (!productForm.name.trim()) {
+            setError('Product name is required');
+            return;
+        }
+
+        if (!productForm.collection) {
+            setError('Please select a collection');
+            return;
+        }
+
+        if (productForm.images.length === 0) {
+            setError('Please upload at least one image');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+        setSuccessMessage('');
+
+        try {
+            const formData = new FormData();
+            formData.append('name', productForm.name.trim());
+            formData.append('description', productForm.description.trim());
+            formData.append('price', productForm.price || '0');
+            formData.append('images', productForm.images.join(','));
+            formData.append('collection', productForm.collection);
+            formData.append('businessType', productForm.businessType);
+            formData.append('inspirationImage', productForm.inspirationImage);
+
+            if (productForm.availableSizes.length > 0) {
+                formData.append('availableSizes', productForm.availableSizes.join(','));
+            }
+
+            const result = await createProduct(formData);
+
+            if (result.success) {
+                setSuccessMessage('Product created successfully!');
+                resetProductForm();
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to create product');
+            }
+        } catch (err) {
+            console.error('Product submission error:', err);
+            setError('An error occurred while creating the product');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetProductForm = () => {
+        setProductForm({
+            name: '',
+            description: '',
+            price: '',
+            images: [],
+            collection: '',
+            businessType: 'retail',
+            inspirationImage: '',
+            availableSizes: []
+        });
+    };
+
+    // ============ CLOUDINARY WIDGET ============
+    const openCloudinaryWidget = (onSuccess, multiple = true) => {
+        if (typeof window === 'undefined' || !window.cloudinary) {
+            setError('Cloudinary widget not loaded. Please refresh the page.');
+            return;
+        }
+
         const widget = window.cloudinary.createUploadWidget(
             {
-                cloudName: 'dk9pid4ec',
-                uploadPreset: 'my_unsigned_preset',
+                cloudName: 'dk9pid4ec', // REPLACE WITH YOUR CLOUDINARY NAME
+                uploadPreset: 'my_unsigned_preset', // REPLACE WITH YOUR PRESET
                 sources: ['local', 'url', 'camera'],
-                multiple: false,
-                styles: {
-                    palette: { window: "#FFFFFF", sourceBg: "#E4EBF1", windowBorder: "#90A0B3", tabIcon: "#0078FF", inactiveTabIcon: "#0E2F5A", menuIcons: "#5A616A", link: "#0078FF", action: "#FF620C", inProgress: "#0078FF", complete: "#20B832", error: "#F44235", textDark: "#000000", textLight: "#FFFFFF" }
-                }
+                multiple: multiple,
+                maxFiles: multiple ? 10 : 1,
+                clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                maxFileSize: 5000000, // 5MB
+                cropping: false,
+                folder: 'digital-atelier'
             },
             (error, result) => {
-                if (!error && result && result.event === "success") {
+                if (error) {
+                    console.error('Cloudinary error:', error);
+                    setError('Image upload failed. Please try again.');
+                    return;
+                }
+
+                if (result && result.event === 'success') {
                     onSuccess(result.info.secure_url);
                 }
             }
         );
+
         widget.open();
     };
 
-    // --- PRODUCT HANDLERS ---
-    const handleProductImageUpload = () => {
-        openCloudinaryWidget((url) => setUploadedImages(prev => [...prev, url]));
-    };
-
-    const handleCreateProduct = async (e) => {
-        e.preventDefault();
-        if (uploadedImages.length === 0 || !description || !category) {
-            alert("Please fill in all required fields and add at least one image.");
-            return;
-        }
-        setIsSubmitting(true);
-        const p = {
-            title, description, price: parseFloat(price), category,
-            sizes: ['M', 'L'],
-            images: uploadedImages.map(url => ({ thumbnail: url, fullRes: url }))
-        };
-
-        try {
-            const res = await createProductAction(p);
-            if (!res.success) throw new Error(res.error);
-            await refreshProducts();
-            setTitle(''); setDescription(''); setPrice(''); setCategory(''); setUploadedImages([]);
-            alert("Product Saved!");
-        } catch (err) {
-            alert("Error: " + err.message);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDeleteProduct = async (id) => {
-        if (confirm("Delete this product?")) {
-            await deleteProductAction(id);
-            refreshProducts();
-        }
-    };
-
-    // --- COLLECTION HANDLERS ---
-    const handleCollectionImageUpload = () => {
-        openCloudinaryWidget((url) => setColImage(url));
-    };
-
-    const handleCreateCollection = async () => {
-        if (!colTitle || !colDesc || !colImage) {
-            alert("Fill all collection fields.");
-            return;
-        }
-        setIsSubmitting(true);
-        try {
-            console.log("Submitting Collection:", { colTitle, colDesc }); // Debug
-            const res = await createNewCollectionAction({ title: colTitle, description: colDesc, image: colImage });
-            if (!res.success) throw new Error(res.error);
-            await refreshCollections();
-            setColTitle(''); setColDesc(''); setColImage('');
-            alert("Collection Created!");
-        } catch (e) {
-            console.error("Create Collection Client Error:", e);
-            alert("Error: " + e.message);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDeleteCollection = async (id) => {
-        if (confirm("Delete collection?")) {
-            await deleteCollectionAction(id);
-            if (managingCollection?._id === id) setManagingCollection(null);
-            refreshCollections();
-        }
-    };
-
-    const handleAddToCollection = async (productId) => {
-        if (!managingCollection) return;
-        const res = await addProductToCollectionAction(managingCollection._id, productId);
-        if (res.success) refreshCollections();
-    };
-
-    const handleRemoveFromCollection = async (productId) => {
-        if (!managingCollection) return;
-        const res = await removeProductFromCollectionAction(managingCollection._id, productId);
-        if (res.success) refreshCollections();
-    };
-
-    // --- CATEGORY HANDLERS ---
-    const handleCreateCategory = async (e) => {
-        e.preventDefault();
-        if (!newCatName) return;
-
-        setIsSubmitting(true);
-        try {
-            const res = await createNewCategoryAction({
-                name: newCatName,
-                parent: newCatParent,
-                type: newCatType
-            });
-            if (!res.success) throw new Error(res.error);
-            await refreshCategories();
-            setNewCatName('');
-            setNewCatParent(null); // Reset to top level after create
-        } catch (e) {
-            alert("Error: " + e.message);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDeleteCategory = async (id) => {
-        if (confirm("Delete category and ALL subcategories?")) {
-            await deleteCategoryAction(id);
-            refreshCategories();
-        }
-    };
-
-    const [editingCategory, setEditingCategory] = useState(null); // { _id, name, parent, type }
-
-    const handleUpdateCategory = async () => {
-        if (!editingCategory || !editingCategory.name) return;
-        setIsSubmitting(true);
-        try {
-            const res = await updateCategoryAction(editingCategory._id, {
-                name: editingCategory.name,
-                parent: editingCategory.parent || null, // Ensure null if empty
-                type: editingCategory.type
-            });
-            if (!res.success) throw new Error(res.error);
-            await refreshCategories();
-            setEditingCategory(null);
-        } catch (e) {
-            alert("Error: " + e.message);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    // Recursive Tree Renderer
-    const renderTree = (nodes, depth = 0) => {
-        return nodes.map(node => (
-            <div key={node._id} style={{ marginLeft: depth * 20, marginTop: 5 }}>
-                <div className={styles.treeNode}>
-                    <span style={{ fontWeight: depth === 0 ? 'bold' : 'normal' }}>
-                        {depth > 0 && '└─ '} {node.name} <span className={styles.badge}>{node.type}</span>
-                    </span>
-                    <div className={styles.nodeActions}>
-                        <button className={styles.tinyBtn} onClick={() => setNewCatParent(node._id)}>+ Sub</button>
-                        <button className={styles.tinyBtn} onClick={() => setEditingCategory({ ...node, parent: node.parent || '' })}>Edit</button>
-                        <button className={styles.tinyBtnDanger} onClick={() => handleDeleteCategory(node._id)}>×</button>
-                    </div>
+    // ============ HELPER FUNCTIONS ============
+    const renderCollectionTree = (tree, level = 0) => {
+        return tree.map(collection => (
+            <div key={collection._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
+                <div className={styles.collectionItem}>
+                    <strong>{collection.name}</strong>
+                    {collection.coverImage && (
+                        <img
+                            src={collection.coverImage}
+                            alt={collection.name}
+                            style={{ width: '50px', marginLeft: '10px' }}
+                        />
+                    )}
+                    <button
+                        onClick={() => handleDeleteCollection(collection._id)}
+                        className={styles.deleteBtn}
+                    >
+                        Delete
+                    </button>
                 </div>
-                {/* Inline Edit Form */}
-                {editingCategory && editingCategory._id === node._id && (
-                    <div style={{ marginLeft: depth * 20 + 20, padding: 10, background: '#f0f0f0', border: '1px solid #ccc', margin: '5px 0' }}>
-                        <div style={{ display: 'flex', gap: 5, marginBottom: 5 }}>
-                            <input
-                                value={editingCategory.name}
-                                onChange={e => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                                placeholder="Name"
-                            />
-                            <select
-                                value={editingCategory.type}
-                                onChange={e => setEditingCategory({ ...editingCategory, type: e.target.value })}
-                            >
-                                <option value="general">General</option>
-                                <option value="retail">Retail</option>
-                                <option value="custom">Custom</option>
-                            </select>
-                        </div>
-                        <div style={{ display: 'flex', gap: 5 }}>
-                            <input
-                                placeholder="New Parent ID (Optional)"
-                                value={editingCategory.parent || ''}
-                                onChange={e => setEditingCategory({ ...editingCategory, parent: e.target.value })}
-                                style={{ width: '100%' }}
-                            />
-                            <button onClick={handleUpdateCategory} disabled={isSubmitting}>Save</button>
-                            <button onClick={() => setEditingCategory(null)}>Cancel</button>
-                        </div>
+                {collection.children && collection.children.length > 0 && (
+                    <div style={{ marginLeft: '20px' }}>
+                        {renderCollectionTree(collection.children, level + 1)}
                     </div>
                 )}
-                {node.children && node.children.length > 0 && renderTree(node.children, depth + 1)}
             </div>
         ));
     };
 
-    if (!isAuthenticated) return (
-        <div className={styles.loginWrapper}>
-            <div className={styles.loginCard}>
-                <div className={styles.brandLogo}>LUXE.</div>
-                <h2 className={styles.loginTitle}>Concierge Login</h2>
-                <form onSubmit={handleLogin}>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} className={styles.loginInput} placeholder="PIN" />
-                    <button className={styles.loginBtn}>Unlock</button>
-                </form>
-            </div>
-        </div>
-    );
-
+    // ============ RENDER ============
     return (
-        <div className={styles.dashboard}>
-            <nav className={styles.nav}>
-                <span className={styles.navBrand}>LUXE. Admin</span>
-                <div className={styles.navTabs}>
-                    <button className={`${styles.tabBtn} ${activeTab === 'products' ? styles.activeTab : ''}`} onClick={() => setActiveTab('products')}>Products</button>
-                    <button className={`${styles.tabBtn} ${activeTab === 'collections' ? styles.activeTab : ''}`} onClick={() => setActiveTab('collections')}>Collections</button>
-                    <button className={`${styles.tabBtn} ${activeTab === 'categories' ? styles.activeTab : ''}`} onClick={() => setActiveTab('categories')}>Hierarchy</button>
+        <div className={styles.container}>
+            <header className={styles.header}>
+                <h1>Admin Dashboard</h1>
+                <a href="/" className={styles.viewSiteBtn}>View Website</a>
+            </header>
+
+            {/* Error/Success Messages */}
+            {error && (
+                <div className={styles.errorMessage}>
+                    {error}
+                    <button onClick={() => setError('')}>×</button>
                 </div>
-                <button onClick={() => setIsAuthenticated(false)} className={styles.logoutBtn}>Lock</button>
-            </nav>
+            )}
 
-            <div className={styles.content}>
-                {activeTab === 'products' && (
-                    <>
-                        <section className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>New Product</h3>
-                            {/* Existing Product Form ... */}
-                            <div className={styles.fieldGroup}>
-                                <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} className={styles.input} />
-                                <div className={styles.row}>
-                                    <input placeholder="Price" type="number" value={price} onChange={e => setPrice(e.target.value)} className={styles.input} />
-                                    {/* Category Tree Selector */}
-                                    <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 5 }}>
-                                        <select
-                                            value={existingCategories.includes(category) ? category : 'custom'}
-                                            onChange={e => {
-                                                if (e.target.value === 'custom') setCategory(''); // Clear for new input
-                                                else setCategory(e.target.value);
-                                            }}
-                                            className={styles.input}
-                                            style={{ fontFamily: 'monospace' }}
-                                        >
-                                            <option value="">-- Select Category --</option>
-                                            <option value="custom" style={{ fontWeight: 'bold', color: '#0078FF' }}>+ Create New Category</option>
-                                            {function flattenForSelect(nodes, depth = 0) {
-                                                if (!nodes || !Array.isArray(nodes)) return [];
-                                                return nodes.map(node => [
-                                                    <option key={node._id} value={node.name}>
-                                                        {'\u00A0'.repeat(depth * 4) + (depth > 0 ? '└ ' : '') + node.name}
-                                                    </option>,
-                                                    ...flattenForSelect(node.children || [], depth + 1)
-                                                ]);
-                                            }(categoryTree || [])}
-                                        </select>
+            {successMessage && (
+                <div className={styles.successMessage}>
+                    {successMessage}
+                    <button onClick={() => setSuccessMessage('')}>×</button>
+                </div>
+            )}
 
-                                        {(!category || !categoryTree.find(findNodeByName(category))) && (
-                                            <input
-                                                placeholder="Enter New Category Name"
-                                                value={category}
-                                                onChange={e => setCategory(e.target.value)}
-                                                className={styles.input}
-                                                style={{ borderColor: '#0078FF' }}
-                                                title="This new category will be created automatically"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
+            {/* Tab Navigation */}
+            <div className={styles.tabs}>
+                <button
+                    className={activeTab === 'collections' ? styles.activeTab : ''}
+                    onClick={() => setActiveTab('collections')}
+                >
+                    Collections
+                </button>
+                <button
+                    className={activeTab === 'products' ? styles.activeTab : ''}
+                    onClick={() => setActiveTab('products')}
+                >
+                    Products
+                </button>
+            </div>
 
-                                {/* Image Upload Section */}
-                                <div className={styles.row} style={{ marginTop: '1rem', alignItems: 'center' }}>
-                                    <button type="button" onClick={handleProductImageUpload} className={styles.modeBtn}>
-                                        + Upload Images
-                                    </button>
-                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                        {uploadedImages.map((img, idx) => (
-                                            <div key={idx} style={{ position: 'relative', width: 50, height: 50 }}>
-                                                <img src={img} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 4 }} />
-                                                <button
-                                                    onClick={() => setUploadedImages(uploadedImages.filter((_, i) => i !== idx))}
-                                                    style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', borderRadius: '50%', width: 15, height: 15, fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
-                                                >
-                                                    ×
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {uploadedImages.length === 0 && <small style={{ color: '#888', display: 'block', marginTop: 5 }}>At least 1 image required.</small>}
+            {/* Collections Tab */}
+            {activeTab === 'collections' && (
+                <div className={styles.tabContent}>
+                    <h2>Create New Collection</h2>
 
-                                <button onClick={handleCreateProduct} disabled={isSubmitting} className={styles.submitBtn} style={{ marginTop: '1rem' }}>Save Product</button>
-                            </div>
-                        </section>
-                        <section className={styles.listSection}>
-                            <h3>Inventory</h3>
-                            <div className={styles.inventoryList}>
-                                {products.map(p => (
-                                    <div key={p._id} className={styles.inventoryItem}>
-                                        <strong>{p.title}</strong>
-                                        <button className={styles.deleteBtn} onClick={() => handleDeleteProduct(p._id)}>Delete</button>
-                                    </div>
+                    <form onSubmit={handleCollectionSubmit} className={styles.form}>
+                        <div className={styles.formGroup}>
+                            <label>Collection Name *</label>
+                            <input
+                                type="text"
+                                value={collectionForm.name}
+                                onChange={(e) => setCollectionForm({
+                                    ...collectionForm,
+                                    name: e.target.value
+                                })}
+                                placeholder="e.g., Custom Couture"
+                                required
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Description</label>
+                            <textarea
+                                value={collectionForm.description}
+                                onChange={(e) => setCollectionForm({
+                                    ...collectionForm,
+                                    description: e.target.value
+                                })}
+                                placeholder="Describe this collection..."
+                                rows="3"
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Parent Collection (Optional)</label>
+                            <select
+                                value={collectionForm.parentCollection}
+                                onChange={(e) => setCollectionForm({
+                                    ...collectionForm,
+                                    parentCollection: e.target.value
+                                })}
+                            >
+                                <option value="">-- Top Level (No Parent) --</option>
+                                {collections.map(col => (
+                                    <option key={col._id} value={col._id}>
+                                        {col.name}
+                                    </option>
                                 ))}
-                            </div>
-                        </section>
-                    </>
-                )}
+                            </select>
+                        </div>
 
-                {activeTab === 'collections' && (
-                    <>
-                        {/* Collections Logic */}
-                        {!managingCollection ? (
-                            <section className={styles.listSection}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3>Collections</h3>
-                                    <button className={styles.modeBtn} onClick={() => {
-                                        // Toggle Create Form Visibility
-                                        const form = document.getElementById('new-collection-form');
-                                        if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
-                                    }}>+ New</button>
+                        <div className={styles.formGroup}>
+                            <label>Cover Image</label>
+                            <button
+                                type="button"
+                                onClick={() => openCloudinaryWidget((url) => {
+                                    setCollectionForm({ ...collectionForm, coverImage: url });
+                                }, false)}
+                                className={styles.uploadBtn}
+                            >
+                                {collectionForm.coverImage ? 'Change Image' : '+ Upload Cover Image'}
+                            </button>
+
+                            {collectionForm.coverImage && (
+                                <div className={styles.imagePreview}>
+                                    <img src={collectionForm.coverImage} alt="Preview" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setCollectionForm({ ...collectionForm, coverImage: '' })}
+                                    >
+                                        Remove
+                                    </button>
                                 </div>
-                                {/* Create Form - Hidden by default */}
-                                <div id="new-collection-form" className={styles.fieldGroup} style={{ display: 'none', marginBottom: '2rem', padding: '1rem', border: '1px solid #eee' }}>
-                                    <h4 style={{ marginTop: 0 }}>Create New Collection</h4>
-                                    <input placeholder="Title" value={colTitle} onChange={e => setColTitle(e.target.value)} className={styles.input} />
-                                    <textarea placeholder="Description" value={colDesc} onChange={e => setColDesc(e.target.value)} className={styles.input} style={{ height: 60 }} />
+                            )}
+                        </div>
 
-                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '10px 0' }}>
-                                        <button type="button" onClick={handleCollectionImageUpload} className={styles.modeBtn}>
-                                            + Cover Image
-                                        </button>
-                                        {colImage && <img src={colImage} alt="Cover" style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
-                                    </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={styles.submitBtn}
+                        >
+                            {loading ? 'Creating...' : 'CREATE COLLECTION'}
+                        </button>
+                    </form>
 
-                                    <button onClick={handleCreateCollection} className={styles.submitBtn} disabled={isSubmitting}>Create Collection</button>
-                                </div>
+                    <hr />
 
-                                <div className={styles.inventoryList}>
-                                    {collections.length === 0 && <p style={{ color: '#999' }}>No collections found. Create one above.</p>}
-                                    {collections.map(c => (
-                                        <div key={c._id} className={styles.inventoryItem}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                {c.image && <img src={c.image} style={{ width: 40, height: 40, borderRadius: 4, objectFit: 'cover' }} />}
-                                                <strong>{c.title}</strong>
-                                            </div>
-                                            <div>
-                                                <button className={styles.modeBtn} onClick={() => setManagingCollection(c)} style={{ marginRight: 5 }}>Manage Products</button>
-                                                <button className={styles.tinyBtnDanger} onClick={() => handleDeleteCollection(c._id)}>Delete</button>
-                                            </div>
+                    <h2>Existing Collections</h2>
+                    <div className={styles.collectionTree}>
+                        {collectionTree.length > 0 ? (
+                            renderCollectionTree(collectionTree)
+                        ) : (
+                            <p>No collections yet. Create one above!</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Products Tab */}
+            {activeTab === 'products' && (
+                <div className={styles.tabContent}>
+                    <h2>New Product</h2>
+
+                    <form onSubmit={handleProductSubmit} className={styles.form}>
+                        <div className={styles.formGroup}>
+                            <label>Product Name *</label>
+                            <input
+                                type="text"
+                                value={productForm.name}
+                                onChange={(e) => setProductForm({
+                                    ...productForm,
+                                    name: e.target.value
+                                })}
+                                placeholder="e.g., Velvet Bridal Dress"
+                                required
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Collection *</label>
+                            <select
+                                value={productForm.collection}
+                                onChange={(e) => setProductForm({
+                                    ...productForm,
+                                    collection: e.target.value
+                                })}
+                                required
+                            >
+                                <option value="">-- Select Collection --</option>
+                                {collections.map(col => (
+                                    <option key={col._id} value={col._id}>
+                                        {col.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Business Type *</label>
+                            <select
+                                value={productForm.businessType}
+                                onChange={(e) => setProductForm({
+                                    ...productForm,
+                                    businessType: e.target.value
+                                })}
+                            >
+                                <option value="retail">Retail</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Description</label>
+                            <textarea
+                                value={productForm.description}
+                                onChange={(e) => setProductForm({
+                                    ...productForm,
+                                    description: e.target.value
+                                })}
+                                placeholder="Describe the product..."
+                                rows="4"
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Price (Optional)</label>
+                            <input
+                                type="number"
+                                value={productForm.price}
+                                onChange={(e) => setProductForm({
+                                    ...productForm,
+                                    price: e.target.value
+                                })}
+                                placeholder="0"
+                                min="0"
+                            />
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Product Images *</label>
+                            <button
+                                type="button"
+                                onClick={() => openCloudinaryWidget((url) => {
+                                    setProductForm({
+                                        ...productForm,
+                                        images: [...productForm.images, url]
+                                    });
+                                }, true)}
+                                className={styles.uploadBtn}
+                            >
+                                + Upload Images
+                            </button>
+
+                            {productForm.images.length > 0 && (
+                                <div className={styles.imageGallery}>
+                                    {productForm.images.map((img, idx) => (
+                                        <div key={idx} className={styles.imageItem}>
+                                            <img src={img} alt={`Product ${idx + 1}`} />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newImages = productForm.images.filter((_, i) => i !== idx);
+                                                    setProductForm({ ...productForm, images: newImages });
+                                                }}
+                                            >
+                                                Remove
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
-                            </section>
-                        ) : (
-                            <div className={styles.manageView}>
-                                <button onClick={() => setManagingCollection(null)} className={styles.backBtn}>← Back to Collections</button>
-                                <h3 style={{ marginTop: 10 }}>Manage: {managingCollection.title}</h3>
-                                <div className={styles.dualGrid}>
-                                    <div className={styles.column}>
-                                        <h4>Add Products</h4>
-                                        <div className={styles.scrollList}>
-                                            {products.filter(p => !managingCollection.products?.some(cp => cp._id === p._id)).map(p => (
-                                                <div key={p._id} className={styles.miniItem} onClick={() => handleAddToCollection(p._id)}>
-                                                    <div>
-                                                        <strong>{p.title}</strong>
-                                                        <br />
-                                                        <small>{p.category}</small>
-                                                    </div>
-                                                    <span className={styles.addIcon}>+</span>
-                                                </div>
-                                            ))}
-                                        </div>
+                            )}
+                        </div>
+
+                        {productForm.businessType === 'custom' && (
+                            <div className={styles.formGroup}>
+                                <label>Inspiration Image (Optional)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => openCloudinaryWidget((url) => {
+                                        setProductForm({ ...productForm, inspirationImage: url });
+                                    }, false)}
+                                    className={styles.uploadBtn}
+                                >
+                                    {productForm.inspirationImage ? 'Change Image' : '+ Upload Inspiration'}
+                                </button>
+
+                                {productForm.inspirationImage && (
+                                    <div className={styles.imagePreview}>
+                                        <img src={productForm.inspirationImage} alt="Inspiration" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductForm({ ...productForm, inspirationImage: '' })}
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
-                                    <div className={styles.column}>
-                                        <h4>In Collection</h4>
-                                        <div className={styles.scrollList}>
-                                            {managingCollection.products?.map(p => (
-                                                <div key={p._id} className={styles.miniItem} onClick={() => handleRemoveFromCollection(p._id)}>
-                                                    <strong>{p.title}</strong>
-                                                    <span className={styles.removeIcon}>-</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         )}
-                    </>
-                )}
 
-                {activeTab === 'categories' && (
-                    <div className={styles.singleCol}>
-                        <section className={styles.formSection}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 className={styles.sectionTitle}>Hierarchy Manager</h3>
-                                <button onClick={async () => {
-                                    if (confirm("Generate default categories (Retail, Custom, Bridal, etc.)?")) {
-                                        await seedCategoriesAction();
-                                        refreshCategories();
-                                    }
-                                }} className={styles.modeBtn}>
-                                    + Seed Defaults
-                                </button>
-                            </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={styles.submitBtn}
+                        >
+                            {loading ? 'Creating...' : 'CREATE PRODUCT'}
+                        </button>
+                    </form>
 
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>
-                                    {newCatParent
-                                        ? `Adding Subcategory to: ${categoryTree.find(findNode(newCatParent))?.name || 'Unknown'}`
-                                        : "Adding Top-Level Section"
-                                    }
-                                    {newCatParent && <button className={styles.tinyBtn} onClick={() => setNewCatParent(null)} style={{ marginLeft: 10 }}>Cancel (Set to Top)</button>}
-                                </label>
+                    <hr />
 
-                                <div className={styles.row}>
-                                    <input
-                                        placeholder="Section Name (e.g., Bridal)"
-                                        value={newCatName}
-                                        onChange={e => setNewCatName(e.target.value)}
-                                        className={styles.input}
-                                    />
-                                    <select
-                                        value={newCatType}
-                                        onChange={e => setNewCatType(e.target.value)}
-                                        className={styles.select}
-                                    >
-                                        <option value="general">General</option>
-                                        <option value="retail">Retail</option>
-                                        <option value="custom">Custom</option>
-                                    </select>
+                    <h2>All Products ({products.length})</h2>
+                    {products.length > 0 ? (
+                        <div className={styles.productGrid}>
+                            {products.map(product => (
+                                <div key={product._id} className={styles.productCard}>
+                                    {product.images && product.images[0] && (
+                                        <img src={product.images[0]} alt={product.name} />
+                                    )}
+                                    <h4>{product.name}</h4>
+                                    <p>{product.businessType === 'retail' ? 'Retail' : 'Custom'}</p>
                                 </div>
-                                <button onClick={handleCreateCategory} disabled={isSubmitting} className={styles.submitBtn}>
-                                    {newCatParent ? "Add Sub-Category" : "Add Top-Level Section"}
-                                </button>
-                            </div>
-
-                            <div className={styles.treeContainer}>
-                                {renderTree(categoryTree)}
-                                {categoryTree.length === 0 && <p style={{ color: '#999' }}>No sections yet. Create one above.</p>}
-                            </div>
-                        </section>
-                    </div>
-                )}
-            </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p>No products yet. Create one above!</p>
+                    )}
+                </div>
+            )}
         </div>
     );
-}
-
-// Helper to find node in tree for label display
-function findNode(id) {
-    return (node) => {
-        if (node._id === id) return true;
-        if (node.children) return node.children.some(findNode(id));
-        return false;
-    };
-}
-
-function findNodeByName(name) {
-    return (node) => {
-        if (node.name === name) return true;
-        if (node.children) return node.children.some(findNodeByName(name));
-        return false;
-    };
 }

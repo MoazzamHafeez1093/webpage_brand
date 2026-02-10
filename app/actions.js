@@ -10,71 +10,86 @@ import mongoose from 'mongoose';
 // COLLECTION ACTIONS
 // ============================================
 
-export async function createCollection(formData) {
+/**
+ * RENAMED FUNCTION to bust cache and ensure fresh deployment.
+ * Includes massive logging to debug "a is not a function".
+ */
+export async function createNewCollectionAction(formData) {
+    console.log('[CreateCollection] 1. START');
+
     try {
-        console.log('[CreateCollection] Starting...');
-
-        // 1. Connect DB
-        try {
-            await dbConnect();
-            console.log('[CreateCollection] DB Connected');
-        } catch (e) {
-            console.error('[CreateCollection] DB Connection Failed:', e);
-            return { success: false, error: 'Database connection failed' };
+        // 0. CHECK DEPENDENCIES
+        if (typeof dbConnect !== 'function') {
+            throw new Error(`dbConnect is not a function, it is: ${typeof dbConnect}`);
         }
+        console.log('[CreateCollection] 2. Dependencies checked');
 
-        // 2. Parse Data
+        // 1. CONNECT DB
+        await dbConnect();
+        console.log('[CreateCollection] 3. DB Connected');
+
+        // 2. PARSE DATA
         const name = formData.get('name');
-        const description = formData.get('description') || '';
-        const coverImage = formData.get('coverImage') || '';
-        const parentCollectionId = formData.get('parentCollection') || null;
-
-        console.log('[CreateCollection] Data received:', { name, parentCollectionId });
+        console.log('[CreateCollection] 4. Data received:', name);
 
         if (!name || name.trim() === '') {
             return { success: false, error: 'Collection name is required' };
         }
 
-        // 3. Logic - Slug Generation
+        // 3. MODEL CHECK
+        // Dynamically check the model to ensure it's loaded correctly
+        const CollectionModel = mongoose.models.Collection || Collection;
+        if (!CollectionModel || typeof CollectionModel.create !== 'function') {
+            console.error('[CreateCollection] Model Error. mongoose.models.Collection:', mongoose.models.Collection);
+            throw new Error('Collection Model is not loaded correctly (create is not a function)');
+        }
+
+        // 4. SLUG GENERATION
         let baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         let slug = baseSlug;
         let counter = 1;
 
-        while (await Collection.findOne({ slug })) {
+        while (await CollectionModel.findOne({ slug })) {
             slug = `${baseSlug}-${counter}`;
             counter++;
         }
+        console.log('[CreateCollection] 5. Slug generated:', slug);
 
-        // 4. Create
-        console.log('[CreateCollection] Creating document...');
-        const collection = await Collection.create({
+        // 5. CREATE DOCUMENT
+        const newCollection = await CollectionModel.create({
             name: name.trim(),
-            description: description.trim(),
+            description: (formData.get('description') || '').trim(),
             slug,
-            coverImage,
-            parentCollection: parentCollectionId || null,
+            coverImage: formData.get('coverImage') || '',
+            parentCollection: formData.get('parentCollection') || null,
+            order: 0 // Default order
         });
-        console.log('[CreateCollection] Document created:', collection._id);
+        console.log('[CreateCollection] 6. Created:', newCollection._id);
 
-        // 5. Revalidate
+        // 6. REVALIDATE
         try {
-            revalidatePath('/');
-            revalidatePath('/admin/secret-login');
-            console.log('[CreateCollection] Revalidation successful');
+            if (typeof revalidatePath === 'function') {
+                revalidatePath('/');
+                revalidatePath('/admin/secret-login');
+                console.log('[CreateCollection] 7. Revalidated');
+            } else {
+                console.warn('[CreateCollection] revalidatePath is NOT a function');
+            }
         } catch (e) {
-            console.error('[CreateCollection] Revalidation failed (non-critical):', e);
+            console.error('[CreateCollection] Revalidation warning:', e);
         }
 
         return {
             success: true,
-            collection: JSON.parse(JSON.stringify(collection))
+            collection: JSON.parse(JSON.stringify(newCollection))
         };
 
     } catch (error) {
-        console.error('[CreateCollection] CRITICAL ERROR:', error);
+        console.error('[CreateCollection] FATAL ERROR:', error);
+        // Return full stack to UI for debugging
         return {
             success: false,
-            error: error.message || 'Failed to create collection'
+            error: `Server Error: ${error.message}`
         };
     }
 }
@@ -121,10 +136,10 @@ export async function deleteCollection(id) {
         await dbConnect();
 
         const hasChildren = await Collection.findOne({ parentCollection: id });
-        if (hasChildren) return { success: false, error: 'Has subcollections' };
+        if (hasChildren) return { success: false, error: 'Cannot delete: Has subcollections' };
 
         const hasProducts = await Product.findOne({ collection: id });
-        if (hasProducts) return { success: false, error: 'Has products' };
+        if (hasProducts) return { success: false, error: 'Cannot delete: Contains products' };
 
         await Collection.findByIdAndDelete(id);
 

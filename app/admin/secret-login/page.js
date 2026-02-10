@@ -1,14 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react';
 import {
-    createCollection,
+    createNewCollectionAction, // NEW NAME
     getAllCollections,
     getCollectionTree,
-    updateCollection,
     deleteCollection,
     createProduct,
-    getAllProducts,
-    getProductsByCollection
+    getAllProducts
 } from '@/app/actions';
 import styles from './admin.module.css';
 
@@ -61,7 +59,6 @@ export default function AdminDashboard() {
     // ============ AUTH HANDLER ============
     const handleLogin = (e) => {
         e.preventDefault();
-        // Simple PIN check - In production use NextAuth
         if (pin === '1234') {
             setIsAuthenticated(true);
             setAuthError('');
@@ -73,7 +70,6 @@ export default function AdminDashboard() {
     // ============ DATA LOADING ============
     async function loadAllData() {
         setLoading(true);
-        setError('');
 
         try {
             const [collectionsData, treeData, productsData] = await Promise.all([
@@ -87,7 +83,6 @@ export default function AdminDashboard() {
             setProducts(productsData || []);
         } catch (err) {
             console.error('Error loading data:', err);
-            // Don't show global error here to avoid flashing on first load
         } finally {
             setLoading(false);
         }
@@ -116,7 +111,8 @@ export default function AdminDashboard() {
                 formData.append('parentCollection', collectionForm.parentCollection);
             }
 
-            const result = await createCollection(formData);
+            // CALL NEW ACTION NAME
+            const result = await createNewCollectionAction(formData);
 
             if (result.success) {
                 setSuccessMessage('Collection created successfully!');
@@ -128,6 +124,10 @@ export default function AdminDashboard() {
         } catch (err) {
             console.error('Collection submission catch:', err);
             setError(err.message || 'An error occurred while creating the collection');
+            // If error message mentions a stack trace, show part of it
+            if (err.message && err.message.length > 100) {
+                setError('Server Error (Check Console/Logs)');
+            }
         } finally {
             setLoading(false);
         }
@@ -225,7 +225,7 @@ export default function AdminDashboard() {
     // ============ CLOUDINARY ============
     const openCloudinaryWidget = (onSuccess, multiple = true) => {
         if (typeof window === 'undefined' || !window.cloudinary) {
-            alert('Cloudinary not loaded yet');
+            setError('Cloudinary widget not loaded. Refresh page.');
             return;
         }
         const widget = window.cloudinary.createUploadWidget(

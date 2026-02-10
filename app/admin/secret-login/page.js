@@ -10,10 +10,15 @@ import {
     getAllProducts,
     getProductsByCollection
 } from '@/app/actions';
-import styles from './admin.module.css'; // Create this CSS file
+import styles from './admin.module.css';
 
 export default function AdminDashboard() {
-    // ============ STATE MANAGEMENT ============
+    // ============ AUTH STATE ============
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [pin, setPin] = useState('');
+    const [authError, setAuthError] = useState('');
+
+    // ============ DASHBOARD STATE ============
     const [activeTab, setActiveTab] = useState('collections');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -22,7 +27,6 @@ export default function AdminDashboard() {
     // Collections state
     const [collections, setCollections] = useState([]);
     const [collectionTree, setCollectionTree] = useState([]);
-    const [selectedCollectionId, setSelectedCollectionId] = useState('');
 
     // Products state
     const [products, setProducts] = useState([]);
@@ -47,12 +51,26 @@ export default function AdminDashboard() {
         availableSizes: []
     });
 
-    // ============ LOAD DATA ON MOUNT ============
+    // ============ LOAD DATA ============
     useEffect(() => {
-        loadAllData();
-    }, []);
+        if (isAuthenticated) {
+            loadAllData();
+        }
+    }, [isAuthenticated]);
 
-    // ============ DATA LOADING FUNCTIONS ============
+    // ============ AUTH HANDLER ============
+    const handleLogin = (e) => {
+        e.preventDefault();
+        // Simple PIN check - In production use NextAuth
+        if (pin === '1234') {
+            setIsAuthenticated(true);
+            setAuthError('');
+        } else {
+            setAuthError('Incorrect PIN');
+        }
+    };
+
+    // ============ DATA LOADING ============
     async function loadAllData() {
         setLoading(true);
         setError('');
@@ -69,17 +87,15 @@ export default function AdminDashboard() {
             setProducts(productsData || []);
         } catch (err) {
             console.error('Error loading data:', err);
-            setError('Failed to load data. Please refresh the page.');
+            // Don't show global error here to avoid flashing on first load
         } finally {
             setLoading(false);
         }
     }
 
     // ============ COLLECTION HANDLERS ============
-
-    // FIX FOR "a is not a function" ERROR - Properly defined handler
     const handleCollectionSubmit = async (e) => {
-        e.preventDefault(); // CRITICAL: Prevent default form behavior
+        e.preventDefault();
 
         if (!collectionForm.name.trim()) {
             setError('Collection name is required');
@@ -105,13 +121,13 @@ export default function AdminDashboard() {
             if (result.success) {
                 setSuccessMessage('Collection created successfully!');
                 resetCollectionForm();
-                await loadAllData(); // Reload all data
+                await loadAllData();
             } else {
                 setError(result.error || 'Failed to create collection');
             }
         } catch (err) {
-            console.error('Collection submission error:', err);
-            setError('An error occurred while creating the collection');
+            console.error('Collection submission catch:', err);
+            setError(err.message || 'An error occurred while creating the collection');
         } finally {
             setLoading(false);
         }
@@ -127,16 +143,11 @@ export default function AdminDashboard() {
     };
 
     const handleDeleteCollection = async (id) => {
-        if (!confirm('Are you sure you want to delete this collection?')) {
-            return;
-        }
+        if (!confirm('Are you sure you want to delete this collection?')) return;
 
         setLoading(true);
-        setError('');
-
         try {
             const result = await deleteCollection(id);
-
             if (result.success) {
                 setSuccessMessage('Collection deleted successfully!');
                 await loadAllData();
@@ -144,29 +155,24 @@ export default function AdminDashboard() {
                 setError(result.error || 'Failed to delete collection');
             }
         } catch (err) {
-            console.error('Delete error:', err);
-            setError('An error occurred while deleting');
+            setError('An error occurred');
         } finally {
             setLoading(false);
         }
     };
 
     // ============ PRODUCT HANDLERS ============
-
-    // FIX FOR "a is not a function" ERROR - Properly defined handler
     const handleProductSubmit = async (e) => {
-        e.preventDefault(); // CRITICAL: Prevent default form behavior
+        e.preventDefault();
 
         if (!productForm.name.trim()) {
             setError('Product name is required');
             return;
         }
-
         if (!productForm.collection) {
             setError('Please select a collection');
             return;
         }
-
         if (productForm.images.length === 0) {
             setError('Please upload at least one image');
             return;
@@ -186,10 +192,6 @@ export default function AdminDashboard() {
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
 
-            if (productForm.availableSizes.length > 0) {
-                formData.append('availableSizes', productForm.availableSizes.join(','));
-            }
-
             const result = await createProduct(formData);
 
             if (result.success) {
@@ -201,7 +203,7 @@ export default function AdminDashboard() {
             }
         } catch (err) {
             console.error('Product submission error:', err);
-            setError('An error occurred while creating the product');
+            setError('An error occurred');
         } finally {
             setLoading(false);
         }
@@ -220,86 +222,124 @@ export default function AdminDashboard() {
         });
     };
 
-    // ============ CLOUDINARY WIDGET ============
+    // ============ CLOUDINARY ============
     const openCloudinaryWidget = (onSuccess, multiple = true) => {
         if (typeof window === 'undefined' || !window.cloudinary) {
-            setError('Cloudinary widget not loaded. Please refresh the page.');
+            alert('Cloudinary not loaded yet');
             return;
         }
-
         const widget = window.cloudinary.createUploadWidget(
             {
-                cloudName: 'dk9pid4ec', // REPLACE WITH YOUR CLOUDINARY NAME
-                uploadPreset: 'my_unsigned_preset', // REPLACE WITH YOUR PRESET
+                cloudName: 'dk9pid4ec',
+                uploadPreset: 'my_unsigned_preset',
                 sources: ['local', 'url', 'camera'],
                 multiple: multiple,
-                maxFiles: multiple ? 10 : 1,
-                clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-                maxFileSize: 5000000, // 5MB
-                cropping: false,
                 folder: 'digital-atelier'
             },
             (error, result) => {
-                if (error) {
-                    console.error('Cloudinary error:', error);
-                    setError('Image upload failed. Please try again.');
-                    return;
-                }
-
-                if (result && result.event === 'success') {
+                if (!error && result && result.event === 'success') {
                     onSuccess(result.info.secure_url);
                 }
             }
         );
-
         widget.open();
     };
 
-    // ============ HELPER FUNCTIONS ============
+    // ============ HELPER: RECURSIVE TREE RENDER ============
     const renderCollectionTree = (tree, level = 0) => {
-        return tree.map(collection => (
-            <div key={collection._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
+        return tree.map(col => (
+            <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
                 <div className={styles.collectionItem}>
-                    <strong>{collection.name}</strong>
-                    {collection.coverImage && (
-                        <img
-                            src={collection.coverImage}
-                            alt={collection.name}
-                            style={{ width: '50px', marginLeft: '10px' }}
-                        />
-                    )}
+                    <strong>{col.name}</strong>
                     <button
-                        onClick={() => handleDeleteCollection(collection._id)}
+                        onClick={() => handleDeleteCollection(col._id)}
                         className={styles.deleteBtn}
                     >
                         Delete
                     </button>
                 </div>
-                {collection.children && collection.children.length > 0 && (
-                    <div style={{ marginLeft: '20px' }}>
-                        {renderCollectionTree(collection.children, level + 1)}
+                {col.children && col.children.length > 0 && (
+                    <div style={{ paddingLeft: '10px', borderLeft: '2px solid #eee' }}>
+                        {renderCollectionTree(col.children, level + 1)}
                     </div>
                 )}
             </div>
         ));
     };
 
-    // ============ RENDER ============
+    // ============ LOGIN SCREEN ============
+    if (!isAuthenticated) {
+        return (
+            <div style={{
+                height: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: '#f5f5f5'
+            }}>
+                <form onSubmit={handleLogin} style={{
+                    background: 'white',
+                    padding: '40px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    textAlign: 'center',
+                    width: '100%',
+                    maxWidth: '400px'
+                }}>
+                    <h1 style={{ marginBottom: '20px', fontFamily: 'serif' }}>Digital Atelier Admin</h1>
+                    {authError && <p style={{ color: 'red', marginBottom: '15px' }}>{authError}</p>}
+                    <input
+                        type="password"
+                        value={pin}
+                        onChange={(e) => setPin(e.target.value)}
+                        placeholder="Enter Admin PIN"
+                        style={{
+                            padding: '12px',
+                            width: '100%',
+                            marginBottom: '20px',
+                            border: '1px solid #ddd',
+                            borderRadius: '4px',
+                            boxSizing: 'border-box'
+                        }}
+                        autoFocus
+                    />
+                    <button
+                        type="submit"
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            background: '#2c2c2c',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        LOGIN
+                    </button>
+                </form>
+            </div>
+        );
+    }
+
+    // ============ DASHBOARD UI ============
     return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <h1>Admin Dashboard</h1>
-                <a href="/" className={styles.viewSiteBtn}>View Website</a>
+                <div>
+                    <a href="/" className={styles.viewSiteBtn} style={{ marginRight: '10px' }}>View Website</a>
+                    <button onClick={() => setIsAuthenticated(false)} className={styles.viewSiteBtn} style={{ background: '#666' }}>Logout</button>
+                </div>
             </header>
 
-            {/* Error/Success Messages */}
             {error && (
                 <div className={styles.errorMessage}>
                     {error}
                     <button onClick={() => setError('')}>×</button>
                 </div>
             )}
-
             {successMessage && (
                 <div className={styles.successMessage}>
                     {successMessage}
@@ -307,7 +347,6 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* Tab Navigation */}
             <div className={styles.tabs}>
                 <button
                     className={activeTab === 'collections' ? styles.activeTab : ''}
@@ -323,273 +362,128 @@ export default function AdminDashboard() {
                 </button>
             </div>
 
-            {/* Collections Tab */}
+            {/* COLLECTIONS TAB */}
             {activeTab === 'collections' && (
                 <div className={styles.tabContent}>
                     <h2>Create New Collection</h2>
-
                     <form onSubmit={handleCollectionSubmit} className={styles.form}>
                         <div className={styles.formGroup}>
                             <label>Collection Name *</label>
                             <input
                                 type="text"
                                 value={collectionForm.name}
-                                onChange={(e) => setCollectionForm({
-                                    ...collectionForm,
-                                    name: e.target.value
-                                })}
-                                placeholder="e.g., Custom Couture"
+                                onChange={(e) => setCollectionForm({ ...collectionForm, name: e.target.value })}
+                                placeholder="e.g. Bridal"
                                 required
                             />
                         </div>
-
                         <div className={styles.formGroup}>
                             <label>Description</label>
                             <textarea
                                 value={collectionForm.description}
-                                onChange={(e) => setCollectionForm({
-                                    ...collectionForm,
-                                    description: e.target.value
-                                })}
-                                placeholder="Describe this collection..."
-                                rows="3"
+                                onChange={(e) => setCollectionForm({ ...collectionForm, description: e.target.value })}
                             />
                         </div>
-
                         <div className={styles.formGroup}>
-                            <label>Parent Collection (Optional)</label>
+                            <label>Parent Collection</label>
                             <select
                                 value={collectionForm.parentCollection}
-                                onChange={(e) => setCollectionForm({
-                                    ...collectionForm,
-                                    parentCollection: e.target.value
-                                })}
+                                onChange={(e) => setCollectionForm({ ...collectionForm, parentCollection: e.target.value })}
                             >
-                                <option value="">-- Top Level (No Parent) --</option>
+                                <option value="">-- Top Level --</option>
                                 {collections.map(col => (
-                                    <option key={col._id} value={col._id}>
-                                        {col.name}
-                                    </option>
+                                    <option key={col._id} value={col._id}>{col.name}</option>
                                 ))}
                             </select>
                         </div>
-
                         <div className={styles.formGroup}>
                             <label>Cover Image</label>
                             <button
                                 type="button"
-                                onClick={() => openCloudinaryWidget((url) => {
-                                    setCollectionForm({ ...collectionForm, coverImage: url });
-                                }, false)}
+                                onClick={() => openCloudinaryWidget((url) => setCollectionForm({ ...collectionForm, coverImage: url }), false)}
                                 className={styles.uploadBtn}
                             >
-                                {collectionForm.coverImage ? 'Change Image' : '+ Upload Cover Image'}
+                                {collectionForm.coverImage ? 'Change Image' : 'Upload Image'}
                             </button>
-
-                            {collectionForm.coverImage && (
-                                <div className={styles.imagePreview}>
-                                    <img src={collectionForm.coverImage} alt="Preview" />
-                                    <button
-                                        type="button"
-                                        onClick={() => setCollectionForm({ ...collectionForm, coverImage: '' })}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            )}
+                            {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '50px', marginTop: '10px' }} />}
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={styles.submitBtn}
-                        >
+                        <button type="submit" disabled={loading} className={styles.submitBtn}>
                             {loading ? 'Creating...' : 'CREATE COLLECTION'}
                         </button>
                     </form>
 
-                    <hr />
-
                     <h2>Existing Collections</h2>
                     <div className={styles.collectionTree}>
-                        {collectionTree.length > 0 ? (
-                            renderCollectionTree(collectionTree)
-                        ) : (
-                            <p>No collections yet. Create one above!</p>
-                        )}
+                        {collectionTree.length ? renderCollectionTree(collectionTree) : <p>No collections found.</p>}
                     </div>
                 </div>
             )}
 
-            {/* Products Tab */}
+            {/* PRODUCTS TAB */}
             {activeTab === 'products' && (
                 <div className={styles.tabContent}>
-                    <h2>New Product</h2>
-
+                    <h2>Create New Product</h2>
                     <form onSubmit={handleProductSubmit} className={styles.form}>
                         <div className={styles.formGroup}>
-                            <label>Product Name *</label>
+                            <label>Name *</label>
                             <input
                                 type="text"
                                 value={productForm.name}
-                                onChange={(e) => setProductForm({
-                                    ...productForm,
-                                    name: e.target.value
-                                })}
-                                placeholder="e.g., Velvet Bridal Dress"
+                                onChange={e => setProductForm({ ...productForm, name: e.target.value })}
                                 required
                             />
                         </div>
-
                         <div className={styles.formGroup}>
                             <label>Collection *</label>
                             <select
                                 value={productForm.collection}
-                                onChange={(e) => setProductForm({
-                                    ...productForm,
-                                    collection: e.target.value
-                                })}
+                                onChange={e => setProductForm({ ...productForm, collection: e.target.value })}
                                 required
                             >
                                 <option value="">-- Select Collection --</option>
-                                {collections.map(col => (
-                                    <option key={col._id} value={col._id}>
-                                        {col.name}
-                                    </option>
-                                ))}
+                                {collections.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                             </select>
                         </div>
-
                         <div className={styles.formGroup}>
-                            <label>Business Type *</label>
+                            <label>Business Type</label>
                             <select
                                 value={productForm.businessType}
-                                onChange={(e) => setProductForm({
-                                    ...productForm,
-                                    businessType: e.target.value
-                                })}
+                                onChange={e => setProductForm({ ...productForm, businessType: e.target.value })}
                             >
                                 <option value="retail">Retail</option>
                                 <option value="custom">Custom</option>
                             </select>
                         </div>
-
                         <div className={styles.formGroup}>
-                            <label>Description</label>
-                            <textarea
-                                value={productForm.description}
-                                onChange={(e) => setProductForm({
-                                    ...productForm,
-                                    description: e.target.value
-                                })}
-                                placeholder="Describe the product..."
-                                rows="4"
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label>Price (Optional)</label>
-                            <input
-                                type="number"
-                                value={productForm.price}
-                                onChange={(e) => setProductForm({
-                                    ...productForm,
-                                    price: e.target.value
-                                })}
-                                placeholder="0"
-                                min="0"
-                            />
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label>Product Images *</label>
+                            <label>Images *</label>
                             <button
                                 type="button"
-                                onClick={() => openCloudinaryWidget((url) => {
-                                    setProductForm({
-                                        ...productForm,
-                                        images: [...productForm.images, url]
-                                    });
-                                }, true)}
+                                onClick={() => openCloudinaryWidget((url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
                                 className={styles.uploadBtn}
                             >
-                                + Upload Images
+                                Upload Images
                             </button>
-
-                            {productForm.images.length > 0 && (
-                                <div className={styles.imageGallery}>
-                                    {productForm.images.map((img, idx) => (
-                                        <div key={idx} className={styles.imageItem}>
-                                            <img src={img} alt={`Product ${idx + 1}`} />
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const newImages = productForm.images.filter((_, i) => i !== idx);
-                                                    setProductForm({ ...productForm, images: newImages });
-                                                }}
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {productForm.businessType === 'custom' && (
-                            <div className={styles.formGroup}>
-                                <label>Inspiration Image (Optional)</label>
-                                <button
-                                    type="button"
-                                    onClick={() => openCloudinaryWidget((url) => {
-                                        setProductForm({ ...productForm, inspirationImage: url });
-                                    }, false)}
-                                    className={styles.uploadBtn}
-                                >
-                                    {productForm.inspirationImage ? 'Change Image' : '+ Upload Inspiration'}
-                                </button>
-
-                                {productForm.inspirationImage && (
-                                    <div className={styles.imagePreview}>
-                                        <img src={productForm.inspirationImage} alt="Inspiration" />
-                                        <button
-                                            type="button"
-                                            onClick={() => setProductForm({ ...productForm, inspirationImage: '' })}
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                )}
+                            <div className={styles.imageGallery}>
+                                {productForm.images.map((img, i) => (
+                                    <img key={i} src={img} alt="Product" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
+                                ))}
                             </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={styles.submitBtn}
-                        >
+                        </div>
+                        <button type="submit" disabled={loading} className={styles.submitBtn}>
                             {loading ? 'Creating...' : 'CREATE PRODUCT'}
                         </button>
                     </form>
 
-                    <hr />
-
-                    <h2>All Products ({products.length})</h2>
-                    {products.length > 0 ? (
-                        <div className={styles.productGrid}>
-                            {products.map(product => (
-                                <div key={product._id} className={styles.productCard}>
-                                    {product.images && product.images[0] && (
-                                        <img src={product.images[0]} alt={product.name} />
-                                    )}
-                                    <h4>{product.name}</h4>
-                                    <p>{product.businessType === 'retail' ? 'Retail' : 'Custom'}</p>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p>No products yet. Create one above!</p>
-                    )}
+                    <h2>Products</h2>
+                    <div className={styles.productGrid}>
+                        {products.map(p => (
+                            <div key={p._id} className={styles.productCard}>
+                                <strong>{p.name}</strong>
+                                <p>{p.businessType}</p>
+                                <button onClick={() => {/* Delete stub */ }} className={styles.deleteBtn}>Delete</button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

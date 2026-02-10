@@ -73,8 +73,8 @@ export default function AdminDashboard() {
 
         try {
             const [collectionsData, treeData, productsData] = await Promise.all([
-                getAllCollections(),
-                getCollectionTree(),
+                getCollectionsAction(),
+                getCollectionTreeAction(),
                 getAllProducts()
             ]);
 
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
             }
 
             // CALL NEW ACTION NAME
-            const result = await createNewCollectionAction(formData);
+            const result = await createCollectionAction(formData);
 
             if (result.success) {
                 setSuccessMessage('Collection created successfully!');
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
 
         setLoading(true);
         try {
-            const result = await deleteCollection(id);
+            const result = await deleteCollectionAction(id);
             if (result.success) {
                 setSuccessMessage('Collection deleted successfully!');
                 await loadAllData();

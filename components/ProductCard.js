@@ -131,8 +131,8 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     onLoad={() => setImgLoaded(true)}
                     onError={(e) => { e.target.src = '/placeholder.jpg'; }}
                     style={{
-                        opacity: 1,
-                        transition: 'transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
+                        opacity: imgLoaded ? 1 : 0,
+                        transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                     }}
                 />
 

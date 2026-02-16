@@ -14,7 +14,7 @@
   background: rgba(248, 248, 248, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 1.2rem 0;
+  padding: 0.6rem 0;
 }
 
 .navContainer {
@@ -47,10 +47,16 @@
 }
 
 .brandLogo {
-  height: 45px;
+  height: 60px;
   width: auto;
   cursor: pointer;
   transition: opacity 0.3s;
+}
+
+@media (min-width: 768px) {
+  .brandLogo {
+    height: 70px;
+  }
 }
 
 .brandLogo:hover {

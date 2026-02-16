@@ -126,16 +126,8 @@ button {
   }
 }
 
-/* Lazy-load image soft entrance */
-img[loading="lazy"] {
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
-}
-
-img[loading="lazy"].loaded,
-img[loading="lazy"][complete] {
-  opacity: 1;
-}
+/* Lazy-load: browser handles loading="lazy" natively.
+   Soft entrance is handled per-component via onLoad callbacks. */
 
 /* Selection styling */
 ::selection {

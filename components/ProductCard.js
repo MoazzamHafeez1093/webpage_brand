@@ -187,8 +187,9 @@ export default function ProductCard({ product, categoryType, onClick }) {
                     {isCustom ? "Custom Couture" : "Retail Collection"} • {category}
                 </div>
                 <h3 className={styles.title}>{title}</h3>
-                {/* Hide price for Custom, show for Retail */}
-                {!isCustom && <div className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</div>}
+                <div className={styles.price}>
+                    {!isCustom && price != null ? `$${typeof price === 'number' ? price.toFixed(2) : price}` : '\u00A0'}
+                </div>
 
                 <button onClick={handleWhatsApp} className={styles.whatsappBtn}>
                     <span>{isCustom ? "Get a Price Estimate" : "Check Size Availability"}</span>

@@ -200,6 +200,7 @@
     font-weight: 300;
     font-family: var(--font-body);
     margin-bottom: 1rem;
+    min-height: 1.4em;
 }
 
 /* ELEGANT WHATSAPP BUTTON */

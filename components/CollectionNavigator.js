@@ -15,8 +15,18 @@ const CollectionNavigator = ({ categories, onClose }) => {
     };
 
     const navigateToCollection = (slug) => {
-        if (slug === 'all') router.push('/');
-        else router.push(`/?collection=${slug}`);
+        if (slug === 'all') {
+            router.push('/');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            // Try to scroll to the collection section on the homepage
+            const element = document.getElementById(`collection-${slug}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                router.push(`/?collection=${slug}`);
+            }
+        }
 
         if (onClose) onClose();
     };
@@ -40,10 +50,9 @@ const CollectionNavigator = ({ categories, onClose }) => {
                             }}
                             aria-label={isExpanded ? "Collapse" : "Expand"}
                         >
-                            {isExpanded ? '▼' : '►'}
+                            {isExpanded ? '\u25BC' : '\u25B6'}
                         </button>
                     ) : (
-                        // Spacer for items without children so alignment matches
                         <span style={{ width: '24px', display: 'inline-block' }}></span>
                     )}
 
@@ -85,7 +94,7 @@ const CollectionNavigator = ({ categories, onClose }) => {
                     className={styles.sectionLabel}
                     onClick={() => navigateToCollection('all')}
                 >
-                    All Items
+                    All Collections
                 </button>
 
                 <div className={styles.list}>

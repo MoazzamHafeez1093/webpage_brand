@@ -12,7 +12,12 @@ export default function Navbar({ categories }) {
     return (
         <nav className={styles.navbar}>
             <div className={styles.navContainer}>
-                <span className={styles.brand} onClick={() => router.push('/')}>LUXE.</span>
+                <img
+                    src="/hoa-logo.png"
+                    alt="House of Aslam"
+                    className={styles.brandLogo}
+                    onClick={() => router.push('/')}
+                />
 
                 <div className={styles.menuWrapper}>
                     <button className={styles.menuBtn} onClick={() => setIsOpen(!isOpen)}>

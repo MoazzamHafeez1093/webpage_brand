@@ -1,4 +1,4 @@
-/* app/page.module.css — The Digital Atelier */
+/* app/page.module.css — House of Aslam */
 
 /* ============ MAIN LAYOUT ============ */
 .main {
@@ -11,14 +11,14 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(250, 250, 245, 0.95);
+  background: rgba(248, 248, 248, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   padding: 1.2rem 0;
 }
 
 .navContainer {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--gap-mobile);
   display: flex;
@@ -46,6 +46,17 @@
   opacity: 0.7;
 }
 
+.brandLogo {
+  height: 45px;
+  width: auto;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.brandLogo:hover {
+  opacity: 0.7;
+}
+
 /* ============ NAVBAR MENU ============ */
 .menuWrapper {
   position: relative;
@@ -70,8 +81,8 @@
 /* ============ HERO SECTION ============ */
 .hero {
   text-align: center;
-  padding: 8rem 1rem 4rem;
-  min-height: 50vh;
+  padding: 6rem 1rem 3rem;
+  min-height: 40vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +121,208 @@
   letter-spacing: 0.05em;
 }
 
-/* ============ MASONRY GRID ============ */
+/* ============ COLLECTIONS SECTION ============ */
+.collectionsSection {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.collectionBlock {
+  margin-bottom: 1rem;
+  padding: 2rem 0 3rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.collectionBlock:last-child {
+  border-bottom: none;
+}
+
+/* Collection Header */
+.collectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0 var(--gap-mobile);
+}
+
+@media (min-width: 768px) {
+  .collectionHeader {
+    padding: 0 var(--gap-desktop);
+  }
+}
+
+.collectionInfo {
+  flex: 1;
+}
+
+.collectionName {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #111;
+  margin-bottom: 0.4rem;
+  text-transform: capitalize;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .collectionName {
+    font-size: 2.2rem;
+  }
+}
+
+.collectionDescription {
+  font-size: 0.85rem;
+  color: #777;
+  max-width: 450px;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+  font-weight: 300;
+}
+
+.collectionCount {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #aaa;
+}
+
+/* Collection Cover Image */
+.collectionCover {
+  width: 100px;
+  height: 130px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .collectionCover {
+    width: 120px;
+    height: 160px;
+    margin-left: 2rem;
+  }
+}
+
+.collectionCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Horizontal Product Scroll */
+.productScroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 1.25rem;
+  padding: 0 var(--gap-mobile) 1rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+@media (min-width: 768px) {
+  .productScroll {
+    padding: 0 var(--gap-desktop) 1rem;
+    gap: 1.5rem;
+  }
+}
+
+.productScroll::-webkit-scrollbar {
+  height: 2px;
+}
+
+.productScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.productScroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+}
+
+.productScrollItem {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+}
+
+/* Remove bottom margin from product cards inside horizontal scroll */
+.productScrollItem > * {
+  margin-bottom: 0;
+}
+
+@media (min-width: 600px) {
+  .productScrollItem {
+    width: 240px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .productScrollItem {
+    width: 280px;
+  }
+}
+
+.emptyCollection {
+  padding: 2rem var(--gap-mobile);
+  color: #bbb;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* ============ CTA SECTION ============ */
+.ctaSection {
+  text-align: center;
+  padding: 6rem 1rem;
+  margin-top: 2rem;
+}
+
+.ctaTitle {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  color: #222;
+  font-weight: 400;
+}
+
+@media (min-width: 768px) {
+  .ctaTitle {
+    font-size: 2.8rem;
+  }
+}
+
+.ctaText {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  color: #666;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.ctaButton {
+  display: inline-block;
+  background: #000;
+  color: var(--accent-gold);
+  padding: 1rem 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  border: 1px solid #000;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.ctaButton:hover {
+  background: #1a1a1a;
+  color: #D4AF37;
+}
+
+/* ============ MASONRY GRID (for shop/category pages) ============ */
 .grid {
   display: block;
   column-count: 1;
@@ -145,7 +357,7 @@
 
 .footer {
   text-align: center;
-  margin-top: 8rem;
+  margin-top: 4rem;
   color: #888;
   font-size: 0.75rem;
   border-top: 1px solid rgba(0, 0, 0, 0.05);

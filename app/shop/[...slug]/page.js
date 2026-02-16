@@ -172,7 +172,7 @@ export default async function CategoryPage({ params }) {
             </section>
 
             <footer className={styles.footer}>
-                <p>&copy; 2025 LUXE. Digital Atelier.</p>
+                <p>&copy; 2025 House of Aslam. All Rights Reserved.</p>
             </footer>
         </main>
     );

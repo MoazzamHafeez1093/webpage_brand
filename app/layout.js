@@ -16,8 +16,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata = {
-  title: 'LUXE | Premium Apparel',
-  description: 'Experience the finest fabrics in crystal clear detail.',
+  title: 'House of Aslam | Since 1998',
+  description: 'Explore curated collections from House of Aslam. Premium apparel crafted with tradition and elegance.',
 };
 
 export default function RootLayout({ children }) {

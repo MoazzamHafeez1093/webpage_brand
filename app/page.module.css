@@ -227,7 +227,7 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  scrollbar-color: var(--accent-gold) transparent;
 }
 
 @media (min-width: 768px) {
@@ -246,31 +246,19 @@
 }
 
 .productScroll::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: var(--accent-gold);
   border-radius: 2px;
 }
 
 .productScrollItem {
   flex: 0 0 auto;
-  width: 200px;
+  width: clamp(200px, 30vw, 340px);
   scroll-snap-align: start;
 }
 
 /* Remove bottom margin from product cards inside horizontal scroll */
 .productScrollItem > * {
   margin-bottom: 0;
-}
-
-@media (min-width: 600px) {
-  .productScrollItem {
-    width: 240px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .productScrollItem {
-    width: 280px;
-  }
 }
 
 .emptyCollection {

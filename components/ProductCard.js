@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, categoryType, onClick }) {
@@ -14,6 +14,13 @@ export default function ProductCard({ product, categoryType, onClick }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imgLoaded, setImgLoaded] = useState(false);
     const [showInspiration, setShowInspiration] = useState(false); // Toggle state
+
+    // Ref callback: handles cached images where onLoad fires before React attaches handler
+    const imgRef = useCallback((el) => {
+        if (el && el.complete && el.naturalWidth > 0) {
+            setImgLoaded(true);
+        }
+    }, []);
 
     // Safety check for images & normalize format
     const safeImages = images && images.length > 0
@@ -123,13 +130,14 @@ export default function ProductCard({ product, categoryType, onClick }) {
             >
                 {/* Main Image OR Inspiration Image */}
                 <img
+                    ref={imgRef}
                     src={showInspiration ? inspirationImage : activeImage.thumbnail}
                     alt={title}
                     className={styles.placeholder}
                     draggable="false"
                     loading="lazy"
                     onLoad={() => setImgLoaded(true)}
-                    onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                    onError={(e) => { e.target.style.display = 'none'; setImgLoaded(true); }}
                     style={{
                         opacity: imgLoaded ? 1 : 0,
                         transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'

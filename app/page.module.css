@@ -254,6 +254,7 @@
   flex: 0 0 auto;
   width: clamp(200px, 30vw, 340px);
   scroll-snap-align: start;
+  display: flex;
 }
 
 /* Remove bottom margin from product cards inside horizontal scroll */

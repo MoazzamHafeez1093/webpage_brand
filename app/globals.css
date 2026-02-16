@@ -23,8 +23,8 @@
 
   /* Spacing - "Breathing Room" */
   --gap-mobile: 1.5rem;
-  --gap-desktop: 5rem;
-  /* Increased for editorial feel */
+  --gap-desktop: 3rem;
+  /* Editorial breathing room */
 
   --radius: 0px;
   /* Sharp, premium corners */

@@ -252,7 +252,7 @@
 
 .productScrollItem {
   flex: 0 0 auto;
-  width: clamp(200px, 30vw, 340px);
+  width: clamp(200px, 42vw, 380px);
   scroll-snap-align: start;
   display: grid;
 }

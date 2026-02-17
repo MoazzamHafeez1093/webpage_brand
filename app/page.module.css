@@ -223,31 +223,37 @@
   display: flex;
   overflow-x: auto;
   gap: 1.25rem;
-  padding: 0 var(--gap-mobile) 1rem;
+  padding: 0;
+  padding-bottom: 1rem;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent-gold) transparent;
+}
+
+/* Pseudo-element spacers for reliable scroll padding (container padding
+   is unreliable with overflow-x in many browsers) */
+.productScroll::before,
+.productScroll::after {
+  content: '';
+  flex: 0 0 calc(var(--gap-mobile) - 1.25rem);
 }
 
 @media (min-width: 768px) {
   .productScroll {
-    padding: 0 var(--gap-desktop) 1rem;
     gap: 1.5rem;
+  }
+  .productScroll::before,
+  .productScroll::after {
+    flex: 0 0 calc(var(--gap-desktop) - 1.5rem);
   }
 }
 
+/* Subtle scrollbar — hidden by default, visible on hover */
+.productScroll {
+  scrollbar-width: none;
+}
+
 .productScroll::-webkit-scrollbar {
-  height: 2px;
-}
-
-.productScroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.productScroll::-webkit-scrollbar-thumb {
-  background: var(--accent-gold);
-  border-radius: 2px;
+  height: 0;
 }
 
 .productScrollItem {

@@ -62,7 +62,7 @@ export default async function Home() {
 
               {/* Horizontal Product Scroll */}
               {collection.products.length > 0 ? (
-                <div className={styles.productScroll}>
+                <div className={styles.productScroll} style={{ marginLeft: '3rem', marginRight: '3rem' }}>
                   {collection.products.map((product) => (
                     <div key={product._id} className={styles.productScrollItem}>
                       <ProductCard product={product} />

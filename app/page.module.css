@@ -227,33 +227,17 @@
   padding-bottom: 1rem;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-/* Pseudo-element spacers for reliable scroll padding (container padding
-   is unreliable with overflow-x in many browsers) */
-.productScroll::before,
-.productScroll::after {
-  content: '';
-  flex: 0 0 calc(var(--gap-mobile) - 1.25rem);
+.productScroll::-webkit-scrollbar {
+  display: none;
 }
 
 @media (min-width: 768px) {
   .productScroll {
     gap: 1.5rem;
   }
-  .productScroll::before,
-  .productScroll::after {
-    flex: 0 0 calc(var(--gap-desktop) - 1.5rem);
-  }
-}
-
-/* Subtle scrollbar — hidden by default, visible on hover */
-.productScroll {
-  scrollbar-width: none;
-}
-
-.productScroll::-webkit-scrollbar {
-  height: 0;
 }
 
 .productScrollItem {
@@ -261,6 +245,24 @@
   width: clamp(200px, 42vw, 380px);
   scroll-snap-align: start;
   display: grid;
+}
+
+/* First & last card margins — aligns cards with the collection header text */
+.productScrollItem:first-child {
+  margin-left: var(--gap-mobile);
+}
+
+.productScrollItem:last-child {
+  margin-right: var(--gap-mobile);
+}
+
+@media (min-width: 768px) {
+  .productScrollItem:first-child {
+    margin-left: var(--gap-desktop);
+  }
+  .productScrollItem:last-child {
+    margin-right: var(--gap-desktop);
+  }
 }
 
 /* Remove bottom margin from product cards inside horizontal scroll */

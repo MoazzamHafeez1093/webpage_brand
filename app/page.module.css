@@ -228,6 +228,8 @@
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  margin-left: var(--gap-mobile);
+  margin-right: var(--gap-mobile);
 }
 
 .productScroll::-webkit-scrollbar {
@@ -237,6 +239,8 @@
 @media (min-width: 768px) {
   .productScroll {
     gap: 1.5rem;
+    margin-left: var(--gap-desktop);
+    margin-right: var(--gap-desktop);
   }
 }
 
@@ -245,24 +249,6 @@
   width: clamp(200px, 42vw, 380px);
   scroll-snap-align: start;
   display: grid;
-}
-
-/* First & last card margins — aligns cards with the collection header text */
-.productScrollItem:first-child {
-  margin-left: var(--gap-mobile);
-}
-
-.productScrollItem:last-child {
-  margin-right: var(--gap-mobile);
-}
-
-@media (min-width: 768px) {
-  .productScrollItem:first-child {
-    margin-left: var(--gap-desktop);
-  }
-  .productScrollItem:last-child {
-    margin-right: var(--gap-desktop);
-  }
 }
 
 /* Remove bottom margin from product cards inside horizontal scroll */

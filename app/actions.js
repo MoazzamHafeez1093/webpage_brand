@@ -185,6 +185,14 @@ export async function updateProductAction(id, formData) {
             businessType: formData.get('businessType') || 'retail',
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
+            customizationNotes: formData.get('customizationNotes') || '',
+            inStock: formData.get('inStock') !== 'false',
+            order: parseInt(formData.get('order')) || 0,
+            isActive: formData.get('isActive') !== 'false',
+            isFeatured: formData.get('isFeatured') === 'true',
+            metaTitle: formData.get('metaTitle') || '',
+            metaDescription: formData.get('metaDescription') || '',
+            tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
         });
 
         revalidatePath('/');
@@ -232,6 +240,14 @@ export async function createProductAction(formData) {
             businessType: formData.get('businessType') || 'retail',
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
+            customizationNotes: formData.get('customizationNotes') || '',
+            inStock: formData.get('inStock') !== 'false',
+            order: parseInt(formData.get('order')) || 0,
+            isActive: formData.get('isActive') !== 'false',
+            isFeatured: formData.get('isFeatured') === 'true',
+            metaTitle: formData.get('metaTitle') || '',
+            metaDescription: formData.get('metaDescription') || '',
+            tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
         });
 
         revalidatePath('/');
@@ -248,7 +264,7 @@ export async function getAllProductsAction() {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
-        const products = await Product.find({ isActive: true }).populate('collectionRef').sort({ order: 1 }).lean();
+        const products = await Product.find({}).populate('collectionRef').sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(products));
     } catch (error) {
         console.error('Get products error:', error);

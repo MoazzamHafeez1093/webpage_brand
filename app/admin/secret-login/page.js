@@ -53,7 +53,15 @@ export default function AdminDashboard() {
         collection: '',
         businessType: 'retail',
         inspirationImage: '',
-        availableSizes: []
+        availableSizes: [],
+        customizationNotes: '',
+        inStock: true,
+        order: 0,
+        isActive: true,
+        isFeatured: false,
+        metaTitle: '',
+        metaDescription: '',
+        tags: ''
     });
 
     // ============ LOAD DATA ============
@@ -191,7 +199,15 @@ export default function AdminDashboard() {
             collection: p.collectionRef?._id || p.collectionRef || '',
             businessType: p.businessType || 'retail',
             inspirationImage: p.inspirationImage || '',
-            availableSizes: p.availableSizes || []
+            availableSizes: p.availableSizes || [],
+            customizationNotes: p.customizationNotes || '',
+            inStock: p.inStock !== false,
+            order: p.order || 0,
+            isActive: p.isActive !== false,
+            isFeatured: p.isFeatured || false,
+            metaTitle: p.metaTitle || '',
+            metaDescription: p.metaDescription || '',
+            tags: (p.tags || []).join(', ')
         });
         setActiveTab('products');
         window.scrollTo(0, 0);
@@ -241,6 +257,14 @@ export default function AdminDashboard() {
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
             formData.append('availableSizes', productForm.availableSizes.join(','));
+            formData.append('customizationNotes', productForm.customizationNotes.trim());
+            formData.append('inStock', String(productForm.inStock));
+            formData.append('order', String(productForm.order));
+            formData.append('isActive', String(productForm.isActive));
+            formData.append('isFeatured', String(productForm.isFeatured));
+            formData.append('metaTitle', productForm.metaTitle.trim());
+            formData.append('metaDescription', productForm.metaDescription.trim());
+            formData.append('tags', productForm.tags);
 
             let result;
             if (editingProductId) {
@@ -274,7 +298,15 @@ export default function AdminDashboard() {
             collection: '',
             businessType: 'retail',
             inspirationImage: '',
-            availableSizes: []
+            availableSizes: [],
+            customizationNotes: '',
+            inStock: true,
+            order: 0,
+            isActive: true,
+            isFeatured: false,
+            metaTitle: '',
+            metaDescription: '',
+            tags: ''
         });
     };
 
@@ -668,6 +700,140 @@ export default function AdminDashboard() {
                             </div>
                         )}
 
+                        {/* Customization Notes - only show for custom */}
+                        {productForm.businessType === 'custom' && (
+                            <div className={styles.formGroup}>
+                                <label>Customization Notes</label>
+                                <textarea
+                                    value={productForm.customizationNotes}
+                                    onChange={e => setProductForm({ ...productForm, customizationNotes: e.target.value })}
+                                    placeholder="Details about the customization process, turnaround time, materials used, etc."
+                                    maxLength={1000}
+                                />
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Shown on product page. Max 1000 characters.
+                                </small>
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        <div className={styles.formGroup}>
+                            <label>Tags</label>
+                            <input
+                                type="text"
+                                value={productForm.tags}
+                                onChange={e => setProductForm({ ...productForm, tags: e.target.value })}
+                                placeholder="bridal, velvet, 2026, luxury (comma-separated)"
+                            />
+                            <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                Comma-separated tags for filtering and display on product page.
+                            </small>
+                        </div>
+
+                        {/* Order + Toggles */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', alignItems: 'end' }}>
+                            <div className={styles.formGroup}>
+                                <label>Display Order</label>
+                                <input
+                                    type="number"
+                                    value={productForm.order}
+                                    onChange={e => setProductForm({ ...productForm, order: parseInt(e.target.value) || 0 })}
+                                    placeholder="0"
+                                    min="0"
+                                />
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>In Stock</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setProductForm(prev => ({ ...prev, inStock: !prev.inStock }))}
+                                    style={{
+                                        padding: '10px 16px',
+                                        width: '100%',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        background: productForm.inStock ? '#48bb78' : '#e53e3e',
+                                        color: 'white',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {productForm.inStock ? 'In Stock' : 'Out of Stock'}
+                                </button>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Featured</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setProductForm(prev => ({ ...prev, isFeatured: !prev.isFeatured }))}
+                                    style={{
+                                        padding: '10px 16px',
+                                        width: '100%',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        background: productForm.isFeatured ? '#c9a961' : '#f5f5f5',
+                                        color: productForm.isFeatured ? 'white' : '#666',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {productForm.isFeatured ? 'Featured' : 'Not Featured'}
+                                </button>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Active</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setProductForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+                                    style={{
+                                        padding: '10px 16px',
+                                        width: '100%',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        background: productForm.isActive ? '#48bb78' : '#a0aec0',
+                                        color: 'white',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {productForm.isActive ? 'Active' : 'Inactive'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* SEO Fields */}
+                        <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '10px' }}>
+                            <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SEO (Optional)</label>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div className={styles.formGroup}>
+                                    <label>Meta Title</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.metaTitle}
+                                        onChange={e => setProductForm({ ...productForm, metaTitle: e.target.value })}
+                                        placeholder="SEO title (max 60 chars)"
+                                        maxLength={60}
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Meta Description</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.metaDescription}
+                                        onChange={e => setProductForm({ ...productForm, metaDescription: e.target.value })}
+                                        placeholder="SEO description (max 160 chars)"
+                                        maxLength={160}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="submit" disabled={loading} className={styles.submitBtn}>
                             {loading ? 'Processing...' : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
                         </button>
@@ -683,7 +849,12 @@ export default function AdminDashboard() {
                                     className={styles.productImage}
                                 />
                                 <div className={styles.productInfo}>
-                                    <strong>{p.name}</strong>
+                                    <strong>
+                                        {p.name}
+                                        {p.isFeatured && <span style={{ marginLeft: '8px', background: '#c9a961', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured</span>}
+                                        {p.isActive === false && <span style={{ marginLeft: '8px', background: '#a0aec0', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Inactive</span>}
+                                        {p.inStock === false && <span style={{ marginLeft: '8px', background: '#e53e3e', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Out of Stock</span>}
+                                    </strong>
                                     <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
                                 </div>
                                 <div>

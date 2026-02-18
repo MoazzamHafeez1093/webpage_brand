@@ -1,10 +1,5 @@
 /* app/product/[id]/page.module.css — Product Detail Page */
 
-.page {
-  min-height: 100vh;
-  background: rgb(var(--background-rgb));
-}
-
 /* ============ HEADER ============ */
 .header {
   max-width: 1200px;
@@ -311,6 +306,141 @@
   border-color: #111;
   background: #111;
   color: white;
+}
+
+.activeSizeBtn {
+  border-color: #111;
+  background: #111;
+  color: white;
+}
+
+/* Badges */
+.featuredBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--accent-gold);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 500;
+  margin-bottom: 0.8rem;
+}
+
+.stockBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.inStock {
+  background: rgba(72, 187, 120, 0.1);
+  color: #38a169;
+}
+
+.outOfStock {
+  background: rgba(229, 62, 62, 0.1);
+  color: #e53e3e;
+}
+
+/* Customization Notes */
+.customNotes {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #fafaf8;
+  border-left: 2px solid var(--accent-gold);
+}
+
+.customNotesLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #999;
+  font-family: var(--font-body);
+  font-weight: 500;
+  margin-bottom: 0.6rem;
+}
+
+.customNotesText {
+  color: #666;
+  line-height: 1.8;
+  font-weight: 300;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Disabled CTA */
+.disabledCta {
+  display: block;
+  width: 100%;
+  padding: 1.2rem;
+  background: #ccc;
+  color: #888;
+  border: 1px solid #ccc;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  cursor: not-allowed;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 2rem;
+}
+
+/* Mobile Sticky CTA */
+.mobileCta {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 1rem 1.5rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  background: #000;
+  text-align: center;
+}
+
+.mobileCta a,
+.mobileCta span {
+  display: block;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.mobileCta .disabledCtaText {
+  color: #888;
+}
+
+@media (min-width: 768px) {
+  .mobileCta {
+    display: none;
+  }
+}
+
+/* Add bottom padding on mobile for sticky CTA */
+.page {
+  min-height: 100vh;
+  background: rgb(var(--background-rgb));
+  padding-bottom: 70px;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-bottom: 0;
+  }
 }
 
 /* Description */

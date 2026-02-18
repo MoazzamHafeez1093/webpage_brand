@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import InteractiveImage from './InteractiveImage';
 import ProductCard from '@/components/ProductCard';
+import ProductActions from './ProductActions';
 
 // Detailed Product View
 export default async function ProductPage({ params }) {
@@ -38,17 +39,13 @@ export default async function ProductPage({ params }) {
     const sizes = product.availableSizes || product.sizes || [];
     const description = product.description || '';
     const tags = product.tags || [];
+    const inStock = product.inStock !== false;
+    const isFeatured = product.isFeatured || false;
+    const customizationNotes = product.customizationNotes || '';
 
-    // WhatsApp contextual message
+    // WhatsApp config
     const phoneNumber = '923211234567';
     const currentImgUrl = product.images?.[0] || '';
-    let waMessage = '';
-    if (isCustom) {
-        waMessage = `Hi, I'm interested in a price estimate for a design like "${title}".\nRef Image: ${currentImgUrl}`;
-    } else {
-        waMessage = `Hi, I would like to check size availability for "${title}" (${category}).\nRef Image: ${currentImgUrl}`;
-    }
-    const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(waMessage)}`;
 
     return (
         <main className={styles.page}>
@@ -81,6 +78,11 @@ export default async function ProductPage({ params }) {
 
                 {/* Details */}
                 <div className={styles.details}>
+                    {/* Featured Badge */}
+                    {isFeatured && (
+                        <span className={styles.featuredBadge}>Featured</span>
+                    )}
+
                     <span className={styles.category}>
                         {isCustom ? 'Custom Couture' : 'Retail Collection'} {category ? `\u2022 ${category}` : ''}
                     </span>
@@ -94,23 +96,19 @@ export default async function ProductPage({ params }) {
                         </div>
                     )}
 
-                    <h1 className={styles.title}>{title}</h1>
+                    <h1 className={styles.title}>
+                        {title}
+                        {/* Stock Badge (retail only) */}
+                        {!isCustom && (
+                            <span className={`${styles.stockBadge} ${inStock ? styles.inStock : styles.outOfStock}`}>
+                                {inStock ? 'In Stock' : 'Out of Stock'}
+                            </span>
+                        )}
+                    </h1>
 
                     {/* Show price for retail, hide for custom */}
                     {!isCustom && price != null && price > 0 && (
                         <p className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</p>
-                    )}
-
-                    {/* Sizes (for retail products) */}
-                    {!isCustom && sizes.length > 0 && (
-                        <div className={styles.sizesSection}>
-                            <span className={styles.label}>Available Sizes</span>
-                            <div className={styles.sizeList}>
-                                {sizes.map(size => (
-                                    <button key={size} className={styles.sizeBtn}>{size}</button>
-                                ))}
-                            </div>
-                        </div>
                     )}
 
                     {description && (
@@ -118,6 +116,14 @@ export default async function ProductPage({ params }) {
                             <div className={styles.divider} />
                             <p className={styles.description}>{description}</p>
                         </>
+                    )}
+
+                    {/* Customization Notes (custom items) */}
+                    {isCustom && customizationNotes && (
+                        <div className={styles.customNotes}>
+                            <p className={styles.customNotesLabel}>Customization Details</p>
+                            <p className={styles.customNotesText}>{customizationNotes}</p>
+                        </div>
                     )}
 
                     {/* Inspiration vs Result comparison for custom items */}
@@ -145,14 +151,16 @@ export default async function ProductPage({ params }) {
                         </p>
                     </div>
 
-                    {/* WhatsApp CTA - Contextual */}
-                    <a
-                        href={waUrl}
-                        target="_blank"
-                        className={styles.cta}
-                    >
-                        {isCustom ? 'Get a Price Estimate' : 'Check Size Availability'}
-                    </a>
+                    {/* Size Selection + CTA (Client Component) */}
+                    <ProductActions
+                        sizes={sizes}
+                        isCustom={isCustom}
+                        title={title}
+                        category={category}
+                        phoneNumber={phoneNumber}
+                        currentImgUrl={currentImgUrl}
+                        inStock={inStock}
+                    />
                 </div>
             </div>
 

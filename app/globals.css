@@ -2,29 +2,28 @@
   /* THE DIGITAL ATELIER | Editorial Luxury Palette */
 
   /* Backgrounds */
-  --background-rgb: 248, 248, 248;
-  /* Neutral Off-White (#F8F8F8) */
-  --highlight-bg: #F0F0F0;
-  /* Soft Pearl Grey for placeholders */
+  --background-rgb: 250, 249, 247;
+  /* Warm Ivory — richer than sterile white */
+  --highlight-bg: #EEECE8;
+  /* Warm Pearl for placeholders */
 
   /* Text & Accents */
   --foreground-rgb: 26, 26, 26;
-  /* Deep Charcoal (#1A1A1A) - softer than black */
+  /* Deep Charcoal (#1A1A1A) */
   --accent-gold: #C5A059;
-  /* Deep Gold for highlights/calls to action */
-  --accent-gold-hover: #B08D55;
-  /* Slightly darker gold for hover states */
+  /* Deep Gold for highlights */
+  --accent-gold-hover: #D4AF37;
+  /* Brighter gold for hover states */
+  --accent-gold-soft: rgba(197, 160, 89, 0.12);
+  /* Soft gold wash for backgrounds */
 
   /* Typography */
   --font-heading: 'Playfair Display', serif;
-  /* High-Contrast Serif */
   --font-body: 'Montserrat', sans-serif;
-  /* Minimalist Sans-Serif */
 
-  /* Spacing - "Breathing Room" */
+  /* Spacing */
   --gap-mobile: 1.5rem;
   --gap-desktop: 3rem;
-  /* Editorial breathing room */
 
   --radius: 0px;
   /* Sharp, premium corners */
@@ -51,6 +50,17 @@ body {
   line-height: 1.8;
   font-size: 15px;
   letter-spacing: 0.03em;
+  animation: bodyFadeIn 0.8s ease-out;
+}
+
+@keyframes bodyFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 h1,
@@ -61,9 +71,7 @@ h5,
 h6 {
   font-family: var(--font-heading);
   color: #111;
-  /* Almost Black for headings */
   font-weight: 400;
-  /* Elegant, not bold */
   letter-spacing: -0.01em;
   line-height: 1.3;
 }
@@ -72,14 +80,13 @@ a {
   color: inherit;
   text-decoration: none;
   transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* Liquid transition */
 }
 
 a:hover {
   color: var(--accent-gold);
 }
 
-/* Animations */
+/* ============ ANIMATIONS ============ */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -92,11 +99,45 @@ a:hover {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes goldPulse {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.9s ease-out forwards;
 }
 
-/* Utility Layouts */
+/* ============ UTILITY LAYOUTS ============ */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -109,10 +150,9 @@ a:hover {
   }
 }
 
-/* Mobile-First Buttons */
+/* Mobile-First */
 button {
   touch-action: manipulation;
-  /* Optimizes touch response */
 }
 
 .masonry-item {
@@ -126,11 +166,13 @@ button {
   }
 }
 
-/* Lazy-load: browser handles loading="lazy" natively.
-   Soft entrance is handled per-component via onLoad callbacks. */
-
 /* Selection styling */
 ::selection {
   background: var(--accent-gold);
-  color: white;
+  color: #fff;
+}
+
+/* ============ PREMIUM IMAGE LOADING ============ */
+img {
+  transition: opacity 0.6s ease-in-out;
 }

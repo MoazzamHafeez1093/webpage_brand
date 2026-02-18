@@ -3,7 +3,6 @@
 .card {
     position: relative;
     background: transparent;
-    /* Seamless blend */
     border-radius: 0;
     overflow: hidden;
     cursor: pointer;
@@ -11,7 +10,7 @@
     flex-direction: column;
     height: 100%;
     border: none;
-    transition: opacity 0.3s ease;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease;
     break-inside: avoid;
     margin-bottom: 2rem;
 }
@@ -26,17 +25,17 @@
 
 .toggleBtn,
 .toggleBtnActive {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px 14px;
     font-family: var(--font-body);
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.12em;
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 20px;
-    /* Pill shape */
+    backdrop-filter: blur(8px);
 }
 
 .toggleBtnActive {
@@ -57,11 +56,11 @@
     border-radius: 4px;
     z-index: 20;
     pointer-events: none;
+    backdrop-filter: blur(4px);
 }
 
 .card:hover {
-    /* No shadow lift, just focus */
-    opacity: 0.95;
+    transform: translateY(-3px);
 }
 
 .imageWrapper {
@@ -81,14 +80,11 @@
     height: 100%;
     object-fit: cover;
     object-position: center top;
-    /* Focus on upper portion — faces, necklines in fashion photography */
     transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
-    /* "Liquid" slow zoom */
 }
 
 .imageWrapper:hover .placeholder {
-    transform: scale(1.08);
-    /* Keep the slight zoom on hover for base image */
+    transform: scale(1.06);
 }
 
 /* Card Link Wrapper */
@@ -98,27 +94,28 @@
     display: block;
 }
 
-/* CAROUSEL CONTROLS - Minimalist */
+/* CAROUSEL CONTROLS */
 .navBtnLeft,
 .navBtnRight {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: transparent;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
     border: none;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 2rem;
+    font-size: 1.8rem;
     line-height: 0;
     color: white;
     z-index: 20;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: all 0.4s ease;
 }
 
 .card:hover .navBtnLeft,
@@ -126,12 +123,17 @@
     opacity: 1;
 }
 
+.navBtnLeft:hover,
+.navBtnRight:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 .navBtnLeft {
-    left: 5px;
+    left: 8px;
 }
 
 .navBtnRight {
-    right: 5px;
+    right: 8px;
 }
 
 .dots {
@@ -146,33 +148,51 @@
 
 .dot,
 .dotActive {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.35);
+    transition: all 0.3s ease;
 }
 
 .dotActive {
     background: white;
+    transform: scale(1.2);
 }
 
 .info {
-    padding: 1rem 0;
-    /* Vertical spacing only */
+    padding: 1.2rem 0 0.5rem;
     text-align: left;
     flex: 1;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
-/* Editorial Typography for Card */
+/* Gold dash accent above info */
+.info::before {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--accent-gold);
+    opacity: 0.4;
+    margin-bottom: 0.8rem;
+    transition: width 0.4s ease, opacity 0.4s ease;
+}
+
+.card:hover .info::before {
+    width: 35px;
+    opacity: 0.7;
+}
+
+/* Editorial Typography */
 .category {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     text-transform: uppercase;
-    letter-spacing: 0.25em;
-    /* Very wide tracking */
-    color: #888;
-    margin-bottom: 0.7rem;
+    letter-spacing: 0.28em;
+    color: #999;
+    margin-bottom: 0.6rem;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -180,24 +200,30 @@
 }
 
 .title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 400;
     font-family: var(--font-heading);
     margin: 0 0 0.3rem 0;
     color: #111;
-    line-height: 1.25;
+    line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: color 0.3s ease;
+}
+
+.card:hover .title {
+    color: #333;
 }
 
 .price {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: #444;
     font-weight: 300;
     font-family: var(--font-body);
     margin-bottom: 1rem;
     min-height: 1.4em;
+    letter-spacing: 0.03em;
 }
 
 /* ELEGANT WHATSAPP BUTTON */
@@ -205,34 +231,49 @@
     margin-top: auto;
     width: 100%;
     padding: 1rem 0;
-    /* Slim but tall enough for touch */
     background: #000;
-    /* Pure Black */
     color: var(--accent-gold);
     border: 1px solid #000;
     border-radius: 0;
-    /* Sharp */
     cursor: pointer;
     font-family: var(--font-body);
     font-weight: 400;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
-    /* Premium spacing */
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.8rem;
-    transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-    /* Liquid */
+    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
     opacity: 0.9;
+    position: relative;
+    overflow: hidden;
+}
+
+.whatsappBtn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(197, 160, 89, 0.06) 40%,
+            rgba(197, 160, 89, 0.12) 50%,
+            rgba(197, 160, 89, 0.06) 60%,
+            transparent 100%);
+    transition: left 0.6s ease;
+}
+
+.whatsappBtn:hover::before {
+    left: 100%;
 }
 
 .whatsappBtn:hover {
     background: #1a1a1a;
-    color: #D4AF37;
-    /* Brighter gold on hover */
+    color: var(--accent-gold-hover);
     opacity: 1;
     letter-spacing: 0.25em;
-    /* Subtle expansion */
 }

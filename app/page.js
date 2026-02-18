@@ -26,6 +26,7 @@ export default async function Home() {
             Explore our curated collections. <br />
             Touch to discover the finest details.
           </p>
+          <div className={styles.heroDivider} />
           <HeroCTA />
         </div>
       </section>
@@ -70,7 +71,7 @@ export default async function Home() {
 
               {/* Horizontal Product Scroll */}
               {collection.products.length > 0 ? (
-                <div className={styles.productScroll} style={{ marginLeft: '3rem', marginRight: '3rem' }}>
+                <div className={styles.productScroll}>
                   {collection.products.map((product) => (
                     <div key={product._id} className={styles.productScrollItem}>
                       <ProductCard product={product} />

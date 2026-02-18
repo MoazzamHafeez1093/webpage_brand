@@ -1,20 +1,31 @@
 import { db } from '@/lib/db';
 import styles from './page.module.css';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import InteractiveImage from './InteractiveImage';
 
 // Detailed Product View
 export default async function ProductPage({ params }) {
     const resolvedParams = await params;
     const product = await db.getItemById(resolvedParams.id);
+    const categories = await db.getCategoryTree();
 
     if (!product) {
-        return <div className="container" style={{ padding: '5rem', textAlign: 'center' }}>Product not found</div>;
+        return (
+            <main className={styles.page}>
+                <Navbar categories={categories} />
+                <div className={styles.notFound}>
+                    <p>Product not found.</p>
+                    <Link href="/" style={{ color: 'var(--accent-gold)', marginTop: '1rem' }}>Return Home</Link>
+                </div>
+            </main>
+        );
     }
 
     // Support both new and legacy schemas
     const title = product.name || product.title || 'Untitled';
     const category = product.collectionRef?.name || product.category || '';
+    const collectionSlug = product.collectionRef?.slug || '';
     const isCustom = product.businessType === 'custom';
     const price = product.price;
     const sizes = product.availableSizes || product.sizes || [];
@@ -32,14 +43,31 @@ export default async function ProductPage({ params }) {
     const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(waMessage)}`;
 
     return (
-        <article className={styles.container}>
+        <main className={styles.page}>
+            <Navbar categories={categories} />
+
             <header className={styles.header}>
-                <Link href="/" className={styles.backLink}>&#8592; Back to Collection</Link>
+                <nav className={styles.breadcrumb}>
+                    <Link href="/">Home</Link>
+                    <span className={styles.breadcrumbSeparator}>/</span>
+                    {collectionSlug ? (
+                        <>
+                            <Link href={`/shop/${collectionSlug}`}>{category}</Link>
+                            <span className={styles.breadcrumbSeparator}>/</span>
+                        </>
+                    ) : category ? (
+                        <>
+                            <span>{category}</span>
+                            <span className={styles.breadcrumbSeparator}>/</span>
+                        </>
+                    ) : null}
+                    <span className={styles.breadcrumbCurrent}>{title}</span>
+                </nav>
             </header>
 
-            <div className={styles.grid}>
-                {/* Large Zoomable Image */}
-                <div className={styles.imageSection}>
+            <div className={styles.productLayout}>
+                {/* Image Gallery */}
+                <div className={styles.galleryContainer}>
                     <InteractiveImage product={product} />
                 </div>
 
@@ -57,8 +85,8 @@ export default async function ProductPage({ params }) {
 
                     {/* Sizes (for retail products) */}
                     {!isCustom && sizes.length > 0 && (
-                        <div className={styles.sizes}>
-                            <span className={styles.label}>Available Sizes:</span>
+                        <div className={styles.sizesSection}>
+                            <span className={styles.label}>Available Sizes</span>
                             <div className={styles.sizeList}>
                                 {sizes.map(size => (
                                     <button key={size} className={styles.sizeBtn}>{size}</button>
@@ -67,7 +95,12 @@ export default async function ProductPage({ params }) {
                         </div>
                     )}
 
-                    {description && <p className={styles.description}>{description}</p>}
+                    {description && (
+                        <>
+                            <div className={styles.divider} />
+                            <p className={styles.description}>{description}</p>
+                        </>
+                    )}
 
                     {/* Inspiration vs Result comparison for custom items */}
                     {isCustom && product.inspirationImage && (
@@ -96,6 +129,6 @@ export default async function ProductPage({ params }) {
                     </a>
                 </div>
             </div>
-        </article>
+        </main>
     );
 }

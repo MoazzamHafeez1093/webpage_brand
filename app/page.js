@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import Navbar from '@/components/Navbar';
 import HeroCTA from '@/components/HeroCTA';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 // Server Component
@@ -41,22 +42,29 @@ export default async function Home() {
               {/* Collection Header */}
               <div className={styles.collectionHeader}>
                 <div className={styles.collectionInfo}>
-                  <h2 className={styles.collectionName}>{collection.name}</h2>
+                  <Link href={`/shop/${collection.slug}`} className={styles.collectionLink}>
+                    <h2 className={styles.collectionName}>{collection.name}</h2>
+                  </Link>
                   {collection.description && (
                     <p className={styles.collectionDescription}>{collection.description}</p>
                   )}
-                  <span className={styles.collectionCount}>
-                    {collection.products.length} {collection.products.length === 1 ? 'piece' : 'pieces'}
-                  </span>
+                  <div className={styles.collectionMeta}>
+                    <span className={styles.collectionCount}>
+                      {collection.products.length} {collection.products.length === 1 ? 'piece' : 'pieces'}
+                    </span>
+                    <Link href={`/shop/${collection.slug}`} className={styles.viewAllLink}>
+                      View Collection &#8594;
+                    </Link>
+                  </div>
                 </div>
                 {collection.coverImage && (
-                  <div className={styles.collectionCover}>
+                  <Link href={`/shop/${collection.slug}`} className={styles.collectionCover}>
                     <img
                       src={collection.coverImage}
                       alt={collection.name}
                       loading="lazy"
                     />
-                  </div>
+                  </Link>
                 )}
               </div>
 

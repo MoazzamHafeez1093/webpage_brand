@@ -91,24 +91,11 @@
     /* Keep the slight zoom on hover for base image */
 }
 
-/* ZOOM LENS */
-.zoomLens {
-    position: absolute;
-    /* Size set in JS now, but defaults here */
-    width: 175px;
-    height: 175px;
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 4px;
-    /* Slightly rounded square */
-    /* Slightly rounded square */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    /* Stronger shadow for "pop" */
-    cursor: none;
-    pointer-events: none;
-    background-repeat: no-repeat;
-    background-color: white;
-    z-index: 100;
-    display: none;
+/* Card Link Wrapper */
+.cardLink {
+    text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
 /* CAROUSEL CONTROLS - Minimalist */

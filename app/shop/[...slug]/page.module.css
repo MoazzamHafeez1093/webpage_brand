@@ -1,0 +1,365 @@
+/* app/shop/[...slug]/page.module.css — Collection Listing Page */
+
+.page {
+  min-height: 100vh;
+  background: rgb(var(--background-rgb));
+}
+
+/* ============ COLLECTION HERO ============ */
+.hero {
+  text-align: center;
+  padding: 8rem 1rem 4rem;
+  position: relative;
+}
+
+.heroInner {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.breadcrumb {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #999;
+  margin-bottom: 2rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+.breadcrumb a {
+  color: #999;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.breadcrumb a:hover {
+  color: var(--accent-gold);
+}
+
+.breadcrumbSeparator {
+  margin: 0 0.75rem;
+  color: #ccc;
+}
+
+.heroTitle {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  font-weight: 400;
+  color: #111;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 1.2rem;
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 4rem;
+  }
+}
+
+.heroDescription {
+  font-size: 1rem;
+  color: #777;
+  max-width: 500px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.8;
+  font-family: var(--font-body);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+}
+
+.heroDivider {
+  width: 50px;
+  height: 1px;
+  background: var(--accent-gold);
+  margin: 0 auto;
+  opacity: 0.6;
+}
+
+/* ============ SUBCOLLECTIONS GRID ============ */
+.subcollectionsSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--gap-mobile) 4rem;
+}
+
+@media (min-width: 768px) {
+  .subcollectionsSection {
+    padding: 0 var(--gap-desktop) 5rem;
+  }
+}
+
+.sectionLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #999;
+  font-weight: 500;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  font-family: var(--font-body);
+}
+
+.subcollectionsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 600px) {
+  .subcollectionsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .subcollectionsGrid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2.5rem;
+  }
+}
+
+.subcollectionCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.subcollectionImageWrap {
+  aspect-ratio: 3 / 4;
+  position: relative;
+  overflow: hidden;
+  background: var(--highlight-bg);
+}
+
+.subcollectionImageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.subcollectionCard:hover .subcollectionImageWrap img {
+  transform: scale(1.06);
+}
+
+.subcollectionPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #bbb;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-family: var(--font-body);
+}
+
+.subcollectionInfo {
+  padding: 1rem 0;
+}
+
+.subcollectionName {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: #222;
+  transition: color 0.3s ease;
+}
+
+.subcollectionCard:hover .subcollectionName {
+  color: var(--accent-gold);
+}
+
+/* ============ PRODUCTS SECTION ============ */
+.productsSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--gap-mobile) 4rem;
+}
+
+@media (min-width: 768px) {
+  .productsSection {
+    padding: 0 var(--gap-desktop) 5rem;
+  }
+}
+
+.productCount {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #999;
+  font-weight: 500;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  font-family: var(--font-body);
+}
+
+.productGrid {
+  display: block;
+  column-count: 1;
+  column-gap: var(--gap-mobile);
+}
+
+@media (min-width: 600px) {
+  .productGrid {
+    column-count: 2;
+    column-gap: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .productGrid {
+    column-count: 3;
+    column-gap: var(--gap-desktop);
+  }
+}
+
+.productItem {
+  break-inside: avoid;
+  margin-bottom: var(--gap-mobile);
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+@media (min-width: 1024px) {
+  .productItem {
+    margin-bottom: var(--gap-desktop);
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+}
+
+/* ============ CTA SECTION ============ */
+.ctaSection {
+  text-align: center;
+  padding: 6rem var(--gap-mobile);
+  background: #fafafa;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .ctaSection {
+    padding: 7rem var(--gap-desktop);
+  }
+}
+
+.ctaTitle {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  color: #222;
+  font-weight: 400;
+}
+
+@media (min-width: 768px) {
+  .ctaTitle {
+    font-size: 2.8rem;
+  }
+}
+
+.ctaText {
+  max-width: 550px;
+  margin: 0 auto 2.5rem;
+  color: #777;
+  line-height: 1.7;
+  font-weight: 300;
+  font-size: 0.95rem;
+}
+
+.ctaButton {
+  display: inline-block;
+  background: #000;
+  color: var(--accent-gold);
+  padding: 1rem 2.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  border: 1px solid #000;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ctaButton:hover {
+  background: #1a1a1a;
+  color: #D4AF37;
+  letter-spacing: 0.2em;
+}
+
+/* ============ FOOTER ============ */
+.footer {
+  text-align: center;
+  margin-top: 0;
+  color: #888;
+  font-size: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 4rem 0 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* ============ NOT FOUND ============ */
+.notFound {
+  text-align: center;
+  padding: 8rem 2rem;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.notFoundTitle {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.notFoundText {
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+.notFoundLink {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent-gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-gold);
+  padding-bottom: 2px;
+  transition: opacity 0.3s ease;
+}
+
+.notFoundLink:hover {
+  opacity: 0.7;
+}
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

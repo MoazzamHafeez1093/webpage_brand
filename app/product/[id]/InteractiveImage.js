@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import styles from './page.module.css';
 
 export default function InteractiveImage({ product }) {
@@ -22,9 +22,7 @@ export default function InteractiveImage({ product }) {
     return (
         <div className={styles.galleryContainer}>
             {/* Main Image Area */}
-            <div
-                className={styles.imageWrapper}
-            >
+            <div className={styles.mainImageWrap}>
                 <img
                     src={images[activeIndex]}
                     alt={`${product.name} - View ${activeIndex + 1}`}

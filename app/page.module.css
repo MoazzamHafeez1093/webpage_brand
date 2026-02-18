@@ -163,22 +163,6 @@
   flex: 1;
 }
 
-.collectionName {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  font-weight: 400;
-  color: #111;
-  margin-bottom: 0.4rem;
-  text-transform: capitalize;
-  letter-spacing: -0.01em;
-}
-
-@media (min-width: 768px) {
-  .collectionName {
-    font-size: 2.2rem;
-  }
-}
-
 .collectionDescription {
   font-size: 0.85rem;
   color: #777;
@@ -195,8 +179,58 @@
   color: #aaa;
 }
 
+/* Collection Link */
+.collectionLink {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+.collectionLink:hover .collectionName {
+  color: var(--accent-gold);
+}
+
+.collectionName {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #111;
+  margin-bottom: 0.4rem;
+  text-transform: capitalize;
+  letter-spacing: -0.01em;
+  transition: color 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .collectionName {
+    font-size: 2.2rem;
+  }
+}
+
+.collectionMeta {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.viewAllLink {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent-gold);
+  text-decoration: none;
+  font-weight: 500;
+  transition: letter-spacing 0.3s ease, opacity 0.3s ease;
+}
+
+.viewAllLink:hover {
+  letter-spacing: 0.2em;
+  opacity: 0.8;
+}
+
 /* Collection Cover Image */
 .collectionCover {
+  display: block;
   width: 100px;
   height: 130px;
   overflow: hidden;

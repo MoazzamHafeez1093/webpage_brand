@@ -17,15 +17,8 @@ const CollectionNavigator = ({ categories, onClose }) => {
     const navigateToCollection = (slug) => {
         if (slug === 'all') {
             router.push('/');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            // Try to scroll to the collection section on the homepage
-            const element = document.getElementById(`collection-${slug}`);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                router.push(`/?collection=${slug}`);
-            }
+            router.push(`/shop/${slug}`);
         }
 
         if (onClose) onClose();

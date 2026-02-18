@@ -26,9 +26,26 @@ export default async function CategoryPage({ params }) {
         );
     }
 
-    const products = await db.getProductsByCategory(category);
-    const categoryType = products.length > 0 ? products[0].businessType : null;
     const hasChildren = category.children && category.children.length > 0;
+
+    // When parent has subcollections: show ONLY its own direct products
+    // When leaf collection: show all products (including descendants)
+    const products = hasChildren
+        ? await db.getDirectProductsByCategory(category)
+        : await db.getProductsByCategory(category);
+
+    const categoryType = products.length > 0 ? products[0].businessType : null;
+
+    // Enrich children with product counts (parallel fetch)
+    let enrichedChildren = [];
+    if (hasChildren) {
+        enrichedChildren = await Promise.all(
+            category.children.map(async (child) => {
+                const count = await db.getProductCountByCategory(child._id);
+                return { ...child, productCount: count };
+            })
+        );
+    }
 
     return (
         <main className={styles.page}>
@@ -50,14 +67,14 @@ export default async function CategoryPage({ params }) {
                 </div>
             </section>
 
-            {/* Subcollections */}
-            {hasChildren && (
+            {/* Subcollection Cards */}
+            {hasChildren && enrichedChildren.length > 0 && (
                 <section className={styles.subcollectionsSection}>
                     <h3 className={styles.sectionLabel}>
                         Explore {category.name}
                     </h3>
                     <div className={styles.subcollectionsGrid}>
-                        {category.children.map(child => (
+                        {enrichedChildren.map(child => (
                             <Link
                                 href={`/shop/${slugArray.join('/')}/${child.slug}`}
                                 key={child._id}
@@ -75,9 +92,12 @@ export default async function CategoryPage({ params }) {
                                             {child.name}
                                         </div>
                                     )}
-                                </div>
-                                <div className={styles.subcollectionInfo}>
-                                    <h4 className={styles.subcollectionName}>{child.name}</h4>
+                                    <div className={styles.subcollectionOverlay}>
+                                        <h4 className={styles.subcollectionName}>{child.name}</h4>
+                                        <span className={styles.subcollectionCount}>
+                                            {child.productCount} {child.productCount === 1 ? 'Design' : 'Designs'}
+                                        </span>
+                                    </div>
                                 </div>
                             </Link>
                         ))}
@@ -88,7 +108,10 @@ export default async function CategoryPage({ params }) {
             {/* Products Grid */}
             <section className={styles.productsSection}>
                 <h3 className={styles.productCount}>
-                    {products.length} {products.length === 1 ? 'Design' : 'Designs'}
+                    {hasChildren && products.length > 0
+                        ? `${products.length} ${products.length === 1 ? 'Design' : 'Designs'} in ${category.name}`
+                        : `${products.length} ${products.length === 1 ? 'Design' : 'Designs'}`
+                    }
                 </h3>
 
                 {products.length > 0 ? (

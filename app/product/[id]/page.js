@@ -3,12 +3,19 @@ import styles from './page.module.css';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import InteractiveImage from './InteractiveImage';
+import ProductCard from '@/components/ProductCard';
 
 // Detailed Product View
 export default async function ProductPage({ params }) {
     const resolvedParams = await params;
     const product = await db.getItemById(resolvedParams.id);
     const categories = await db.getCategoryTree();
+
+    // Fetch related products from the same collection
+    const collectionId = product?.collectionRef?._id || product?.collectionRef;
+    const relatedProducts = collectionId
+        ? await db.getRelatedProducts(collectionId, resolvedParams.id, 4)
+        : [];
 
     if (!product) {
         return (
@@ -30,6 +37,7 @@ export default async function ProductPage({ params }) {
     const price = product.price;
     const sizes = product.availableSizes || product.sizes || [];
     const description = product.description || '';
+    const tags = product.tags || [];
 
     // WhatsApp contextual message
     const phoneNumber = '923211234567';
@@ -76,6 +84,16 @@ export default async function ProductPage({ params }) {
                     <span className={styles.category}>
                         {isCustom ? 'Custom Couture' : 'Retail Collection'} {category ? `\u2022 ${category}` : ''}
                     </span>
+
+                    {/* Tags */}
+                    {tags.length > 0 && (
+                        <div className={styles.tagsRow}>
+                            {tags.map((tag, i) => (
+                                <span key={i} className={styles.tag}>{tag}</span>
+                            ))}
+                        </div>
+                    )}
+
                     <h1 className={styles.title}>{title}</h1>
 
                     {/* Show price for retail, hide for custom */}
@@ -119,6 +137,14 @@ export default async function ProductPage({ params }) {
                         </div>
                     )}
 
+                    {/* Trust Note */}
+                    <div className={styles.trustSection}>
+                        <p className={styles.trustNote}>
+                            Every piece is crafted with care and attention to detail.
+                            We stand behind the quality of our work.
+                        </p>
+                    </div>
+
                     {/* WhatsApp CTA - Contextual */}
                     <a
                         href={waUrl}
@@ -129,6 +155,26 @@ export default async function ProductPage({ params }) {
                     </a>
                 </div>
             </div>
+
+            {/* Related Products */}
+            {relatedProducts.length > 0 && (
+                <section className={styles.relatedSection}>
+                    <div className={styles.relatedInner}>
+                        <h3 className={styles.relatedLabel}>You May Also Like</h3>
+                        <div className={styles.relatedGrid}>
+                            {relatedProducts.map((item, index) => (
+                                <div
+                                    key={item._id}
+                                    className={styles.relatedItem}
+                                    style={{ animationDelay: `${index * 80}ms` }}
+                                >
+                                    <ProductCard product={item} categoryType={item.businessType} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
         </main>
     );
 }

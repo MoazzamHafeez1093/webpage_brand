@@ -111,14 +111,14 @@
 @media (min-width: 600px) {
   .subcollectionsGrid {
     grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .subcollectionsGrid {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 2.5rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
   }
 }
 
@@ -131,7 +131,7 @@
 }
 
 .subcollectionImageWrap {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   position: relative;
   overflow: hidden;
   background: var(--highlight-bg);
@@ -160,22 +160,48 @@
   font-family: var(--font-body);
 }
 
-.subcollectionInfo {
-  padding: 1rem 0;
+/* Overlay on subcollection cards */
+.subcollectionOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2.5rem 1.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
 }
 
 .subcollectionName {
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: 1.4rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   margin: 0;
-  color: #222;
-  transition: color 0.3s ease;
+  color: #fff;
+  transition: letter-spacing 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@media (min-width: 768px) {
+  .subcollectionName {
+    font-size: 1.6rem;
+  }
 }
 
 .subcollectionCard:hover .subcollectionName {
-  color: var(--accent-gold);
+  letter-spacing: 0.04em;
+}
+
+.subcollectionCount {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.4rem;
+  font-weight: 400;
 }
 
 /* ============ PRODUCTS SECTION ============ */

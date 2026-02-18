@@ -40,6 +40,13 @@ export default function InteractiveImage({ product }) {
                         </button>
                     </>
                 )}
+
+                {/* Image Counter */}
+                {images.length > 1 && (
+                    <span className={styles.imageCounter}>
+                        {activeIndex + 1} of {images.length}
+                    </span>
+                )}
             </div>
 
             {/* Thumbnails */}

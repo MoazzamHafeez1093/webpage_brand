@@ -44,7 +44,7 @@ export default async function ProductPage({ params }) {
     const customizationNotes = product.customizationNotes || '';
 
     // WhatsApp config
-    const phoneNumber = '923211234567';
+    const phoneNumber = '923346202291';
     const currentImgUrl = product.images?.[0] || '';
 
     return (
@@ -108,7 +108,7 @@ export default async function ProductPage({ params }) {
 
                     {/* Show price for retail, hide for custom */}
                     {!isCustom && price != null && price > 0 && (
-                        <p className={styles.price}>${typeof price === 'number' ? price.toFixed(2) : price}</p>
+                        <p className={styles.price}>Rs. {typeof price === 'number' ? price.toLocaleString() : price}</p>
                     )}
 
                     {description && (
@@ -168,6 +168,7 @@ export default async function ProductPage({ params }) {
                     {/* Size Selection + CTA (Client Component) */}
                     <ProductActions
                         sizes={sizes}
+                        sizeOptions={product.sizeOptions || []}
                         isCustom={isCustom}
                         title={title}
                         category={category}

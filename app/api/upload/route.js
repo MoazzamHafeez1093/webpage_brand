@@ -1,6 +1,7 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
+import sharp from 'sharp';
 
 export async function POST(request) {
     const data = await request.formData();
@@ -13,9 +14,6 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // unique filename
-    const filename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`;
-
     // Ensure directory exists
     const uploadDir = join(process.cwd(), 'public', 'uploads');
     try {
@@ -24,12 +22,27 @@ export async function POST(request) {
         // ignore if exists
     }
 
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
+    // Compress and resize with sharp
+    let processedBuffer;
+    let outputFilename;
+    try {
+        processedBuffer = await sharp(buffer)
+            .resize(1200, 1680, { fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 80, progressive: true })
+            .toBuffer();
+        outputFilename = `${Date.now()}-${file.name.replace(/\s/g, '-').replace(/\.[^.]+$/, '')}.jpg`;
+    } catch (e) {
+        // If sharp fails (non-image file), fall back to raw buffer
+        processedBuffer = buffer;
+        outputFilename = `${Date.now()}-${file.name.replace(/\s/g, '-')}`;
+    }
+
+    const filepath = join(uploadDir, outputFilename);
+    await writeFile(filepath, processedBuffer);
 
     // Return the public URL
     return NextResponse.json({
         success: true,
-        url: `/uploads/${filename}`
+        url: `/uploads/${outputFilename}`
     });
 }

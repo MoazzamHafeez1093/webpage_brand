@@ -72,7 +72,7 @@ export async function getCollectionsAction() {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
+        const collections = await Collection.find({ isActive: true, isArchived: { $ne: true } }).sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(collections));
     } catch (error) {
         console.error('Get all collections error:', error);
@@ -80,11 +80,14 @@ export async function getCollectionsAction() {
     }
 }
 
-export async function getCollectionTreeAction() {
+export async function getCollectionTreeAction(includeArchived = false) {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        const collections = await Collection.find({ isActive: true }).sort({ order: 1 }).lean();
+        const query = includeArchived
+            ? { isActive: true }
+            : { isActive: true, isArchived: { $ne: true } };
+        const collections = await Collection.find(query).sort({ order: 1 }).lean();
 
         const buildTree = (parentId = null) => {
             return collections
@@ -176,6 +179,13 @@ export async function updateProductAction(id, formData) {
         const imagesString = formData.get('images') || '';
         const images = imagesString.split(',').filter(x => x);
 
+        // Parse sizeOptions JSON
+        let sizeOptions = [];
+        const sizeOptionsRaw = formData.get('sizeOptions');
+        if (sizeOptionsRaw) {
+            try { sizeOptions = JSON.parse(sizeOptionsRaw); } catch (e) { sizeOptions = []; }
+        }
+
         await Product.findByIdAndUpdate(id, {
             name: formData.get('name'),
             description: formData.get('description'),
@@ -185,8 +195,11 @@ export async function updateProductAction(id, formData) {
             businessType: formData.get('businessType') || 'retail',
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
+            sizeOptions,
             customizationNotes: formData.get('customizationNotes') || '',
             inStock: formData.get('inStock') !== 'false',
+            isOutOfStock: formData.get('isOutOfStock') === 'true',
+            isArchived: formData.get('isArchived') === 'true',
             order: parseInt(formData.get('order')) || 0,
             isActive: formData.get('isActive') !== 'false',
             isFeatured: formData.get('isFeatured') === 'true',
@@ -231,6 +244,13 @@ export async function createProductAction(formData) {
         const imagesString = formData.get('images') || '';
         const images = imagesString.split(',').filter(x => x);
 
+        // Parse sizeOptions JSON
+        let sizeOptions = [];
+        const sizeOptionsRaw = formData.get('sizeOptions');
+        if (sizeOptionsRaw) {
+            try { sizeOptions = JSON.parse(sizeOptionsRaw); } catch (e) { sizeOptions = []; }
+        }
+
         const product = await Product.create({
             name,
             description: formData.get('description'),
@@ -240,8 +260,11 @@ export async function createProductAction(formData) {
             businessType: formData.get('businessType') || 'retail',
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
+            sizeOptions,
             customizationNotes: formData.get('customizationNotes') || '',
             inStock: formData.get('inStock') !== 'false',
+            isOutOfStock: formData.get('isOutOfStock') === 'true',
+            isArchived: formData.get('isArchived') === 'true',
             order: parseInt(formData.get('order')) || 0,
             isActive: formData.get('isActive') !== 'false',
             isFeatured: formData.get('isFeatured') === 'true',
@@ -260,14 +283,91 @@ export async function createProductAction(formData) {
     }
 }
 
-export async function getAllProductsAction() {
+export async function getAllProductsAction(includeArchived = false) {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
-        const products = await Product.find({}).populate('collectionRef').sort({ order: 1 }).lean();
+        const query = includeArchived ? {} : { isArchived: { $ne: true } };
+        const products = await Product.find(query).populate('collectionRef').sort({ order: 1 }).lean();
         return JSON.parse(JSON.stringify(products));
     } catch (error) {
         console.error('Get products error:', error);
+        return [];
+    }
+}
+
+
+// ============================================
+// ARCHIVE ACTIONS
+// ============================================
+
+export async function archiveProductAction(id) {
+    try {
+        await dbConnect();
+        const Product = mongoose.models.Product;
+        await Product.findByIdAndUpdate(id, { isArchived: true });
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[ArchiveProduct] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function unarchiveProductAction(id) {
+    try {
+        await dbConnect();
+        const Product = mongoose.models.Product;
+        await Product.findByIdAndUpdate(id, { isArchived: false });
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[UnarchiveProduct] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function archiveCollectionAction(id) {
+    try {
+        await dbConnect();
+        const Collection = mongoose.models.Collection;
+        await Collection.findByIdAndUpdate(id, { isArchived: true });
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[ArchiveCollection] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function unarchiveCollectionAction(id) {
+    try {
+        await dbConnect();
+        const Collection = mongoose.models.Collection;
+        await Collection.findByIdAndUpdate(id, { isArchived: false });
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[UnarchiveCollection] Error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getAllCollectionsAction(includeArchived = false) {
+    try {
+        await dbConnect();
+        const Collection = mongoose.models.Collection;
+        const query = includeArchived
+            ? { isActive: true }
+            : { isActive: true, isArchived: { $ne: true } };
+        const collections = await Collection.find(query).sort({ order: 1 }).lean();
+        return JSON.parse(JSON.stringify(collections));
+    } catch (error) {
+        console.error('Get all collections error:', error);
         return [];
     }
 }

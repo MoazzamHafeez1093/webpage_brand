@@ -11,7 +11,8 @@ export default function ProductCard({ product, categoryType }) {
     // Normalize businessType: check explicit field or infer from category/product
     const isCustom = product?.businessType === 'custom' || categoryType === 'custom' || category === 'custom';
 
-    const { price, images, inspirationImage } = product || {};
+    const { price, images, inspirationImage, inStock, isOutOfStock } = product || {};
+    const outOfStock = !isCustom && (isOutOfStock === true || inStock === false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [imgLoaded, setImgLoaded] = useState(false);
     const [showInspiration, setShowInspiration] = useState(false);
@@ -43,7 +44,7 @@ export default function ProductCard({ product, categoryType }) {
     const handleWhatsApp = (e) => {
         e.stopPropagation();
         e.preventDefault();
-        const phoneNumber = '923211234567';
+        const phoneNumber = '923346202291';
 
         let message = '';
         const currentImgUrl = activeImage.fullRes || activeImage.thumbnail;
@@ -77,6 +78,10 @@ export default function ProductCard({ product, categoryType }) {
                 )}
 
                 <div className={styles.imageWrapper}>
+                    {/* Out of Stock Badge */}
+                    {outOfStock && (
+                        <span className={styles.outOfStockBadge}>Out of Stock</span>
+                    )}
                     {/* Main Image OR Inspiration Image */}
                     <img
                         ref={imgRef}
@@ -128,7 +133,7 @@ export default function ProductCard({ product, categoryType }) {
                     </div>
                     <h3 className={styles.title}>{title}</h3>
                     <div className={styles.price}>
-                        {!isCustom && price != null ? `$${typeof price === 'number' ? price.toFixed(2) : price}` : '\u00A0'}
+                        {!isCustom && price != null ? `Rs. ${typeof price === 'number' ? price.toLocaleString() : price}` : '\u00A0'}
                     </div>
 
                     <button onClick={handleWhatsApp} className={styles.whatsappBtn}>

@@ -3,8 +3,13 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-export default function ProductActions({ sizes, isCustom, title, category, phoneNumber, currentImgUrl, inStock }) {
+export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, currentImgUrl, inStock }) {
     const [selectedSize, setSelectedSize] = useState(null);
+
+    // Merge sizeOptions (new schema) with sizes (legacy) for display
+    const effectiveSizes = sizeOptions && sizeOptions.length > 0
+        ? sizeOptions
+        : (sizes || []).map(s => ({ size: s, inStock: true }));
 
     // Build WhatsApp URL dynamically based on selected size
     const buildWaUrl = () => {
@@ -24,19 +29,21 @@ export default function ProductActions({ sizes, isCustom, title, category, phone
     return (
         <>
             {/* Sizes (for retail products) */}
-            {!isCustom && sizes.length > 0 && (
+            {!isCustom && effectiveSizes.length > 0 && (
                 <div className={styles.sizesSection}>
                     <span className={styles.label}>
                         {selectedSize ? `Selected: ${selectedSize}` : 'Select Size'}
                     </span>
                     <div className={styles.sizeList}>
-                        {sizes.map(size => (
+                        {effectiveSizes.map(opt => (
                             <button
-                                key={size}
-                                className={`${styles.sizeBtn} ${selectedSize === size ? styles.activeSizeBtn : ''}`}
-                                onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                                key={opt.size}
+                                className={`${styles.sizeBtn} ${selectedSize === opt.size ? styles.activeSizeBtn : ''} ${!opt.inStock ? styles.disabledSizeBtn : ''}`}
+                                onClick={() => opt.inStock && setSelectedSize(selectedSize === opt.size ? null : opt.size)}
+                                disabled={!opt.inStock}
+                                title={!opt.inStock ? 'Out of stock' : ''}
                             >
-                                {size}
+                                {opt.size}
                             </button>
                         ))}
                     </div>

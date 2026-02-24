@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import imageCompression from 'browser-image-compression';
 import {
     createCollectionAction,
     getCollectionsAction,
@@ -9,7 +10,12 @@ import {
     createProductAction,
     getAllProductsAction,
     updateProductAction,
-    deleteProductAction
+    deleteProductAction,
+    archiveProductAction,
+    unarchiveProductAction,
+    archiveCollectionAction,
+    unarchiveCollectionAction,
+    getAllCollectionsAction
 } from '@/app/actions';
 import styles from './admin.module.css';
 
@@ -35,6 +41,13 @@ export default function AdminDashboard() {
     // Products state
     const [products, setProducts] = useState([]);
     const [editingProductId, setEditingProductId] = useState(null);
+    const [productFilter, setProductFilter] = useState('active'); // 'active' | 'archived'
+    const [collectionFilter, setCollectionFilter] = useState('active'); // 'active' | 'archived'
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState('');
+    const productImageInputRef = useRef(null);
+    const coverImageInputRef = useRef(null);
+    const inspirationImageInputRef = useRef(null);
 
     // Collection form
     const [collectionForm, setCollectionForm] = useState({
@@ -54,6 +67,7 @@ export default function AdminDashboard() {
         businessType: 'retail',
         inspirationImage: '',
         availableSizes: [],
+        sizeOptions: [],
         customizationNotes: '',
         inStock: true,
         order: 0,
@@ -89,8 +103,8 @@ export default function AdminDashboard() {
         try {
             const [collectionsData, treeData, productsData] = await Promise.all([
                 getCollectionsAction(),
-                getCollectionTreeAction(),
-                getAllProductsAction()
+                getCollectionTreeAction(true), // include archived for admin view
+                getAllProductsAction(true) // include archived for admin view
             ]);
 
             setCollections(collectionsData || []);
@@ -191,6 +205,7 @@ export default function AdminDashboard() {
     // ============ PRODUCT HANDLERS ============
     const handleEditProduct = (p) => {
         setEditingProductId(p._id);
+        const loadedSizeOptions = p.sizeOptions || [];
         setProductForm({
             name: p.name,
             description: p.description || '',
@@ -199,7 +214,12 @@ export default function AdminDashboard() {
             collection: p.collectionRef?._id || p.collectionRef || '',
             businessType: p.businessType || 'retail',
             inspirationImage: p.inspirationImage || '',
-            availableSizes: p.availableSizes || [],
+            availableSizes: loadedSizeOptions.length > 0
+                ? loadedSizeOptions.map(s => s.size)
+                : (p.availableSizes || []),
+            sizeOptions: loadedSizeOptions.length > 0
+                ? loadedSizeOptions
+                : (p.availableSizes || []).map(s => ({ size: s, inStock: true })),
             customizationNotes: p.customizationNotes || '',
             inStock: p.inStock !== false,
             order: p.order || 0,
@@ -222,6 +242,75 @@ export default function AdminDashboard() {
             await loadAllData();
         } catch (e) {
             setError('Failed to delete');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ============ ARCHIVE HANDLERS ============
+    const handleArchiveProduct = async (id) => {
+        setLoading(true);
+        try {
+            const result = await archiveProductAction(id);
+            if (result.success) {
+                setSuccessMessage('Product archived');
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to archive');
+            }
+        } catch (e) {
+            setError('Failed to archive');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUnarchiveProduct = async (id) => {
+        setLoading(true);
+        try {
+            const result = await unarchiveProductAction(id);
+            if (result.success) {
+                setSuccessMessage('Product restored from archive');
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to unarchive');
+            }
+        } catch (e) {
+            setError('Failed to unarchive');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleArchiveCollection = async (id) => {
+        setLoading(true);
+        try {
+            const result = await archiveCollectionAction(id);
+            if (result.success) {
+                setSuccessMessage('Collection archived');
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to archive');
+            }
+        } catch (e) {
+            setError('Failed to archive');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUnarchiveCollection = async (id) => {
+        setLoading(true);
+        try {
+            const result = await unarchiveCollectionAction(id);
+            if (result.success) {
+                setSuccessMessage('Collection restored from archive');
+                await loadAllData();
+            } else {
+                setError(result.error || 'Failed to unarchive');
+            }
+        } catch (e) {
+            setError('Failed to unarchive');
         } finally {
             setLoading(false);
         }
@@ -256,9 +345,11 @@ export default function AdminDashboard() {
             formData.append('collection', productForm.collection);
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
-            formData.append('availableSizes', productForm.availableSizes.join(','));
+            formData.append('availableSizes', productForm.sizeOptions.map(s => s.size).join(','));
+            formData.append('sizeOptions', JSON.stringify(productForm.sizeOptions));
             formData.append('customizationNotes', productForm.customizationNotes.trim());
             formData.append('inStock', String(productForm.inStock));
+            formData.append('isOutOfStock', String(!productForm.inStock));
             formData.append('order', String(productForm.order));
             formData.append('isActive', String(productForm.isActive));
             formData.append('isFeatured', String(productForm.isFeatured));
@@ -299,6 +390,7 @@ export default function AdminDashboard() {
             businessType: 'retail',
             inspirationImage: '',
             availableSizes: [],
+            sizeOptions: [],
             customizationNotes: '',
             inStock: true,
             order: 0,
@@ -311,15 +403,87 @@ export default function AdminDashboard() {
     };
 
     const toggleSize = (size) => {
+        setProductForm(prev => {
+            const isSelected = prev.availableSizes.includes(size);
+            if (isSelected) {
+                return {
+                    ...prev,
+                    availableSizes: prev.availableSizes.filter(s => s !== size),
+                    sizeOptions: prev.sizeOptions.filter(s => s.size !== size)
+                };
+            } else {
+                return {
+                    ...prev,
+                    availableSizes: [...prev.availableSizes, size],
+                    sizeOptions: [...prev.sizeOptions, { size, inStock: true }]
+                };
+            }
+        });
+    };
+
+    const toggleSizeStock = (size) => {
         setProductForm(prev => ({
             ...prev,
-            availableSizes: prev.availableSizes.includes(size)
-                ? prev.availableSizes.filter(s => s !== size)
-                : [...prev.availableSizes, size]
+            sizeOptions: prev.sizeOptions.map(s =>
+                s.size === size ? { ...s, inStock: !s.inStock } : s
+            )
         }));
     };
 
     // ============ CLOUDINARY ============
+    const CLOUDINARY_CLOUD_NAME = 'dk9pid4ec';
+    const CLOUDINARY_UPLOAD_PRESET = 'my_unsigned_preset';
+    const CLOUDINARY_FOLDER = 'digital-atelier';
+
+    const compressAndUpload = async (file) => {
+        // Compress
+        setUploadStatus('Compressing...');
+        const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+        };
+        const compressed = await imageCompression(file, options);
+
+        // Upload to Cloudinary
+        setUploadStatus('Uploading...');
+        const formData = new FormData();
+        formData.append('file', compressed);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', CLOUDINARY_FOLDER);
+
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            { method: 'POST', body: formData }
+        );
+        const data = await res.json();
+        if (!data.secure_url) throw new Error('Upload failed');
+        return data.secure_url;
+    };
+
+    const handleImageUpload = async (inputRef, onSuccess, multiple = true) => {
+        const files = inputRef.current?.files;
+        if (!files || files.length === 0) return;
+
+        setUploadingImages(true);
+        setUploadStatus('Preparing...');
+        try {
+            for (let i = 0; i < files.length; i++) {
+                setUploadStatus(`Compressing ${i + 1}/${files.length}...`);
+                const url = await compressAndUpload(files[i]);
+                onSuccess(url);
+            }
+            setSuccessMessage(`${files.length} image${files.length > 1 ? 's' : ''} uploaded`);
+        } catch (err) {
+            console.error('Upload error:', err);
+            setError('Image upload failed: ' + err.message);
+        } finally {
+            setUploadingImages(false);
+            setUploadStatus('');
+            if (inputRef.current) inputRef.current.value = '';
+        }
+    };
+
     const openCloudinaryWidget = (onSuccess, multiple = true) => {
         if (typeof window === 'undefined' || !window.cloudinary) {
             setError('Cloudinary widget not loaded. Refresh page.');
@@ -327,11 +491,12 @@ export default function AdminDashboard() {
         }
         const widget = window.cloudinary.createUploadWidget(
             {
-                cloudName: 'dk9pid4ec',
-                uploadPreset: 'my_unsigned_preset',
+                cloudName: CLOUDINARY_CLOUD_NAME,
+                uploadPreset: CLOUDINARY_UPLOAD_PRESET,
                 sources: ['local', 'url', 'camera'],
                 multiple: multiple,
-                folder: 'digital-atelier'
+                folder: CLOUDINARY_FOLDER,
+                eager: 'w_1200,h_1680,c_fill,q_auto,f_auto'
             },
             (error, result) => {
                 if (!error && result && result.event === 'success') {
@@ -355,6 +520,15 @@ export default function AdminDashboard() {
     };
 
     // ============ HELPER: RECURSIVE TREE RENDER ============
+    const filterCollectionTree = (tree, showArchived) => {
+        return tree
+            .filter(col => showArchived ? col.isArchived : !col.isArchived)
+            .map(col => ({
+                ...col,
+                children: col.children ? filterCollectionTree(col.children, showArchived) : []
+            }));
+    };
+
     const renderCollectionTree = (tree, level = 0) => {
         return tree.map(col => (
             <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
@@ -364,6 +538,7 @@ export default function AdminDashboard() {
                             <img src={col.coverImage} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
                         )}
                         <strong>{col.name}</strong>
+                        {col.isArchived && <span style={{ marginLeft: '8px', background: '#718096', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Archived</span>}
                     </div>
                     <div className={styles.actionButtons}>
                         <button
@@ -372,6 +547,21 @@ export default function AdminDashboard() {
                         >
                             Edit
                         </button>
+                        {col.isArchived ? (
+                            <button
+                                onClick={() => handleUnarchiveCollection(col._id)}
+                                style={{ padding: '4px 12px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                            >
+                                Restore
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => handleArchiveCollection(col._id)}
+                                style={{ padding: '4px 12px', background: '#718096', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                            >
+                                Archive
+                            </button>
+                        )}
                         <button
                             onClick={() => handleDeleteCollection(col._id)}
                             className={styles.deleteBtn}
@@ -531,23 +721,65 @@ export default function AdminDashboard() {
                         </div>
                         <div className={styles.formGroup}>
                             <label>Cover Image</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                ref={coverImageInputRef}
+                                onChange={() => handleImageUpload(coverImageInputRef, (url) => setCollectionForm(prev => ({ ...prev, coverImage: url })), false)}
+                                style={{ display: 'none' }}
+                            />
                             <button
                                 type="button"
-                                onClick={() => openCloudinaryWidget((url) => setCollectionForm({ ...collectionForm, coverImage: url }), false)}
+                                onClick={() => coverImageInputRef.current?.click()}
                                 className={styles.uploadBtn}
+                                disabled={uploadingImages}
                             >
-                                {collectionForm.coverImage ? 'Change Image' : 'Upload Image'}
+                                {uploadingImages ? uploadStatus : (collectionForm.coverImage ? 'Change Image' : 'Upload Image')}
                             </button>
                             {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '80px', marginTop: '10px', borderRadius: '4px' }} />}
                         </div>
-                        <button type="submit" disabled={loading} className={styles.submitBtn}>
-                            {loading ? 'Processing...' : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
+                        <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
+                            {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
                         </button>
                     </form>
 
                     <h2>Existing Collections</h2>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                        <button
+                            onClick={() => setCollectionFilter('active')}
+                            style={{
+                                padding: '6px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                background: collectionFilter === 'active' ? '#2c2c2c' : '#e2e8f0',
+                                color: collectionFilter === 'active' ? 'white' : '#333'
+                            }}
+                        >
+                            Active
+                        </button>
+                        <button
+                            onClick={() => setCollectionFilter('archived')}
+                            style={{
+                                padding: '6px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                background: collectionFilter === 'archived' ? '#718096' : '#e2e8f0',
+                                color: collectionFilter === 'archived' ? 'white' : '#333'
+                            }}
+                        >
+                            Archived
+                        </button>
+                    </div>
                     <div className={styles.collectionTree}>
-                        {collectionTree.length ? renderCollectionTree(collectionTree) : <p>No collections found. Create your first collection above.</p>}
+                        {collectionTree.length ? renderCollectionTree(
+                            filterCollectionTree(collectionTree, collectionFilter === 'archived')
+                        ) : <p>No collections found. Create your first collection above.</p>}
                     </div>
                 </div>
             )}
@@ -643,17 +875,64 @@ export default function AdminDashboard() {
                                         </button>
                                     ))}
                                 </div>
+                                {productForm.sizeOptions.length > 0 && (
+                                    <div style={{ marginTop: '12px', padding: '12px', background: '#f9f9f9', borderRadius: '6px', border: '1px solid #eee' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Per-Size Stock Status</label>
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            {productForm.sizeOptions.map(opt => (
+                                                <button
+                                                    key={opt.size}
+                                                    type="button"
+                                                    onClick={() => toggleSizeStock(opt.size)}
+                                                    style={{
+                                                        padding: '6px 14px',
+                                                        border: '1px solid',
+                                                        borderColor: opt.inStock ? '#48bb78' : '#e53e3e',
+                                                        background: opt.inStock ? '#f0fff4' : '#fff5f5',
+                                                        color: opt.inStock ? '#276749' : '#9b2c2c',
+                                                        borderRadius: '4px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '12px',
+                                                        fontWeight: '600',
+                                                        transition: 'all 0.2s',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px'
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        width: '8px',
+                                                        height: '8px',
+                                                        borderRadius: '50%',
+                                                        background: opt.inStock ? '#48bb78' : '#e53e3e',
+                                                        display: 'inline-block'
+                                                    }} />
+                                                    {opt.size}: {opt.inStock ? 'In Stock' : 'Out'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
                         <div className={styles.formGroup}>
                             <label>Product Images *</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                ref={productImageInputRef}
+                                onChange={() => handleImageUpload(productImageInputRef, (url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
+                                style={{ display: 'none' }}
+                            />
                             <button
                                 type="button"
-                                onClick={() => openCloudinaryWidget((url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
+                                onClick={() => productImageInputRef.current?.click()}
                                 className={styles.uploadBtn}
+                                disabled={uploadingImages}
                             >
-                                Upload Images
+                                {uploadingImages ? uploadStatus : 'Upload Images'}
                             </button>
                             <div className={styles.imageGallery}>
                                 {productForm.images.map((img, i) => (
@@ -675,12 +954,20 @@ export default function AdminDashboard() {
                         {productForm.businessType === 'custom' && (
                             <div className={styles.formGroup}>
                                 <label>Customer Inspiration Image (for side-by-side comparison)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={inspirationImageInputRef}
+                                    onChange={() => handleImageUpload(inspirationImageInputRef, (url) => setProductForm(prev => ({ ...prev, inspirationImage: url })), false)}
+                                    style={{ display: 'none' }}
+                                />
                                 <button
                                     type="button"
-                                    onClick={() => openCloudinaryWidget((url) => setProductForm(prev => ({ ...prev, inspirationImage: url })), false)}
+                                    onClick={() => inspirationImageInputRef.current?.click()}
                                     className={styles.uploadBtn}
+                                    disabled={uploadingImages}
                                 >
-                                    {productForm.inspirationImage ? 'Change Inspiration Image' : 'Upload Inspiration Image'}
+                                    {uploadingImages ? uploadStatus : (productForm.inspirationImage ? 'Change Inspiration Image' : 'Upload Inspiration Image')}
                                 </button>
                                 {productForm.inspirationImage && (
                                     <div style={{ position: 'relative', display: 'inline-block', marginTop: '10px' }}>
@@ -834,14 +1121,46 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        <button type="submit" disabled={loading} className={styles.submitBtn}>
-                            {loading ? 'Processing...' : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
+                        <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
+                            {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
                         </button>
                     </form>
 
                     <h2>Existing Products</h2>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                        <button
+                            onClick={() => setProductFilter('active')}
+                            style={{
+                                padding: '6px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                background: productFilter === 'active' ? '#2c2c2c' : '#e2e8f0',
+                                color: productFilter === 'active' ? 'white' : '#333'
+                            }}
+                        >
+                            Active ({products.filter(p => !p.isArchived).length})
+                        </button>
+                        <button
+                            onClick={() => setProductFilter('archived')}
+                            style={{
+                                padding: '6px 16px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                background: productFilter === 'archived' ? '#718096' : '#e2e8f0',
+                                color: productFilter === 'archived' ? 'white' : '#333'
+                            }}
+                        >
+                            Archived ({products.filter(p => p.isArchived).length})
+                        </button>
+                    </div>
                     <div className={styles.productList}>
-                        {products.map(p => (
+                        {products.filter(p => productFilter === 'archived' ? p.isArchived : !p.isArchived).map(p => (
                             <div key={p._id} className={styles.productRow}>
                                 <img
                                     src={p.images && p.images[0] ? p.images[0] : '/placeholder.jpg'}
@@ -854,6 +1173,7 @@ export default function AdminDashboard() {
                                         {p.isFeatured && <span style={{ marginLeft: '8px', background: '#c9a961', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured</span>}
                                         {p.isActive === false && <span style={{ marginLeft: '8px', background: '#a0aec0', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Inactive</span>}
                                         {p.inStock === false && <span style={{ marginLeft: '8px', background: '#e53e3e', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Out of Stock</span>}
+                                        {p.isArchived && <span style={{ marginLeft: '8px', background: '#718096', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Archived</span>}
                                     </strong>
                                     <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
                                 </div>
@@ -861,15 +1181,30 @@ export default function AdminDashboard() {
                                     <span className={styles.productType}>{p.businessType}</span>
                                 </div>
                                 <div className={styles.priceTag}>
-                                    {p.price > 0 ? `$${p.price.toFixed(2)}` : '-'}
+                                    {p.price > 0 ? `Rs. ${p.price.toLocaleString()}` : '-'}
                                 </div>
                                 <div className={styles.actionButtons}>
                                     <button onClick={() => handleEditProduct(p)} className={styles.editBtn}>Edit</button>
+                                    {p.isArchived ? (
+                                        <button
+                                            onClick={() => handleUnarchiveProduct(p._id)}
+                                            style={{ padding: '4px 12px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                        >
+                                            Restore
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleArchiveProduct(p._id)}
+                                            style={{ padding: '4px 12px', background: '#718096', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                        >
+                                            Archive
+                                        </button>
+                                    )}
                                     <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
                                 </div>
                             </div>
                         ))}
-                        {products.length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>No products found. Create your first product above.</p>}
+                        {products.filter(p => productFilter === 'archived' ? p.isArchived : !p.isArchived).length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>{productFilter === 'archived' ? 'No archived products.' : 'No products found. Create your first product above.'}</p>}
                     </div>
                 </div>
             )}

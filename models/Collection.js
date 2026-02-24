@@ -53,6 +53,12 @@ const CollectionSchema = new mongoose.Schema({
         default: true
     },
 
+    // Archived (hidden from admin default view + storefront)
+    isArchived: {
+        type: Boolean,
+        default: false
+    },
+
     // Metadata
     createdBy: {
         type: String,

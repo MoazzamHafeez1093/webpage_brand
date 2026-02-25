@@ -1,5 +1,4 @@
 import './globals.css';
-import Script from 'next/script';
 import { Playfair_Display, Montserrat } from 'next/font/google';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
 
@@ -27,10 +26,6 @@ export default function RootLayout({ children }) {
       <body className={`${playfair.variable} ${montserrat.variable}`}>
         {children}
         <WhatsAppFloat />
-        <Script
-          src="https://upload-widget.cloudinary.com/global/all.js"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );

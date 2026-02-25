@@ -7,8 +7,10 @@ import styles from './page.module.css';
 
 // Server Component
 export default async function Home() {
-  const categories = await db.getCategoryTree();
-  const collectionsWithProducts = await db.getCollectionsWithProducts();
+  const [categories, collectionsWithProducts] = await Promise.all([
+    db.getCategoryTree(),
+    db.getCollectionsWithProducts()
+  ]);
 
   return (
     <main className={styles.main}>

@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import ProductCard from '@/components/ProductCard';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 
 export default async function CategoryPage({ params }) {
@@ -9,9 +10,11 @@ export default async function CategoryPage({ params }) {
     const slugArray = resolvedParams.slug;
     const currentSlug = slugArray[slugArray.length - 1];
 
-    // Fetch Data using Collection model
-    const category = await db.getCategoryBySlug(currentSlug);
-    const categoryTree = await db.getCategoryTree();
+    // Fetch Data in parallel
+    const [category, categoryTree] = await Promise.all([
+        db.getCategoryBySlug(currentSlug),
+        db.getCategoryTree()
+    ]);
 
     if (!category) {
         return (
@@ -82,10 +85,12 @@ export default async function CategoryPage({ params }) {
                             >
                                 <div className={styles.subcollectionImageWrap}>
                                     {child.coverImage ? (
-                                        <img
+                                        <Image
                                             src={child.coverImage}
                                             alt={child.name}
-                                            loading="lazy"
+                                            fill
+                                            sizes="(max-width: 600px) 100vw, 50vw"
+                                            style={{ objectFit: 'cover' }}
                                         />
                                     ) : (
                                         <div className={styles.subcollectionPlaceholder}>

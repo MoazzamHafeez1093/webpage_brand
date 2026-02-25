@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import styles from './page.module.css';
 
 export default function InteractiveImage({ product }) {
@@ -23,10 +24,13 @@ export default function InteractiveImage({ product }) {
         <div className={styles.galleryContainer}>
             {/* Main Image Area */}
             <div className={styles.mainImageWrap}>
-                <img
+                <Image
                     src={images[activeIndex]}
                     alt={`${product.name} - View ${activeIndex + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className={styles.mainImage}
+                    priority
                 />
 
                 {/* Navigation Arrows */}
@@ -58,7 +62,7 @@ export default function InteractiveImage({ product }) {
                             className={`${styles.thumbnail} ${idx === activeIndex ? styles.activeThumb : ''}`}
                             onClick={() => setActiveIndex(idx)}
                         >
-                            <img src={img} alt={`Thumbnail ${idx + 1}`} />
+                            <Image src={img} alt={`Thumbnail ${idx + 1}`} fill sizes="68px" style={{ objectFit: 'cover' }} />
                         </div>
                     ))}
                 </div>

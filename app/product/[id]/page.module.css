@@ -156,6 +156,7 @@
   opacity: 0.45;
   transition: all 0.4s ease;
   overflow: hidden;
+  position: relative;
 }
 
 .thumbnail img {
@@ -508,11 +509,12 @@
 .comparisonItem {
   position: relative;
   overflow: hidden;
+  aspect-ratio: 3 / 4;
 }
 
 .comparisonItem img {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  height: 100%;
   object-fit: cover;
   transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
 }

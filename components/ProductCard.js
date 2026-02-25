@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, categoryType }) {
@@ -17,12 +18,7 @@ export default function ProductCard({ product, categoryType }) {
     const [imgLoaded, setImgLoaded] = useState(false);
     const [showInspiration, setShowInspiration] = useState(false);
 
-    // Ref callback: handles cached images where onLoad fires before React attaches handler
-    const imgRef = useCallback((el) => {
-        if (el && el.complete && el.naturalWidth > 0) {
-            setImgLoaded(true);
-        }
-    }, []);
+
 
     // Safety check for images & normalize format
     const safeImages = images && images.length > 0
@@ -83,17 +79,18 @@ export default function ProductCard({ product, categoryType }) {
                         <span className={styles.outOfStockBadge}>Out of Stock</span>
                     )}
                     {/* Main Image OR Inspiration Image */}
-                    <img
-                        ref={imgRef}
+                    <Image
                         src={showInspiration ? inspirationImage : activeImage.thumbnail}
-                        alt={title}
+                        alt={title || 'Product image'}
+                        fill
+                        sizes="(max-width: 600px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className={styles.placeholder}
-                        draggable="false"
-                        loading="lazy"
+                        draggable={false}
                         onLoad={() => setImgLoaded(true)}
-                        onError={(e) => { e.target.style.display = 'none'; setImgLoaded(true); }}
+                        onError={() => setImgLoaded(true)}
                         style={{
                             opacity: imgLoaded ? 1 : 0,
+                            objectFit: 'cover',
                             transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                         }}
                     />

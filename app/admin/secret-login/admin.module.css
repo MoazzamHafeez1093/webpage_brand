@@ -457,3 +457,211 @@
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 }
+
+/* ============ CONFIRMATION MODAL ============ */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease;
+}
+
+.modalBox {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+    text-align: center;
+}
+
+.modalBox h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    color: #2c2c2c;
+}
+
+.modalBox p {
+    margin: 0 0 24px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modalCancelBtn {
+    padding: 10px 24px;
+    background: #e2e8f0;
+    color: #2c2c2c;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.modalCancelBtn:hover {
+    background: #cbd5e0;
+}
+
+.modalConfirmBtn {
+    padding: 10px 24px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.modalConfirmBtn:hover {
+    background: #c53030;
+}
+
+.modalConfirmArchive {
+    background: #718096;
+}
+
+.modalConfirmArchive:hover {
+    background: #4a5568;
+}
+
+/* ============ CONSISTENT TOGGLE BUTTONS ============ */
+.toggleBtn {
+    padding: 10px 16px;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.toggleBtnGreen {
+    composes: toggleBtn;
+    background: #48bb78;
+    color: white;
+}
+
+.toggleBtnRed {
+    composes: toggleBtn;
+    background: #e53e3e;
+    color: white;
+}
+
+.toggleBtnGold {
+    composes: toggleBtn;
+    background: #c9a961;
+    color: white;
+}
+
+.toggleBtnGray {
+    composes: toggleBtn;
+    background: #a0aec0;
+    color: white;
+}
+
+.toggleBtnOff {
+    composes: toggleBtn;
+    background: #f5f5f5;
+    color: #666;
+}
+
+/* ============ FILTER TABS ============ */
+.filterTabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.filterTab {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.filterTabActive {
+    composes: filterTab;
+    background: #2c2c2c;
+    color: white;
+}
+
+.filterTabArchived {
+    composes: filterTab;
+    background: #718096;
+    color: white;
+}
+
+.filterTabOutOfStock {
+    composes: filterTab;
+    background: #e53e3e;
+    color: white;
+}
+
+.filterTabInactive {
+    composes: filterTab;
+    background: #e2e8f0;
+    color: #333;
+}
+
+/* ============ BADGES ============ */
+.badge {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-block;
+}
+
+.badgeFeatured {
+    composes: badge;
+    background: #c9a961;
+    color: white;
+}
+
+.badgeInactive {
+    composes: badge;
+    background: #a0aec0;
+    color: white;
+}
+
+.badgeOutOfStock {
+    composes: badge;
+    background: #e53e3e;
+    color: white;
+}
+
+.badgeArchived {
+    composes: badge;
+    background: #718096;
+    color: white;
+}

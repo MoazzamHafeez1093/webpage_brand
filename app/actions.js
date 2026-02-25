@@ -196,6 +196,7 @@ export async function updateProductAction(id, formData) {
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
             sizeOptions,
+            hasSizes: formData.get('hasSizes') === 'true',
             customizationNotes: formData.get('customizationNotes') || '',
             inStock: formData.get('inStock') !== 'false',
             isOutOfStock: formData.get('isOutOfStock') === 'true',
@@ -261,6 +262,7 @@ export async function createProductAction(formData) {
             inspirationImage: formData.get('inspirationImage') || '',
             availableSizes: (formData.get('availableSizes') || '').split(',').filter(x => x),
             sizeOptions,
+            hasSizes: formData.get('hasSizes') === 'true',
             customizationNotes: formData.get('customizationNotes') || '',
             inStock: formData.get('inStock') !== 'false',
             isOutOfStock: formData.get('isOutOfStock') === 'true',
@@ -305,7 +307,7 @@ export async function archiveProductAction(id) {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
-        await Product.findByIdAndUpdate(id, { isArchived: true });
+        await Product.findByIdAndUpdate(id, { isArchived: true, archivedAt: new Date() });
         revalidatePath('/');
         revalidatePath('/admin/secret-login');
         return { success: true };
@@ -319,7 +321,7 @@ export async function unarchiveProductAction(id) {
     try {
         await dbConnect();
         const Product = mongoose.models.Product;
-        await Product.findByIdAndUpdate(id, { isArchived: false });
+        await Product.findByIdAndUpdate(id, { isArchived: false, archivedAt: null });
         revalidatePath('/');
         revalidatePath('/admin/secret-login');
         return { success: true };
@@ -333,7 +335,7 @@ export async function archiveCollectionAction(id) {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        await Collection.findByIdAndUpdate(id, { isArchived: true });
+        await Collection.findByIdAndUpdate(id, { isArchived: true, archivedAt: new Date() });
         revalidatePath('/');
         revalidatePath('/admin/secret-login');
         return { success: true };
@@ -347,7 +349,7 @@ export async function unarchiveCollectionAction(id) {
     try {
         await dbConnect();
         const Collection = mongoose.models.Collection;
-        await Collection.findByIdAndUpdate(id, { isArchived: false });
+        await Collection.findByIdAndUpdate(id, { isArchived: false, archivedAt: null });
         revalidatePath('/');
         revalidatePath('/admin/secret-login');
         return { success: true };

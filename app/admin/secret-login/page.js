@@ -17,6 +17,7 @@ import {
     unarchiveCollectionAction,
     getAllCollectionsAction
 } from '@/app/actions';
+import Script from 'next/script';
 import styles from './admin.module.css';
 
 const AVAILABLE_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'];
@@ -41,13 +42,17 @@ export default function AdminDashboard() {
     // Products state
     const [products, setProducts] = useState([]);
     const [editingProductId, setEditingProductId] = useState(null);
-    const [productFilter, setProductFilter] = useState('active'); // 'active' | 'archived'
+    const [productFilter, setProductFilter] = useState('active'); // 'active' | 'archived' | 'out_of_stock'
     const [collectionFilter, setCollectionFilter] = useState('active'); // 'active' | 'archived'
     const [uploadingImages, setUploadingImages] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
+    const [uploadProgress, setUploadProgress] = useState([]); // [{name, status: 'compressing'|'uploading'|'done'|'error'}]
     const productImageInputRef = useRef(null);
     const coverImageInputRef = useRef(null);
     const inspirationImageInputRef = useRef(null);
+
+    // Confirmation modal state
+    const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null, type: 'danger' });
 
     // Collection form
     const [collectionForm, setCollectionForm] = useState({
@@ -68,6 +73,7 @@ export default function AdminDashboard() {
         inspirationImage: '',
         availableSizes: [],
         sizeOptions: [],
+        hasSizes: false,
         customizationNotes: '',
         inStock: true,
         order: 0,
@@ -184,22 +190,29 @@ export default function AdminDashboard() {
     };
 
     const handleDeleteCollection = async (id) => {
-        if (!confirm('Are you sure you want to delete this collection?')) return;
-
-        setLoading(true);
-        try {
-            const result = await deleteCollectionAction(id);
-            if (result.success) {
-                setSuccessMessage('Collection deleted successfully!');
-                await loadAllData();
-            } else {
-                setError(result.error || 'Failed to delete collection');
+        setConfirmModal({
+            open: true,
+            title: 'Delete Collection',
+            message: 'Are you sure you want to permanently delete this collection? This action cannot be undone.',
+            type: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, open: false }));
+                setLoading(true);
+                try {
+                    const result = await deleteCollectionAction(id);
+                    if (result.success) {
+                        setSuccessMessage('Collection deleted successfully!');
+                        await loadAllData();
+                    } else {
+                        setError(result.error || 'Failed to delete collection');
+                    }
+                } catch (err) {
+                    setError('An error occurred');
+                } finally {
+                    setLoading(false);
+                }
             }
-        } catch (err) {
-            setError('An error occurred');
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     // ============ PRODUCT HANDLERS ============
@@ -219,7 +232,8 @@ export default function AdminDashboard() {
                 : (p.availableSizes || []),
             sizeOptions: loadedSizeOptions.length > 0
                 ? loadedSizeOptions
-                : (p.availableSizes || []).map(s => ({ size: s, inStock: true })),
+                : (p.availableSizes || []).map(s => ({ size: s, inStock: true, stockQuantity: 0 })),
+            hasSizes: p.hasSizes || false,
             customizationNotes: p.customizationNotes || '',
             inStock: p.inStock !== false,
             order: p.order || 0,
@@ -234,35 +248,52 @@ export default function AdminDashboard() {
     };
 
     const handleDeleteProduct = async (id) => {
-        if (!confirm('Are you sure?')) return;
-        setLoading(true);
-        try {
-            await deleteProductAction(id);
-            setSuccessMessage('Product deleted');
-            await loadAllData();
-        } catch (e) {
-            setError('Failed to delete');
-        } finally {
-            setLoading(false);
-        }
+        setConfirmModal({
+            open: true,
+            title: 'Delete Product',
+            message: 'Are you sure you want to permanently delete this product? This action cannot be undone.',
+            type: 'danger',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, open: false }));
+                setLoading(true);
+                try {
+                    await deleteProductAction(id);
+                    setSuccessMessage('Product deleted');
+                    await loadAllData();
+                } catch (e) {
+                    setError('Failed to delete');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
     };
 
     // ============ ARCHIVE HANDLERS ============
     const handleArchiveProduct = async (id) => {
-        setLoading(true);
-        try {
-            const result = await archiveProductAction(id);
-            if (result.success) {
-                setSuccessMessage('Product archived');
-                await loadAllData();
-            } else {
-                setError(result.error || 'Failed to archive');
+        setConfirmModal({
+            open: true,
+            title: 'Archive Product',
+            message: 'This product will be hidden from the storefront. You can restore it later from the Archived tab.',
+            type: 'archive',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, open: false }));
+                setLoading(true);
+                try {
+                    const result = await archiveProductAction(id);
+                    if (result.success) {
+                        setSuccessMessage('Product archived');
+                        await loadAllData();
+                    } else {
+                        setError(result.error || 'Failed to archive');
+                    }
+                } catch (e) {
+                    setError('Failed to archive');
+                } finally {
+                    setLoading(false);
+                }
             }
-        } catch (e) {
-            setError('Failed to archive');
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleUnarchiveProduct = async (id) => {
@@ -283,20 +314,29 @@ export default function AdminDashboard() {
     };
 
     const handleArchiveCollection = async (id) => {
-        setLoading(true);
-        try {
-            const result = await archiveCollectionAction(id);
-            if (result.success) {
-                setSuccessMessage('Collection archived');
-                await loadAllData();
-            } else {
-                setError(result.error || 'Failed to archive');
+        setConfirmModal({
+            open: true,
+            title: 'Archive Collection',
+            message: 'This collection will be hidden from the storefront navigation. Products inside will remain active unless individually archived.',
+            type: 'archive',
+            onConfirm: async () => {
+                setConfirmModal(prev => ({ ...prev, open: false }));
+                setLoading(true);
+                try {
+                    const result = await archiveCollectionAction(id);
+                    if (result.success) {
+                        setSuccessMessage('Collection archived');
+                        await loadAllData();
+                    } else {
+                        setError(result.error || 'Failed to archive');
+                    }
+                } catch (e) {
+                    setError('Failed to archive');
+                } finally {
+                    setLoading(false);
+                }
             }
-        } catch (e) {
-            setError('Failed to archive');
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleUnarchiveCollection = async (id) => {
@@ -347,6 +387,7 @@ export default function AdminDashboard() {
             formData.append('inspirationImage', productForm.inspirationImage);
             formData.append('availableSizes', productForm.sizeOptions.map(s => s.size).join(','));
             formData.append('sizeOptions', JSON.stringify(productForm.sizeOptions));
+            formData.append('hasSizes', String(productForm.hasSizes));
             formData.append('customizationNotes', productForm.customizationNotes.trim());
             formData.append('inStock', String(productForm.inStock));
             formData.append('isOutOfStock', String(!productForm.inStock));
@@ -391,6 +432,7 @@ export default function AdminDashboard() {
             inspirationImage: '',
             availableSizes: [],
             sizeOptions: [],
+            hasSizes: false,
             customizationNotes: '',
             inStock: true,
             order: 0,
@@ -415,7 +457,7 @@ export default function AdminDashboard() {
                 return {
                     ...prev,
                     availableSizes: [...prev.availableSizes, size],
-                    sizeOptions: [...prev.sizeOptions, { size, inStock: true }]
+                    sizeOptions: [...prev.sizeOptions, { size, inStock: true, stockQuantity: 0 }]
                 };
             }
         });
@@ -430,23 +472,30 @@ export default function AdminDashboard() {
         }));
     };
 
-    // ============ CLOUDINARY ============
+    // ============ CLOUDINARY (OPTIMIZED PARALLEL UPLOADS) ============
     const CLOUDINARY_CLOUD_NAME = 'dk9pid4ec';
     const CLOUDINARY_UPLOAD_PRESET = 'my_unsigned_preset';
     const CLOUDINARY_FOLDER = 'digital-atelier';
 
-    const compressAndUpload = async (file) => {
-        // Compress
-        setUploadStatus('Compressing...');
+    // Light compression only — Cloudinary handles final resize + quality
+    const compressAndUpload = async (file, index, total) => {
+        // Update progress: compressing
+        setUploadProgress(prev => prev.map((p, i) => i === index ? { ...p, status: 'compressing' } : p));
+        setUploadStatus(`Compressing ${index + 1}/${total}...`);
+
+        // Light compression: just reduce size, don't resize aggressively
         const options = {
-            maxSizeMB: 1,
-            maxWidthOrHeight: 1920,
+            maxSizeMB: 2,            // Lighter than before (was 1MB)
+            maxWidthOrHeight: 2400,  // Keep more resolution, let Cloudinary handle final sizing
             useWebWorker: true,
+            initialQuality: 0.9,     // Higher quality, Cloudinary will optimize
         };
         const compressed = await imageCompression(file, options);
 
-        // Upload to Cloudinary
-        setUploadStatus('Uploading...');
+        // Update progress: uploading
+        setUploadProgress(prev => prev.map((p, i) => i === index ? { ...p, status: 'uploading' } : p));
+
+        // Upload to Cloudinary with eager transforms (Cloudinary does final processing)
         const formData = new FormData();
         formData.append('file', compressed);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -458,29 +507,96 @@ export default function AdminDashboard() {
         );
         const data = await res.json();
         if (!data.secure_url) throw new Error('Upload failed');
+
+        // Update progress: done
+        setUploadProgress(prev => prev.map((p, i) => i === index ? { ...p, status: 'done' } : p));
+
         return data.secure_url;
     };
 
+    // PARALLEL upload handler — all images upload simultaneously
     const handleImageUpload = async (inputRef, onSuccess, multiple = true) => {
         const files = inputRef.current?.files;
         if (!files || files.length === 0) return;
 
+        const fileArray = Array.from(files);
         setUploadingImages(true);
-        setUploadStatus('Preparing...');
+        setUploadProgress(fileArray.map(f => ({ name: f.name, status: 'pending' })));
+        setUploadStatus(`Uploading 0/${fileArray.length}...`);
+
         try {
-            for (let i = 0; i < files.length; i++) {
-                setUploadStatus(`Compressing ${i + 1}/${files.length}...`);
-                const url = await compressAndUpload(files[i]);
-                onSuccess(url);
+            // Upload ALL images in parallel
+            const results = await Promise.allSettled(
+                fileArray.map((file, index) =>
+                    compressAndUpload(file, index, fileArray.length)
+                        .then(url => {
+                            onSuccess(url);
+                            // Update overall status
+                            setUploadProgress(prev => {
+                                const doneCount = prev.filter(p => p.status === 'done').length + 1;
+                                setUploadStatus(`Uploaded ${doneCount}/${fileArray.length}`);
+                                return prev;
+                            });
+                            return url;
+                        })
+                )
+            );
+
+            const succeeded = results.filter(r => r.status === 'fulfilled').length;
+            const failed = results.filter(r => r.status === 'rejected').length;
+
+            if (failed > 0) {
+                setError(`${failed} image(s) failed to upload. ${succeeded} succeeded.`);
             }
-            setSuccessMessage(`${files.length} image${files.length > 1 ? 's' : ''} uploaded`);
+            if (succeeded > 0) {
+                setSuccessMessage(`${succeeded} image${succeeded > 1 ? 's' : ''} uploaded!`);
+            }
         } catch (err) {
             console.error('Upload error:', err);
             setError('Image upload failed: ' + err.message);
         } finally {
             setUploadingImages(false);
             setUploadStatus('');
+            setUploadProgress([]);
             if (inputRef.current) inputRef.current.value = '';
+        }
+    };
+
+    // URL UPLOAD — upload image from a URL directly to Cloudinary
+    const handleUrlUpload = async (imageUrl, onSuccess) => {
+        if (!imageUrl || !imageUrl.trim()) {
+            setError('Please enter a valid image URL');
+            return;
+        }
+
+        setUploadingImages(true);
+        setUploadStatus('Uploading from URL...');
+        setUploadProgress([{ name: 'URL Image', status: 'uploading' }]);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', imageUrl.trim());
+            formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+            formData.append('folder', CLOUDINARY_FOLDER);
+
+            const res = await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+                { method: 'POST', body: formData }
+            );
+            const data = await res.json();
+            if (!data.secure_url) throw new Error(data.error?.message || 'Upload from URL failed');
+
+            onSuccess(data.secure_url);
+            setSuccessMessage('Image uploaded from URL!');
+            setUploadProgress([{ name: 'URL Image', status: 'done' }]);
+        } catch (err) {
+            console.error('URL upload error:', err);
+            setError('URL upload failed: ' + err.message);
+            setUploadProgress([{ name: 'URL Image', status: 'error' }]);
+        } finally {
+            setUploadingImages(false);
+            setUploadStatus('');
+            setTimeout(() => setUploadProgress([]), 1500);
         }
     };
 
@@ -639,575 +755,665 @@ export default function AdminDashboard() {
 
     // ============ DASHBOARD UI ============
     return (
-        <div className={styles.container}>
-            <header className={styles.header}>
-                <h1>Admin Dashboard</h1>
-                <div>
-                    <a href="/" className={styles.viewSiteBtn} style={{ marginRight: '10px' }}>View Website</a>
-                    <button onClick={() => setIsAuthenticated(false)} className={styles.viewSiteBtn} style={{ background: '#666' }}>Logout</button>
-                </div>
-            </header>
-
-            {error && (
-                <div className={styles.errorMessage}>
-                    {error}
-                    <button onClick={() => setError('')}>&times;</button>
-                </div>
-            )}
-            {successMessage && (
-                <div className={styles.successMessage}>
-                    {successMessage}
-                    <button onClick={() => setSuccessMessage('')}>&times;</button>
-                </div>
-            )}
-
-            <div className={styles.tabs}>
-                <button
-                    className={activeTab === 'collections' ? styles.activeTab : ''}
-                    onClick={() => setActiveTab('collections')}
-                >
-                    Collections
-                </button>
-                <button
-                    className={activeTab === 'products' ? styles.activeTab : ''}
-                    onClick={() => setActiveTab('products')}
-                >
-                    Products
-                </button>
-            </div>
-
-            {/* COLLECTIONS TAB */}
-            {activeTab === 'collections' && (
-                <div className={styles.tabContent}>
-                    <h2>{editingCollectionId ? 'Edit Collection' : 'Create New Collection'}</h2>
-                    {editingCollectionId && (
-                        <button onClick={resetCollectionForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
-                    )}
-                    <form onSubmit={handleCollectionSubmit} className={styles.form}>
-                        <div className={styles.formGroup}>
-                            <label>Collection Name *</label>
-                            <input
-                                type="text"
-                                value={collectionForm.name}
-                                onChange={(e) => setCollectionForm({ ...collectionForm, name: e.target.value })}
-                                placeholder="e.g. Bridal, Evening Wear, 2026 Velvet Series"
-                                required
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Description</label>
-                            <textarea
-                                value={collectionForm.description}
-                                onChange={(e) => setCollectionForm({ ...collectionForm, description: e.target.value })}
-                                placeholder="Brief description of this collection"
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Parent Collection (for nesting)</label>
-                            <select
-                                value={collectionForm.parentCollection}
-                                onChange={(e) => setCollectionForm({ ...collectionForm, parentCollection: e.target.value })}
-                            >
-                                <option value="">-- Top Level (No Parent) --</option>
-                                {nestedCollectionOptions
-                                    .filter(c => c._id !== editingCollectionId)
-                                    .map(col => (
-                                        <option key={col._id} value={col._id}>{col.name}</option>
-                                    ))}
-                            </select>
-                            <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                                Select a parent to nest this inside another collection. E.g. Custom Couture &rarr; Bridal &rarr; 2026 Velvet Series
-                            </small>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Cover Image</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                ref={coverImageInputRef}
-                                onChange={() => handleImageUpload(coverImageInputRef, (url) => setCollectionForm(prev => ({ ...prev, coverImage: url })), false)}
-                                style={{ display: 'none' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => coverImageInputRef.current?.click()}
-                                className={styles.uploadBtn}
-                                disabled={uploadingImages}
-                            >
-                                {uploadingImages ? uploadStatus : (collectionForm.coverImage ? 'Change Image' : 'Upload Image')}
-                            </button>
-                            {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '80px', marginTop: '10px', borderRadius: '4px' }} />}
-                        </div>
-                        <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
-                            {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
-                        </button>
-                    </form>
-
-                    <h2>Existing Collections</h2>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <button
-                            onClick={() => setCollectionFilter('active')}
-                            style={{
-                                padding: '6px 16px',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                background: collectionFilter === 'active' ? '#2c2c2c' : '#e2e8f0',
-                                color: collectionFilter === 'active' ? 'white' : '#333'
-                            }}
-                        >
-                            Active
-                        </button>
-                        <button
-                            onClick={() => setCollectionFilter('archived')}
-                            style={{
-                                padding: '6px 16px',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                background: collectionFilter === 'archived' ? '#718096' : '#e2e8f0',
-                                color: collectionFilter === 'archived' ? 'white' : '#333'
-                            }}
-                        >
-                            Archived
-                        </button>
+        <>
+            <div className={styles.container}>
+                <header className={styles.header}>
+                    <h1>Admin Dashboard</h1>
+                    <div>
+                        <a href="/" className={styles.viewSiteBtn} style={{ marginRight: '10px' }}>View Website</a>
+                        <button onClick={() => setIsAuthenticated(false)} className={styles.viewSiteBtn} style={{ background: '#666' }}>Logout</button>
                     </div>
-                    <div className={styles.collectionTree}>
-                        {collectionTree.length ? renderCollectionTree(
-                            filterCollectionTree(collectionTree, collectionFilter === 'archived')
-                        ) : <p>No collections found. Create your first collection above.</p>}
-                    </div>
-                </div>
-            )}
+                </header>
 
-            {/* PRODUCTS TAB */}
-            {activeTab === 'products' && (
-                <div className={styles.tabContent}>
-                    <h2>{editingProductId ? 'Edit Product' : 'Create New Product'}</h2>
-                    {editingProductId && (
-                        <button onClick={resetProductForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
-                    )}
-                    <form onSubmit={handleProductSubmit} className={styles.form}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                {error && (
+                    <div className={styles.errorMessage}>
+                        {error}
+                        <button onClick={() => setError('')}>&times;</button>
+                    </div>
+                )}
+                {successMessage && (
+                    <div className={styles.successMessage}>
+                        {successMessage}
+                        <button onClick={() => setSuccessMessage('')}>&times;</button>
+                    </div>
+                )}
+
+                <div className={styles.tabs}>
+                    <button
+                        className={activeTab === 'collections' ? styles.activeTab : ''}
+                        onClick={() => setActiveTab('collections')}
+                    >
+                        Collections
+                    </button>
+                    <button
+                        className={activeTab === 'products' ? styles.activeTab : ''}
+                        onClick={() => setActiveTab('products')}
+                    >
+                        Products
+                    </button>
+                </div>
+
+                {/* COLLECTIONS TAB */}
+                {activeTab === 'collections' && (
+                    <div className={styles.tabContent}>
+                        <h2>{editingCollectionId ? 'Edit Collection' : 'Create New Collection'}</h2>
+                        {editingCollectionId && (
+                            <button onClick={resetCollectionForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
+                        )}
+                        <form onSubmit={handleCollectionSubmit} className={styles.form}>
                             <div className={styles.formGroup}>
-                                <label>Name *</label>
+                                <label>Collection Name *</label>
                                 <input
                                     type="text"
-                                    value={productForm.name}
-                                    onChange={e => setProductForm({ ...productForm, name: e.target.value })}
-                                    placeholder="Product name"
+                                    value={collectionForm.name}
+                                    onChange={(e) => setCollectionForm({ ...collectionForm, name: e.target.value })}
+                                    placeholder="e.g. Bridal, Evening Wear, 2026 Velvet Series"
                                     required
                                 />
                             </div>
                             <div className={styles.formGroup}>
-                                <label>Collection *</label>
-                                <select
-                                    value={productForm.collection}
-                                    onChange={e => setProductForm({ ...productForm, collection: e.target.value })}
-                                    required
-                                >
-                                    <option value="">-- Select Collection --</option>
-                                    {nestedCollectionOptions.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className={styles.formGroup}>
-                            <label>Description</label>
-                            <textarea
-                                value={productForm.description}
-                                onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                                placeholder="Product description"
-                            />
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                            <div className={styles.formGroup}>
-                                <label>Business Type</label>
-                                <select
-                                    value={productForm.businessType}
-                                    onChange={e => setProductForm({ ...productForm, businessType: e.target.value })}
-                                >
-                                    <option value="retail">Retail</option>
-                                    <option value="custom">Custom</option>
-                                </select>
+                                <label>Description</label>
+                                <textarea
+                                    value={collectionForm.description}
+                                    onChange={(e) => setCollectionForm({ ...collectionForm, description: e.target.value })}
+                                    placeholder="Brief description of this collection"
+                                />
                             </div>
                             <div className={styles.formGroup}>
-                                <label>Price {productForm.businessType === 'custom' ? '(optional for custom)' : ''}</label>
+                                <label>Parent Collection (for nesting)</label>
+                                <select
+                                    value={collectionForm.parentCollection}
+                                    onChange={(e) => setCollectionForm({ ...collectionForm, parentCollection: e.target.value })}
+                                >
+                                    <option value="">-- Top Level (No Parent) --</option>
+                                    {nestedCollectionOptions
+                                        .filter(c => c._id !== editingCollectionId)
+                                        .map(col => (
+                                            <option key={col._id} value={col._id}>{col.name}</option>
+                                        ))}
+                                </select>
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Select a parent to nest this inside another collection. E.g. Custom Couture &rarr; Bridal &rarr; 2026 Velvet Series
+                                </small>
+                            </div>
+                            <div className={styles.formGroup}>
+                                <label>Cover Image</label>
                                 <input
-                                    type="number"
-                                    value={productForm.price}
-                                    onChange={e => setProductForm({ ...productForm, price: e.target.value })}
-                                    placeholder="0.00"
-                                    min="0"
-                                    step="0.01"
+                                    type="file"
+                                    accept="image/*"
+                                    ref={coverImageInputRef}
+                                    onChange={() => handleImageUpload(coverImageInputRef, (url) => setCollectionForm(prev => ({ ...prev, coverImage: url })), false)}
+                                    style={{ display: 'none' }}
+                                />
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => coverImageInputRef.current?.click()}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        📁 {collectionForm.coverImage ? 'Change Image' : 'Upload'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const url = prompt('Enter cover image URL:');
+                                            if (url) handleUrlUpload(url, (uploadedUrl) => setCollectionForm(prev => ({ ...prev, coverImage: uploadedUrl })));
+                                        }}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        🔗 From URL
+                                    </button>
+                                </div>
+                                {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '80px', marginTop: '10px', borderRadius: '4px' }} />}
+                            </div>
+                            <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
+                                {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}
+                            </button>
+                        </form>
+
+                        <h2>Existing Collections</h2>
+                        <div className={styles.filterTabs}>
+                            <button
+                                onClick={() => setCollectionFilter('active')}
+                                className={collectionFilter === 'active' ? styles.filterTabActive : styles.filterTabInactive}
+                            >
+                                Active
+                            </button>
+                            <button
+                                onClick={() => setCollectionFilter('archived')}
+                                className={collectionFilter === 'archived' ? styles.filterTabArchived : styles.filterTabInactive}
+                            >
+                                Archived
+                            </button>
+                        </div>
+                        <div className={styles.collectionTree}>
+                            {collectionTree.length ? renderCollectionTree(
+                                filterCollectionTree(collectionTree, collectionFilter === 'archived')
+                            ) : <p>No collections found. Create your first collection above.</p>}
+                        </div>
+                    </div>
+                )}
+
+                {/* PRODUCTS TAB */}
+                {activeTab === 'products' && (
+                    <div className={styles.tabContent}>
+                        <h2>{editingProductId ? 'Edit Product' : 'Create New Product'}</h2>
+                        {editingProductId && (
+                            <button onClick={resetProductForm} style={{ marginBottom: '1rem', padding: '5px 10px' }}>Cancel Edit</button>
+                        )}
+                        <form onSubmit={handleProductSubmit} className={styles.form}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div className={styles.formGroup}>
+                                    <label>Name *</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.name}
+                                        onChange={e => setProductForm({ ...productForm, name: e.target.value })}
+                                        placeholder="Product name"
+                                        required
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Collection *</label>
+                                    <select
+                                        value={productForm.collection}
+                                        onChange={e => setProductForm({ ...productForm, collection: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">-- Select Collection --</option>
+                                        {nestedCollectionOptions.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <label>Description</label>
+                                <textarea
+                                    value={productForm.description}
+                                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                                    placeholder="Product description"
                                 />
                             </div>
-                        </div>
 
-                        {/* Sizes - only show for retail */}
-                        {productForm.businessType === 'retail' && (
-                            <div className={styles.formGroup}>
-                                <label>Available Sizes</label>
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    {AVAILABLE_SIZES.map(size => (
-                                        <button
-                                            key={size}
-                                            type="button"
-                                            onClick={() => toggleSize(size)}
-                                            style={{
-                                                padding: '8px 16px',
-                                                border: productForm.availableSizes.includes(size) ? '2px solid #2c2c2c' : '1px solid #ddd',
-                                                background: productForm.availableSizes.includes(size) ? '#2c2c2c' : 'white',
-                                                color: productForm.availableSizes.includes(size) ? 'white' : '#333',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontSize: '13px',
-                                                fontWeight: productForm.availableSizes.includes(size) ? '600' : '400',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div className={styles.formGroup}>
+                                    <label>Business Type</label>
+                                    <select
+                                        value={productForm.businessType}
+                                        onChange={e => setProductForm({ ...productForm, businessType: e.target.value })}
+                                    >
+                                        <option value="retail">Retail</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
                                 </div>
-                                {productForm.sizeOptions.length > 0 && (
-                                    <div style={{ marginTop: '12px', padding: '12px', background: '#f9f9f9', borderRadius: '6px', border: '1px solid #eee' }}>
-                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Per-Size Stock Status</label>
-                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                            {productForm.sizeOptions.map(opt => (
-                                                <button
-                                                    key={opt.size}
-                                                    type="button"
-                                                    onClick={() => toggleSizeStock(opt.size)}
-                                                    style={{
-                                                        padding: '6px 14px',
-                                                        border: '1px solid',
-                                                        borderColor: opt.inStock ? '#48bb78' : '#e53e3e',
-                                                        background: opt.inStock ? '#f0fff4' : '#fff5f5',
-                                                        color: opt.inStock ? '#276749' : '#9b2c2c',
-                                                        borderRadius: '4px',
-                                                        cursor: 'pointer',
-                                                        fontSize: '12px',
-                                                        fontWeight: '600',
-                                                        transition: 'all 0.2s',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '6px'
-                                                    }}
-                                                >
-                                                    <span style={{
-                                                        width: '8px',
-                                                        height: '8px',
-                                                        borderRadius: '50%',
-                                                        background: opt.inStock ? '#48bb78' : '#e53e3e',
-                                                        display: 'inline-block'
-                                                    }} />
-                                                    {opt.size}: {opt.inStock ? 'In Stock' : 'Out'}
-                                                </button>
+                                <div className={styles.formGroup}>
+                                    <label>Price {productForm.businessType === 'custom' ? '(optional for custom)' : ''}</label>
+                                    <input
+                                        type="number"
+                                        value={productForm.price}
+                                        onChange={e => setProductForm({ ...productForm, price: e.target.value })}
+                                        placeholder="0.00"
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Sizes - only show for retail */}
+                            {productForm.businessType === 'retail' && (
+                                <div className={styles.formGroup}>
+                                    <label>Enable Size Options</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProductForm(prev => ({ ...prev, hasSizes: !prev.hasSizes }))}
+                                        className={productForm.hasSizes ? styles.toggleBtnGold : styles.toggleBtnOff}
+                                    >
+                                        {productForm.hasSizes ? '✓ Sizes Enabled' : 'Sizes Disabled'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {productForm.businessType === 'retail' && productForm.hasSizes && (
+                                <div className={styles.formGroup}>
+                                    <label>Available Sizes</label>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        {AVAILABLE_SIZES.map(size => (
+                                            <button
+                                                key={size}
+                                                type="button"
+                                                onClick={() => toggleSize(size)}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    border: productForm.availableSizes.includes(size) ? '2px solid #2c2c2c' : '1px solid #ddd',
+                                                    background: productForm.availableSizes.includes(size) ? '#2c2c2c' : 'white',
+                                                    color: productForm.availableSizes.includes(size) ? 'white' : '#333',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '13px',
+                                                    fontWeight: productForm.availableSizes.includes(size) ? '600' : '400',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {productForm.sizeOptions.length > 0 && (
+                                        <div style={{ marginTop: '12px', padding: '12px', background: '#f9f9f9', borderRadius: '6px', border: '1px solid #eee' }}>
+                                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#666', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Per-Size Stock Status & Quantity</label>
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                {productForm.sizeOptions.map(opt => (
+                                                    <div key={opt.size} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleSizeStock(opt.size)}
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                border: '1px solid',
+                                                                borderColor: opt.inStock ? '#48bb78' : '#e53e3e',
+                                                                background: opt.inStock ? '#f0fff4' : '#fff5f5',
+                                                                color: opt.inStock ? '#276749' : '#9b2c2c',
+                                                                borderRadius: '4px',
+                                                                cursor: 'pointer',
+                                                                fontSize: '12px',
+                                                                fontWeight: '600',
+                                                                transition: 'all 0.2s',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '6px'
+                                                            }}
+                                                        >
+                                                            <span style={{
+                                                                width: '8px',
+                                                                height: '8px',
+                                                                borderRadius: '50%',
+                                                                background: opt.inStock ? '#48bb78' : '#e53e3e',
+                                                                display: 'inline-block'
+                                                            }} />
+                                                            {opt.size}: {opt.inStock ? 'In Stock' : 'Out'}
+                                                        </button>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={opt.stockQuantity || 0}
+                                                            onChange={(e) => {
+                                                                const qty = parseInt(e.target.value) || 0;
+                                                                setProductForm(prev => ({
+                                                                    ...prev,
+                                                                    sizeOptions: prev.sizeOptions.map(s =>
+                                                                        s.size === opt.size ? { ...s, stockQuantity: qty } : s
+                                                                    )
+                                                                }));
+                                                            }}
+                                                            style={{
+                                                                width: '60px',
+                                                                padding: '4px 6px',
+                                                                border: '1px solid #ddd',
+                                                                borderRadius: '4px',
+                                                                fontSize: '12px',
+                                                                textAlign: 'center'
+                                                            }}
+                                                            placeholder="Qty"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className={styles.formGroup}>
+                                <label>Product Images *</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    ref={productImageInputRef}
+                                    onChange={() => handleImageUpload(productImageInputRef, (url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
+                                    style={{ display: 'none' }}
+                                />
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => productImageInputRef.current?.click()}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        📁 From Device
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const url = prompt('Enter image URL:');
+                                            if (url) handleUrlUpload(url, (uploadedUrl) => setProductForm(prev => ({ ...prev, images: [...prev.images, uploadedUrl] })));
+                                        }}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        🔗 From URL
+                                    </button>
+                                </div>
+
+                                {/* Upload Progress Indicator */}
+                                {uploadProgress.length > 0 && (
+                                    <div style={{ marginTop: '10px', padding: '12px', background: '#f7fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: '600', color: '#2c2c2c' }}>
+                                                {uploadStatus}
+                                            </span>
+                                            <span style={{ fontSize: '12px', color: '#718096' }}>
+                                                {uploadProgress.filter(p => p.status === 'done').length}/{uploadProgress.length} done
+                                            </span>
+                                        </div>
+                                        {/* Progress bar */}
+                                        <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                width: `${(uploadProgress.filter(p => p.status === 'done').length / uploadProgress.length) * 100}%`,
+                                                height: '100%',
+                                                background: 'linear-gradient(90deg, #48bb78, #38a169)',
+                                                borderRadius: '3px',
+                                                transition: 'width 0.3s ease'
+                                            }} />
+                                        </div>
+                                        {/* Per-image status */}
+                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                                            {uploadProgress.map((p, i) => (
+                                                <span key={i} style={{
+                                                    fontSize: '11px',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '10px',
+                                                    background: p.status === 'done' ? '#c6f6d5' : p.status === 'error' ? '#fed7d7' : p.status === 'uploading' ? '#bee3f8' : '#e2e8f0',
+                                                    color: p.status === 'done' ? '#276749' : p.status === 'error' ? '#9b2c2c' : p.status === 'uploading' ? '#2b6cb0' : '#4a5568',
+                                                }}>
+                                                    {p.status === 'done' ? '✓' : p.status === 'error' ? '✗' : p.status === 'uploading' ? '↑' : '⏳'} {p.name.substring(0, 12)}
+                                                </span>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        )}
 
-                        <div className={styles.formGroup}>
-                            <label>Product Images *</label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                ref={productImageInputRef}
-                                onChange={() => handleImageUpload(productImageInputRef, (url) => setProductForm(prev => ({ ...prev, images: [...prev.images, url] })), true)}
-                                style={{ display: 'none' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => productImageInputRef.current?.click()}
-                                className={styles.uploadBtn}
-                                disabled={uploadingImages}
-                            >
-                                {uploadingImages ? uploadStatus : 'Upload Images'}
-                            </button>
-                            <div className={styles.imageGallery}>
-                                {productForm.images.map((img, i) => (
-                                    <div key={i} style={{ position: 'relative', display: 'inline-block', marginRight: 5 }}>
-                                        <img src={img} alt="Product" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                                <div className={styles.imageGallery}>
+                                    {productForm.images.map((img, i) => (
+                                        <div key={i} style={{ position: 'relative', display: 'inline-block', marginRight: 5 }}>
+                                            <img src={img} alt="Product" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                                            <button
+                                                type="button"
+                                                onClick={() => setProductForm(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
+                                                style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Inspiration Image - only show for custom */}
+                            {productForm.businessType === 'custom' && (
+                                <div className={styles.formGroup}>
+                                    <label>Customer Inspiration Image (for side-by-side comparison)</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={inspirationImageInputRef}
+                                        onChange={() => handleImageUpload(inspirationImageInputRef, (url) => setProductForm(prev => ({ ...prev, inspirationImage: url })), false)}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                         <button
                                             type="button"
-                                            onClick={() => setProductForm(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
-                                            style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={() => inspirationImageInputRef.current?.click()}
+                                            className={styles.uploadBtn}
+                                            disabled={uploadingImages}
                                         >
-                                            &times;
+                                            📁 {productForm.inspirationImage ? 'Change Image' : 'Upload'}
                                         </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Inspiration Image - only show for custom */}
-                        {productForm.businessType === 'custom' && (
-                            <div className={styles.formGroup}>
-                                <label>Customer Inspiration Image (for side-by-side comparison)</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={inspirationImageInputRef}
-                                    onChange={() => handleImageUpload(inspirationImageInputRef, (url) => setProductForm(prev => ({ ...prev, inspirationImage: url })), false)}
-                                    style={{ display: 'none' }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => inspirationImageInputRef.current?.click()}
-                                    className={styles.uploadBtn}
-                                    disabled={uploadingImages}
-                                >
-                                    {uploadingImages ? uploadStatus : (productForm.inspirationImage ? 'Change Inspiration Image' : 'Upload Inspiration Image')}
-                                </button>
-                                {productForm.inspirationImage && (
-                                    <div style={{ position: 'relative', display: 'inline-block', marginTop: '10px' }}>
-                                        <img src={productForm.inspirationImage} alt="Inspiration" style={{ height: '100px', borderRadius: '4px' }} />
                                         <button
                                             type="button"
-                                            onClick={() => setProductForm(prev => ({ ...prev, inspirationImage: '' }))}
-                                            style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={() => {
+                                                const url = prompt('Enter inspiration image URL:');
+                                                if (url) handleUrlUpload(url, (uploadedUrl) => setProductForm(prev => ({ ...prev, inspirationImage: uploadedUrl })));
+                                            }}
+                                            className={styles.uploadBtn}
+                                            disabled={uploadingImages}
                                         >
-                                            &times;
+                                            🔗 From URL
                                         </button>
                                     </div>
-                                )}
-                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                                    Upload the customer&apos;s inspiration photo. It will be shown side-by-side with your creation on the website.
-                                </small>
-                            </div>
-                        )}
-
-                        {/* Customization Notes - only show for custom */}
-                        {productForm.businessType === 'custom' && (
-                            <div className={styles.formGroup}>
-                                <label>Customization Notes</label>
-                                <textarea
-                                    value={productForm.customizationNotes}
-                                    onChange={e => setProductForm({ ...productForm, customizationNotes: e.target.value })}
-                                    placeholder="Details about the customization process, turnaround time, materials used, etc."
-                                    maxLength={1000}
-                                />
-                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                                    Shown on product page. Max 1000 characters.
-                                </small>
-                            </div>
-                        )}
-
-                        {/* Tags */}
-                        <div className={styles.formGroup}>
-                            <label>Tags</label>
-                            <input
-                                type="text"
-                                value={productForm.tags}
-                                onChange={e => setProductForm({ ...productForm, tags: e.target.value })}
-                                placeholder="bridal, velvet, 2026, luxury (comma-separated)"
-                            />
-                            <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
-                                Comma-separated tags for filtering and display on product page.
-                            </small>
-                        </div>
-
-                        {/* Order + Toggles */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', alignItems: 'end' }}>
-                            <div className={styles.formGroup}>
-                                <label>Display Order</label>
-                                <input
-                                    type="number"
-                                    value={productForm.order}
-                                    onChange={e => setProductForm({ ...productForm, order: parseInt(e.target.value) || 0 })}
-                                    placeholder="0"
-                                    min="0"
-                                />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>In Stock</label>
-                                <button
-                                    type="button"
-                                    onClick={() => setProductForm(prev => ({ ...prev, inStock: !prev.inStock }))}
-                                    style={{
-                                        padding: '10px 16px',
-                                        width: '100%',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        background: productForm.inStock ? '#48bb78' : '#e53e3e',
-                                        color: 'white',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {productForm.inStock ? 'In Stock' : 'Out of Stock'}
-                                </button>
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Featured</label>
-                                <button
-                                    type="button"
-                                    onClick={() => setProductForm(prev => ({ ...prev, isFeatured: !prev.isFeatured }))}
-                                    style={{
-                                        padding: '10px 16px',
-                                        width: '100%',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        background: productForm.isFeatured ? '#c9a961' : '#f5f5f5',
-                                        color: productForm.isFeatured ? 'white' : '#666',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {productForm.isFeatured ? 'Featured' : 'Not Featured'}
-                                </button>
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Active</label>
-                                <button
-                                    type="button"
-                                    onClick={() => setProductForm(prev => ({ ...prev, isActive: !prev.isActive }))}
-                                    style={{
-                                        padding: '10px 16px',
-                                        width: '100%',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: '600',
-                                        background: productForm.isActive ? '#48bb78' : '#a0aec0',
-                                        color: 'white',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {productForm.isActive ? 'Active' : 'Inactive'}
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* SEO Fields */}
-                        <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '10px' }}>
-                            <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SEO (Optional)</label>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                <div className={styles.formGroup}>
-                                    <label>Meta Title</label>
-                                    <input
-                                        type="text"
-                                        value={productForm.metaTitle}
-                                        onChange={e => setProductForm({ ...productForm, metaTitle: e.target.value })}
-                                        placeholder="SEO title (max 60 chars)"
-                                        maxLength={60}
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label>Meta Description</label>
-                                    <input
-                                        type="text"
-                                        value={productForm.metaDescription}
-                                        onChange={e => setProductForm({ ...productForm, metaDescription: e.target.value })}
-                                        placeholder="SEO description (max 160 chars)"
-                                        maxLength={160}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
-                            {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
-                        </button>
-                    </form>
-
-                    <h2>Existing Products</h2>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <button
-                            onClick={() => setProductFilter('active')}
-                            style={{
-                                padding: '6px 16px',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                background: productFilter === 'active' ? '#2c2c2c' : '#e2e8f0',
-                                color: productFilter === 'active' ? 'white' : '#333'
-                            }}
-                        >
-                            Active ({products.filter(p => !p.isArchived).length})
-                        </button>
-                        <button
-                            onClick={() => setProductFilter('archived')}
-                            style={{
-                                padding: '6px 16px',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '600',
-                                background: productFilter === 'archived' ? '#718096' : '#e2e8f0',
-                                color: productFilter === 'archived' ? 'white' : '#333'
-                            }}
-                        >
-                            Archived ({products.filter(p => p.isArchived).length})
-                        </button>
-                    </div>
-                    <div className={styles.productList}>
-                        {products.filter(p => productFilter === 'archived' ? p.isArchived : !p.isArchived).map(p => (
-                            <div key={p._id} className={styles.productRow}>
-                                <img
-                                    src={p.images && p.images[0] ? p.images[0] : '/placeholder.jpg'}
-                                    alt={p.name}
-                                    className={styles.productImage}
-                                />
-                                <div className={styles.productInfo}>
-                                    <strong>
-                                        {p.name}
-                                        {p.isFeatured && <span style={{ marginLeft: '8px', background: '#c9a961', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Featured</span>}
-                                        {p.isActive === false && <span style={{ marginLeft: '8px', background: '#a0aec0', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Inactive</span>}
-                                        {p.inStock === false && <span style={{ marginLeft: '8px', background: '#e53e3e', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Out of Stock</span>}
-                                        {p.isArchived && <span style={{ marginLeft: '8px', background: '#718096', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Archived</span>}
-                                    </strong>
-                                    <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
-                                </div>
-                                <div>
-                                    <span className={styles.productType}>{p.businessType}</span>
-                                </div>
-                                <div className={styles.priceTag}>
-                                    {p.price > 0 ? `Rs. ${p.price.toLocaleString()}` : '-'}
-                                </div>
-                                <div className={styles.actionButtons}>
-                                    <button onClick={() => handleEditProduct(p)} className={styles.editBtn}>Edit</button>
-                                    {p.isArchived ? (
-                                        <button
-                                            onClick={() => handleUnarchiveProduct(p._id)}
-                                            style={{ padding: '4px 12px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                                        >
-                                            Restore
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleArchiveProduct(p._id)}
-                                            style={{ padding: '4px 12px', background: '#718096', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                                        >
-                                            Archive
-                                        </button>
+                                    {productForm.inspirationImage && (
+                                        <div style={{ position: 'relative', display: 'inline-block', marginTop: '10px' }}>
+                                            <img src={productForm.inspirationImage} alt="Inspiration" style={{ height: '100px', borderRadius: '4px' }} />
+                                            <button
+                                                type="button"
+                                                onClick={() => setProductForm(prev => ({ ...prev, inspirationImage: '' }))}
+                                                style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
                                     )}
-                                    <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Upload the customer&apos;s inspiration photo. It will be shown side-by-side with your creation on the website.
+                                    </small>
+                                </div>
+                            )}
+
+                            {/* Customization Notes - only show for custom */}
+                            {productForm.businessType === 'custom' && (
+                                <div className={styles.formGroup}>
+                                    <label>Customization Notes</label>
+                                    <textarea
+                                        value={productForm.customizationNotes}
+                                        onChange={e => setProductForm({ ...productForm, customizationNotes: e.target.value })}
+                                        placeholder="Details about the customization process, turnaround time, materials used, etc."
+                                        maxLength={1000}
+                                    />
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Shown on product page. Max 1000 characters.
+                                    </small>
+                                </div>
+                            )}
+
+                            {/* Tags */}
+                            <div className={styles.formGroup}>
+                                <label>Tags</label>
+                                <input
+                                    type="text"
+                                    value={productForm.tags}
+                                    onChange={e => setProductForm({ ...productForm, tags: e.target.value })}
+                                    placeholder="bridal, velvet, 2026, luxury (comma-separated)"
+                                />
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Comma-separated tags for filtering and display on product page.
+                                </small>
+                            </div>
+
+                            {/* Order + Toggles */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px', alignItems: 'end' }}>
+                                <div className={styles.formGroup}>
+                                    <label>Display Order</label>
+                                    <input
+                                        type="number"
+                                        value={productForm.order}
+                                        onChange={e => setProductForm({ ...productForm, order: parseInt(e.target.value) || 0 })}
+                                        placeholder="0"
+                                        min="0"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>In Stock</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProductForm(prev => ({ ...prev, inStock: !prev.inStock }))}
+                                        className={productForm.inStock ? styles.toggleBtnGreen : styles.toggleBtnRed}
+                                    >
+                                        {productForm.inStock ? '✓ In Stock' : '✗ Out of Stock'}
+                                    </button>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Featured</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProductForm(prev => ({ ...prev, isFeatured: !prev.isFeatured }))}
+                                        className={productForm.isFeatured ? styles.toggleBtnGold : styles.toggleBtnOff}
+                                    >
+                                        {productForm.isFeatured ? '★ Featured' : 'Not Featured'}
+                                    </button>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Active</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProductForm(prev => ({ ...prev, isActive: !prev.isActive }))}
+                                        className={productForm.isActive ? styles.toggleBtnGreen : styles.toggleBtnGray}
+                                    >
+                                        {productForm.isActive ? '✓ Active' : 'Inactive'}
+                                    </button>
                                 </div>
                             </div>
-                        ))}
-                        {products.filter(p => productFilter === 'archived' ? p.isArchived : !p.isArchived).length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>{productFilter === 'archived' ? 'No archived products.' : 'No products found. Create your first product above.'}</p>}
+
+                            {/* SEO Fields */}
+                            <div style={{ borderTop: '1px solid #eee', paddingTop: '20px', marginTop: '10px' }}>
+                                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: '#999', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SEO (Optional)</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div className={styles.formGroup}>
+                                        <label>Meta Title</label>
+                                        <input
+                                            type="text"
+                                            value={productForm.metaTitle}
+                                            onChange={e => setProductForm({ ...productForm, metaTitle: e.target.value })}
+                                            placeholder="SEO title (max 60 chars)"
+                                            maxLength={60}
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Meta Description</label>
+                                        <input
+                                            type="text"
+                                            value={productForm.metaDescription}
+                                            onChange={e => setProductForm({ ...productForm, metaDescription: e.target.value })}
+                                            placeholder="SEO description (max 160 chars)"
+                                            maxLength={160}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
+                                {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingProductId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT')}
+                            </button>
+                        </form>
+
+                        <h2>Existing Products</h2>
+                        <div className={styles.filterTabs}>
+                            <button
+                                onClick={() => setProductFilter('active')}
+                                className={productFilter === 'active' ? styles.filterTabActive : styles.filterTabInactive}
+                            >
+                                Active ({products.filter(p => !p.isArchived && p.inStock !== false).length})
+                            </button>
+                            <button
+                                onClick={() => setProductFilter('out_of_stock')}
+                                className={productFilter === 'out_of_stock' ? styles.filterTabOutOfStock : styles.filterTabInactive}
+                            >
+                                Out of Stock ({products.filter(p => !p.isArchived && p.inStock === false).length})
+                            </button>
+                            <button
+                                onClick={() => setProductFilter('archived')}
+                                className={productFilter === 'archived' ? styles.filterTabArchived : styles.filterTabInactive}
+                            >
+                                Archived ({products.filter(p => p.isArchived).length})
+                            </button>
+                        </div>
+                        <div className={styles.productList}>
+                            {products.filter(p => {
+                                if (productFilter === 'archived') return p.isArchived;
+                                if (productFilter === 'out_of_stock') return !p.isArchived && p.inStock === false;
+                                return !p.isArchived && p.inStock !== false;
+                            }).map(p => (
+                                <div key={p._id} className={styles.productRow}>
+                                    <img
+                                        src={p.images && p.images[0] ? p.images[0] : '/placeholder.jpg'}
+                                        alt={p.name}
+                                        className={styles.productImage}
+                                    />
+                                    <div className={styles.productInfo}>
+                                        <strong>
+                                            {p.name}
+                                            {p.isFeatured && <span className={styles.badgeFeatured}>Featured</span>}
+                                            {p.isActive === false && <span className={styles.badgeInactive}>Inactive</span>}
+                                            {p.inStock === false && <span className={styles.badgeOutOfStock}>Out of Stock</span>}
+                                            {p.isArchived && <span className={styles.badgeArchived}>Archived</span>}
+                                        </strong>
+                                        <span className={styles.productMeta}>{p.collectionRef?.name || 'No Collection'}</span>
+                                    </div>
+                                    <div>
+                                        <span className={styles.productType}>{p.businessType}</span>
+                                    </div>
+                                    <div className={styles.priceTag}>
+                                        {p.price > 0 ? `Rs. ${p.price.toLocaleString()}` : '-'}
+                                    </div>
+                                    <div className={styles.actionButtons}>
+                                        <button onClick={() => handleEditProduct(p)} className={styles.editBtn}>Edit</button>
+                                        {p.isArchived ? (
+                                            <button
+                                                onClick={() => handleUnarchiveProduct(p._id)}
+                                                style={{ padding: '4px 12px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                            >
+                                                Restore
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleArchiveProduct(p._id)}
+                                                style={{ padding: '4px 12px', background: '#718096', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                                            >
+                                                Archive
+                                            </button>
+                                        )}
+                                        <button onClick={() => handleDeleteProduct(p._id)} className={styles.deleteBtn}>Delete</button>
+                                    </div>
+                                </div>
+                            ))}
+                            {products.filter(p => {
+                                if (productFilter === 'archived') return p.isArchived;
+                                if (productFilter === 'out_of_stock') return !p.isArchived && p.inStock === false;
+                                return !p.isArchived && p.inStock !== false;
+                            }).length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>{productFilter === 'archived' ? 'No archived products.' : productFilter === 'out_of_stock' ? 'No out-of-stock products.' : 'No products found. Create your first product above.'}</p>}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* CONFIRMATION MODAL */}
+            {confirmModal.open && (
+                <div className={styles.modalOverlay} onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>
+                    <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
+                        <h3>{confirmModal.title}</h3>
+                        <p>{confirmModal.message}</p>
+                        <div className={styles.modalActions}>
+                            <button
+                                className={styles.modalCancelBtn}
+                                onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className={`${styles.modalConfirmBtn} ${confirmModal.type === 'archive' ? styles.modalConfirmArchive : ''}`}
+                                onClick={confirmModal.onConfirm}
+                            >
+                                {confirmModal.type === 'archive' ? 'Archive' : 'Delete'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
-        </div>
+            <Script
+                src="https://upload-widget.cloudinary.com/global/all.js"
+                strategy="lazyOnload"
+            />
+        </>
     );
 }

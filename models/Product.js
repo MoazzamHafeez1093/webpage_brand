@@ -77,6 +77,12 @@ const ProductSchema = new mongoose.Schema({
         enum: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom']
     }],
 
+    // Whether this product has size options enabled
+    hasSizes: {
+        type: Boolean,
+        default: false
+    },
+
     // Dynamic size options with per-size availability
     sizeOptions: [{
         size: {
@@ -87,6 +93,11 @@ const ProductSchema = new mongoose.Schema({
         inStock: {
             type: Boolean,
             default: true
+        },
+        stockQuantity: {
+            type: Number,
+            default: 0,
+            min: 0
         }
     }],
 
@@ -118,6 +129,12 @@ const ProductSchema = new mongoose.Schema({
     isArchived: {
         type: Boolean,
         default: false
+    },
+
+    // Timestamp when archived
+    archivedAt: {
+        type: Date,
+        default: null
     },
 
     // Featured product (for homepage highlights)
@@ -164,6 +181,7 @@ ProductSchema.index({ businessType: 1, isActive: 1 });
 ProductSchema.index({ isFeatured: 1, isActive: 1 });
 ProductSchema.index({ tags: 1 });
 ProductSchema.index({ isArchived: 1 });
+ProductSchema.index({ isOutOfStock: 1 });
 
 // Virtual for primary image (first image in array)
 ProductSchema.virtual('primaryImage').get(function () {

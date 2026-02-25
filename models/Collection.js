@@ -59,6 +59,12 @@ const CollectionSchema = new mongoose.Schema({
         default: false
     },
 
+    // Timestamp when archived
+    archivedAt: {
+        type: Date,
+        default: null
+    },
+
     // Metadata
     createdBy: {
         type: String,

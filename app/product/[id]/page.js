@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import styles from './page.module.css';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import InteractiveImage from './InteractiveImage';
 import ProductCard from '@/components/ProductCard';
@@ -9,10 +10,12 @@ import ProductActions from './ProductActions';
 // Detailed Product View
 export default async function ProductPage({ params }) {
     const resolvedParams = await params;
-    const product = await db.getItemById(resolvedParams.id);
-    const categories = await db.getCategoryTree();
+    const [product, categories] = await Promise.all([
+        db.getItemById(resolvedParams.id),
+        db.getCategoryTree()
+    ]);
 
-    // Fetch related products from the same collection
+    // Fetch related products from the same collection (depends on product)
     const collectionId = product?.collectionRef?._id || product?.collectionRef;
     const relatedProducts = collectionId
         ? await db.getRelatedProducts(collectionId, resolvedParams.id, 4)
@@ -132,11 +135,11 @@ export default async function ProductPage({ params }) {
                             <span className={styles.label}>Inspiration vs Our Creation</span>
                             <div className={styles.comparisonGrid}>
                                 <div className={styles.comparisonItem}>
-                                    <img src={product.inspirationImage} alt="Client Inspiration" />
+                                    <Image src={product.inspirationImage} alt="Client Inspiration" fill sizes="(max-width: 768px) 45vw, 25vw" style={{ objectFit: 'cover' }} />
                                     <span className={styles.comparisonLabel}>Client&apos;s Vision</span>
                                 </div>
                                 <div className={styles.comparisonItem}>
-                                    <img src={product.images?.[0] || '/placeholder.jpg'} alt="Our Creation" />
+                                    <Image src={product.images?.[0] || '/placeholder.jpg'} alt="Our Creation" fill sizes="(max-width: 768px) 45vw, 25vw" style={{ objectFit: 'cover' }} />
                                     <span className={styles.comparisonLabel}>Our Creation</span>
                                 </div>
                             </div>

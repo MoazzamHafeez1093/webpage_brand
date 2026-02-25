@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import styles from '../app/page.module.css';
 import CollectionNavigator from './CollectionNavigator';
 
@@ -12,11 +13,15 @@ export default function Navbar({ categories }) {
     return (
         <nav className={styles.navbar}>
             <div className={styles.navContainer}>
-                <img
+                <Image
                     src="/hoa-logo.png"
                     alt="House of Aslam"
+                    width={120}
+                    height={40}
                     className={styles.brandLogo}
                     onClick={() => router.push('/')}
+                    priority
+                    style={{ cursor: 'pointer' }}
                 />
 
                 <div className={styles.menuWrapper}>

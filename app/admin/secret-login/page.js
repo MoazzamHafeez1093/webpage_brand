@@ -15,7 +15,8 @@ import {
     unarchiveProductAction,
     archiveCollectionAction,
     unarchiveCollectionAction,
-    getAllCollectionsAction
+    getAllCollectionsAction,
+    reorderCollectionAction
 } from '@/app/actions';
 import Script from 'next/script';
 import styles from './admin.module.css';
@@ -640,11 +641,46 @@ export default function AdminDashboard() {
             }));
     };
 
+    const handleMoveCollection = async (id, direction) => {
+        setLoading(true);
+        const result = await reorderCollectionAction(id, direction);
+        if (result.success) {
+            await loadAllData();
+        } else {
+            setError(result.error || 'Failed to reorder');
+        }
+        setLoading(false);
+    };
+
     const renderCollectionTree = (tree, level = 0) => {
-        return tree.map(col => (
+        return tree.map((col, index) => (
             <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
                 <div className={styles.collectionItem}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <button
+                                onClick={() => handleMoveCollection(col._id, 'up')}
+                                disabled={index === 0 || loading}
+                                title="Move up"
+                                style={{
+                                    padding: '0', width: '22px', height: '16px', border: '1px solid #ddd',
+                                    background: index === 0 ? '#f5f5f5' : '#fff', cursor: index === 0 ? 'default' : 'pointer',
+                                    borderRadius: '3px 3px 0 0', fontSize: '10px', lineHeight: '1', color: index === 0 ? '#ccc' : '#555',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >&#9650;</button>
+                            <button
+                                onClick={() => handleMoveCollection(col._id, 'down')}
+                                disabled={index === tree.length - 1 || loading}
+                                title="Move down"
+                                style={{
+                                    padding: '0', width: '22px', height: '16px', border: '1px solid #ddd',
+                                    background: index === tree.length - 1 ? '#f5f5f5' : '#fff', cursor: index === tree.length - 1 ? 'default' : 'pointer',
+                                    borderRadius: '0 0 3px 3px', fontSize: '10px', lineHeight: '1', color: index === tree.length - 1 ? '#ccc' : '#555',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '-1px'
+                                }}
+                            >&#9660;</button>
+                        </div>
                         <strong>{col.name}</strong>
                         {col.isArchived && <span style={{ marginLeft: '8px', background: '#718096', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Archived</span>}
                     </div>

@@ -373,3 +373,45 @@ export async function getAllCollectionsAction(includeArchived = false) {
         return [];
     }
 }
+
+export async function reorderCollectionAction(id, direction) {
+    try {
+        await dbConnect();
+        const Collection = mongoose.models.Collection;
+
+        const current = await Collection.findById(id).lean();
+        if (!current) return { success: false, error: 'Collection not found' };
+
+        // Get siblings (same parent level), sorted by order then createdAt
+        const siblings = await Collection.find({
+            parentCollection: current.parentCollection || null,
+            isActive: true
+        }).sort({ order: 1, createdAt: 1 }).lean();
+
+        const currentIndex = siblings.findIndex(s => s._id.toString() === id);
+        if (currentIndex === -1) return { success: false, error: 'Collection not found in siblings' };
+
+        const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (swapIndex < 0 || swapIndex >= siblings.length) {
+            return { success: false, error: 'Already at the edge' };
+        }
+
+        // Normalize: assign sequential order values based on current position,
+        // then swap the two items. This handles cases where multiple items share order: 0.
+        const updates = siblings.map((s, i) => {
+            let newOrder = i;
+            if (i === currentIndex) newOrder = swapIndex;
+            else if (i === swapIndex) newOrder = currentIndex;
+            return Collection.findByIdAndUpdate(s._id, { order: newOrder });
+        });
+
+        await Promise.all(updates);
+
+        revalidatePath('/');
+        revalidatePath('/admin/secret-login');
+        return { success: true };
+    } catch (error) {
+        console.error('[ReorderCollection] Error:', error);
+        return { success: false, error: error.message };
+    }
+}

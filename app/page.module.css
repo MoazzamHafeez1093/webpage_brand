@@ -308,8 +308,7 @@
   scrollbar-width: none;
   margin-left: var(--gap-mobile);
   margin-right: var(--gap-mobile);
-  mask-image: linear-gradient(to right, transparent 0%, black 2%, black 96%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 2%, black 96%, transparent 100%);
+
 }
 
 .productScroll::-webkit-scrollbar {

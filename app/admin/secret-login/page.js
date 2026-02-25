@@ -48,7 +48,6 @@ export default function AdminDashboard() {
     const [uploadStatus, setUploadStatus] = useState('');
     const [uploadProgress, setUploadProgress] = useState([]); // [{name, status: 'compressing'|'uploading'|'done'|'error'}]
     const productImageInputRef = useRef(null);
-    const coverImageInputRef = useRef(null);
     const inspirationImageInputRef = useRef(null);
 
     // Confirmation modal state
@@ -58,7 +57,6 @@ export default function AdminDashboard() {
     const [collectionForm, setCollectionForm] = useState({
         name: '',
         description: '',
-        coverImage: '',
         parentCollection: ''
     });
 
@@ -129,7 +127,6 @@ export default function AdminDashboard() {
         setCollectionForm({
             name: col.name,
             description: col.description || '',
-            coverImage: col.coverImage || '',
             parentCollection: col.parentCollection || ''
         });
         window.scrollTo(0, 0);
@@ -151,7 +148,6 @@ export default function AdminDashboard() {
             const formData = new FormData();
             formData.append('name', collectionForm.name.trim());
             formData.append('description', collectionForm.description.trim());
-            formData.append('coverImage', collectionForm.coverImage);
 
             if (collectionForm.parentCollection) {
                 formData.append('parentCollection', collectionForm.parentCollection);
@@ -184,7 +180,6 @@ export default function AdminDashboard() {
         setCollectionForm({
             name: '',
             description: '',
-            coverImage: '',
             parentCollection: ''
         });
     };
@@ -650,9 +645,6 @@ export default function AdminDashboard() {
             <div key={col._id} style={{ paddingLeft: `${level * 20}px`, marginBottom: '10px' }}>
                 <div className={styles.collectionItem}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {col.coverImage && (
-                            <img src={col.coverImage} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
-                        )}
                         <strong>{col.name}</strong>
                         {col.isArchived && <span style={{ marginLeft: '8px', background: '#718096', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: '600', textTransform: 'uppercase' }}>Archived</span>}
                     </div>
@@ -835,38 +827,6 @@ export default function AdminDashboard() {
                                 <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
                                     Select a parent to nest this inside another collection. E.g. Custom Couture &rarr; Bridal &rarr; 2026 Velvet Series
                                 </small>
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Cover Image</label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={coverImageInputRef}
-                                    onChange={() => handleImageUpload(coverImageInputRef, (url) => setCollectionForm(prev => ({ ...prev, coverImage: url })), false)}
-                                    style={{ display: 'none' }}
-                                />
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <button
-                                        type="button"
-                                        onClick={() => coverImageInputRef.current?.click()}
-                                        className={styles.uploadBtn}
-                                        disabled={uploadingImages}
-                                    >
-                                        📁 {collectionForm.coverImage ? 'Change Image' : 'Upload'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const url = prompt('Enter cover image URL:');
-                                            if (url) handleUrlUpload(url, (uploadedUrl) => setCollectionForm(prev => ({ ...prev, coverImage: uploadedUrl })));
-                                        }}
-                                        className={styles.uploadBtn}
-                                        disabled={uploadingImages}
-                                    >
-                                        🔗 From URL
-                                    </button>
-                                </div>
-                                {collectionForm.coverImage && <img src={collectionForm.coverImage} alt="Preview" style={{ height: '80px', marginTop: '10px', borderRadius: '4px' }} />}
                             </div>
                             <button type="submit" disabled={loading || uploadingImages} className={styles.submitBtn}>
                                 {loading ? 'Processing...' : uploadingImages ? uploadStatus : (editingCollectionId ? 'UPDATE COLLECTION' : 'CREATE COLLECTION')}

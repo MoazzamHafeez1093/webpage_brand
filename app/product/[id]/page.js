@@ -146,27 +146,6 @@ export default async function ProductPage({ params }) {
                         </div>
                     )}
 
-                    {/* Trust Note */}
-                    <div className={styles.trustSection}>
-                        <p className={styles.trustNote}>
-                            Every piece is crafted with care and attention to detail.
-                            We stand behind the quality of our work.
-                        </p>
-                        <div className={styles.promiseSection}>
-                            <div className={styles.promiseItem}>
-                                <div className={styles.promiseIcon}>◆</div>
-                                <div className={styles.promiseText}>Premium Craftsmanship</div>
-                            </div>
-                            <div className={styles.promiseItem}>
-                                <div className={styles.promiseIcon}>◆</div>
-                                <div className={styles.promiseText}>Free Consultation</div>
-                            </div>
-                            <div className={styles.promiseItem}>
-                                <div className={styles.promiseIcon}>◆</div>
-                                <div className={styles.promiseText}>Made to Order</div>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Size Selection + CTA (Client Component) */}
                     <ProductActions

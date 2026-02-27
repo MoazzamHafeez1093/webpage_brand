@@ -582,66 +582,7 @@
   letter-spacing: 0.22em;
 }
 
-/* Trust Section */
-.trustSection {
-  margin-top: 2.5rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
 
-.trustSection::before {
-  content: '✦';
-  display: block;
-  font-size: 0.7rem;
-  color: var(--accent-gold);
-  opacity: 0.5;
-  margin-bottom: 1rem;
-  letter-spacing: 0.5em;
-}
-
-.trustNote {
-  font-style: italic;
-  color: #aaa;
-  font-size: 0.85rem;
-  line-height: 1.8;
-  text-align: center;
-  font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-/* ============ PROMISE SECTION ============ */
-.promiseSection {
-  display: flex;
-  justify-content: center;
-  gap: 2.5rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.promiseItem {
-  text-align: center;
-}
-
-.promiseIcon {
-  font-size: 0.9rem;
-  color: var(--accent-gold);
-  margin-bottom: 0.4rem;
-  opacity: 0.6;
-}
-
-.promiseText {
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: #aaa;
-  font-family: var(--font-body);
-  font-weight: 400;
-}
 
 /* ============ RELATED PRODUCTS ============ */
 .relatedSection {

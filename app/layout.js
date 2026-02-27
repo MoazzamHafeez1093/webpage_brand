@@ -1,6 +1,7 @@
 import './globals.css';
 import { Playfair_Display, Montserrat } from 'next/font/google';
 import WhatsAppFloat from '@/components/WhatsAppFloat';
+import Footer from '@/components/Footer';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -25,8 +26,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${playfair.variable} ${montserrat.variable}`}>
         {children}
+        <Footer />
         <WhatsAppFloat />
       </body>
     </html>
   );
 }
+

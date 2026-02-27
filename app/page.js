@@ -99,9 +99,6 @@ export default async function Home() {
         </a>
       </section>
 
-      <footer className={styles.footer}>
-        <p>&copy; 2025 House of Aslam. All Rights Reserved.</p>
-      </footer>
     </main>
   );
 }

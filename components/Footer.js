@@ -26,7 +26,7 @@ export default function Footer() {
                     <h4 className={styles.colTitle}>Explore</h4>
                     <nav className={styles.navLinks}>
                         <Link href="/">Home</Link>
-                        <Link href="/shop">Collections</Link>
+                        <a href={waUrl} target="_blank" rel="noopener noreferrer">Contact Us</a>
                     </nav>
                 </div>
 

@@ -632,13 +632,30 @@ export default function AdminDashboard() {
     };
 
     // ============ HELPER: RECURSIVE TREE RENDER ============
+    const hasArchivedDescendant = (col) => {
+        if (col.isArchived) return true;
+        if (col.children) return col.children.some(child => hasArchivedDescendant(child));
+        return false;
+    };
+
     const filterCollectionTree = (tree, showArchived) => {
-        return tree
-            .filter(col => showArchived ? col.isArchived : !col.isArchived)
-            .map(col => ({
-                ...col,
-                children: col.children ? filterCollectionTree(col.children, showArchived) : []
-            }));
+        if (showArchived) {
+            // Keep any node that is archived OR has an archived descendant
+            return tree
+                .filter(col => hasArchivedDescendant(col))
+                .map(col => ({
+                    ...col,
+                    children: col.children ? filterCollectionTree(col.children, showArchived) : []
+                }));
+        } else {
+            // Active view: only show non-archived collections
+            return tree
+                .filter(col => !col.isArchived)
+                .map(col => ({
+                    ...col,
+                    children: col.children ? filterCollectionTree(col.children, showArchived) : []
+                }));
+        }
     };
 
     const handleMoveCollection = async (id, direction) => {

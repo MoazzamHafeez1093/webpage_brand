@@ -308,7 +308,7 @@
   scrollbar-width: none;
   margin-left: var(--gap-mobile);
   margin-right: var(--gap-mobile);
-
+  align-items: stretch;
 }
 
 .productScroll::-webkit-scrollbar {

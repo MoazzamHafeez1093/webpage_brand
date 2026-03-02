@@ -91,6 +91,7 @@
     text-decoration: none;
     color: inherit;
     display: block;
+    height: 100%;
 }
 
 /* CAROUSEL CONTROLS */

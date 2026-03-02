@@ -325,9 +325,11 @@
 
 .productScrollItem {
   flex: 0 0 auto;
-  width: clamp(200px, 42vw, 380px);
+  width: clamp(160px, 40vw, 380px);
   scroll-snap-align: start;
   display: grid;
+  overflow: hidden;
+  min-width: 0;
 }
 
 /* Remove bottom margin from product cards inside horizontal scroll */

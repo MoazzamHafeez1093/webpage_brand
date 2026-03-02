@@ -189,7 +189,7 @@ export default function AdminDashboard() {
         setConfirmModal({
             open: true,
             title: 'Delete Collection',
-            message: 'Are you sure you want to permanently delete this collection? This action cannot be undone.',
+            message: 'Are you sure? This will permanently delete this collection, ALL its subcollections, and ALL products inside them. This action cannot be undone.',
             type: 'danger',
             onConfirm: async () => {
                 setConfirmModal(prev => ({ ...prev, open: false }));
@@ -197,7 +197,10 @@ export default function AdminDashboard() {
                 try {
                     const result = await deleteCollectionAction(id);
                     if (result.success) {
-                        setSuccessMessage('Collection deleted successfully!');
+                        const parts = [];
+                        if (result.deletedCollections) parts.push(`${result.deletedCollections} collection(s)`);
+                        if (result.deletedProducts) parts.push(`${result.deletedProducts} product(s)`);
+                        setSuccessMessage(`Deleted ${parts.join(' and ') || 'collection'} successfully!`);
                         await loadAllData();
                     } else {
                         setError(result.error || 'Failed to delete collection');

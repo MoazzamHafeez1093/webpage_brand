@@ -148,18 +148,34 @@ export async function deleteCollectionAction(id) {
         const Collection = mongoose.models.Collection;
         const Product = mongoose.models.Product;
 
-        const hasChildren = await Collection.findOne({ parentCollection: id });
-        if (hasChildren) return { success: false, error: 'Cannot delete: Has subcollections' };
+        // BFS to find ALL descendant collection IDs
+        let allCollectionIds = [id];
+        let queue = [id];
+        while (queue.length > 0) {
+            const children = await Collection.find(
+                { parentCollection: { $in: queue } },
+                { _id: 1 }
+            ).lean();
+            const childIds = children.map(c => c._id.toString());
+            queue = childIds;
+            allCollectionIds = allCollectionIds.concat(childIds);
+        }
 
-        const hasProducts = await Product.findOne({ collectionRef: id });
-        if (hasProducts) return { success: false, error: 'Cannot delete: Contains products' };
+        // Delete all products in all these collections
+        const productResult = await Product.deleteMany({ collectionRef: { $in: allCollectionIds } });
 
-        await Collection.findByIdAndDelete(id);
+        // Delete all descendant collections + the target collection
+        const collectionResult = await Collection.deleteMany({ _id: { $in: allCollectionIds } });
 
         revalidatePath('/');
         revalidatePath('/admin/secret-login');
-        return { success: true };
+        return {
+            success: true,
+            deletedProducts: productResult.deletedCount || 0,
+            deletedCollections: collectionResult.deletedCount || 0
+        };
     } catch (error) {
+        console.error('[DeleteCollection] Error:', error);
         return { success: false, error: error.message };
     }
 }

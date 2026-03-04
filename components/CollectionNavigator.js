@@ -16,7 +16,7 @@ const CollectionNavigator = ({ categories, onClose }) => {
 
     const navigateToCollection = (slug) => {
         if (slug === 'all') {
-            router.push('/');
+            router.push('/shop/all');
         } else {
             router.push(`/shop/${slug}`);
         }

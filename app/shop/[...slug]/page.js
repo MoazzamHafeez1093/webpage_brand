@@ -12,11 +12,72 @@ export default async function CategoryPage({ params }) {
     const slugArray = resolvedParams.slug;
     const currentSlug = slugArray[slugArray.length - 1];
 
-    // Fetch Data in parallel
-    const [category, categoryTree] = await Promise.all([
-        db.getCategoryBySlug(currentSlug),
-        db.getCategoryTree()
-    ]);
+    // Fetch category tree for nav
+    const categoryTree = await db.getCategoryTree();
+
+    // Special case: /shop/all — show ALL products
+    if (currentSlug === 'all') {
+        const allProducts = await db.getAllItems();
+        return (
+            <main className={styles.page}>
+                <Navbar categories={categoryTree} />
+                <section className={styles.hero}>
+                    <div className={styles.heroInner}>
+                        <div className={styles.breadcrumb}>
+                            <Link href="/">Home</Link>
+                            <span className={styles.breadcrumbSeparator}>/</span>
+                            <span>All Collections</span>
+                        </div>
+                        <h1 className={styles.heroTitle}>Browse All</h1>
+                        <p className={styles.heroDescription}>
+                            Explore our complete collection of designs.
+                        </p>
+                        <div className={styles.heroDivider} />
+                    </div>
+                </section>
+                <section className={styles.productsSection}>
+                    <h3 className={styles.productCount}>
+                        {allProducts.length} {allProducts.length === 1 ? 'Design' : 'Designs'}
+                    </h3>
+                    {allProducts.length > 0 ? (
+                        <div className={styles.productGrid}>
+                            {allProducts.map((product, index) => (
+                                <div
+                                    key={product._id}
+                                    className={styles.productItem}
+                                    style={{ animationDelay: `${index * 60}ms` }}
+                                >
+                                    <ProductCard product={product} />
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className={styles.emptyState}>
+                            No designs listed yet. Check back soon.
+                        </div>
+                    )}
+                </section>
+                <section className={styles.ctaSection}>
+                    <h2 className={styles.ctaTitle}>Have a Design in Mind?</h2>
+                    <p className={styles.ctaText}>
+                        Our atelier brings your vision to life. Share your inspiration or sketch,
+                        and let us craft a masterpiece just for you.
+                    </p>
+                    <a
+                        href="https://wa.me/923346202291?text=Hi%2C%20I%20have%20a%20custom%20design%20request.%20I%27d%20like%20to%20send%20a%20photo%20for%20a%20quote."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.ctaButton}
+                    >
+                        Get a Custom Quote
+                    </a>
+                </section>
+            </main>
+        );
+    }
+
+    // Normal collection page
+    const category = await db.getCategoryBySlug(currentSlug);
 
     if (!category) {
         return (

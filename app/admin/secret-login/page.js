@@ -770,7 +770,7 @@ export default function AdminDashboard() {
                     width: '100%',
                     maxWidth: '400px'
                 }}>
-                    <h1 style={{ marginBottom: '20px', fontFamily: 'serif' }}>Digital Atelier Admin</h1>
+                    <h1 style={{ marginBottom: '20px', fontFamily: 'serif' }}>House of Aslam Admin</h1>
                     {authError && <p style={{ color: 'red', marginBottom: '15px' }}>{authError}</p>}
                     <input
                         type="password"

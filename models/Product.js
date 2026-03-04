@@ -33,7 +33,6 @@ const ProductSchema = new mongoose.Schema({
     },
 
     // CRITICAL: Link to Collection instead of Category
-    // CRITICAL: Link to Collection instead of Category
     collectionRef: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Collection',

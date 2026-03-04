@@ -388,8 +388,16 @@ export default function AdminDashboard() {
             formData.append('sizeOptions', JSON.stringify(productForm.sizeOptions));
             formData.append('hasSizes', String(productForm.hasSizes));
             formData.append('customizationNotes', productForm.customizationNotes.trim());
-            formData.append('inStock', String(productForm.inStock));
-            formData.append('isOutOfStock', String(!productForm.inStock));
+            // Auto-compute stock status
+            let computedInStock = productForm.inStock;
+            if (productForm.businessType === 'custom') {
+                computedInStock = true; // Custom items don't have stock
+            } else if (productForm.hasSizes && productForm.sizeOptions.length > 0) {
+                // If ALL sizes are out of stock, product is out of stock
+                computedInStock = productForm.sizeOptions.some(s => s.inStock);
+            }
+            formData.append('inStock', String(computedInStock));
+            formData.append('isOutOfStock', String(!computedInStock));
             formData.append('order', String(productForm.order));
             formData.append('isActive', String(productForm.isActive));
             formData.append('isFeatured', String(productForm.isFeatured));
@@ -1261,13 +1269,19 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>In Stock</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => setProductForm(prev => ({ ...prev, inStock: !prev.inStock }))}
-                                        className={productForm.inStock ? styles.toggleBtnGreen : styles.toggleBtnRed}
-                                    >
-                                        {productForm.inStock ? '✓ In Stock' : '✗ Out of Stock'}
-                                    </button>
+                                    {productForm.businessType === 'custom' ? (
+                                        <span style={{ fontSize: '12px', color: '#888', fontStyle: 'italic' }}>N/A for custom items</span>
+                                    ) : productForm.hasSizes ? (
+                                        <span style={{ fontSize: '12px', color: '#888', fontStyle: 'italic' }}>Managed per-size above</span>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setProductForm(prev => ({ ...prev, inStock: !prev.inStock }))}
+                                            className={productForm.inStock ? styles.toggleBtnGreen : styles.toggleBtnRed}
+                                        >
+                                            {productForm.inStock ? '✓ In Stock' : '✗ Out of Stock'}
+                                        </button>
+                                    )}
                                 </div>
                                 <div className={styles.formGroup}>
                                     <label>Featured</label>

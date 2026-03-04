@@ -52,7 +52,7 @@ export default function ProductCard({ product, categoryType }) {
         }
 
         const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     // Build the product detail URL

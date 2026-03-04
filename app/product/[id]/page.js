@@ -7,6 +7,9 @@ import InteractiveImage from './InteractiveImage';
 import ProductCard from '@/components/ProductCard';
 import ProductActions from './ProductActions';
 
+// Force dynamic rendering so stock data is always fresh
+export const dynamic = 'force-dynamic';
+
 // Detailed Product View
 export default async function ProductPage({ params }) {
     const resolvedParams = await params;
@@ -75,9 +78,7 @@ export default async function ProductPage({ params }) {
 
             <div className={styles.productLayout}>
                 {/* Image Gallery */}
-                <div className={styles.galleryContainer}>
-                    <InteractiveImage product={product} />
-                </div>
+                <InteractiveImage product={product} />
 
                 {/* Details */}
                 <div className={styles.details}>

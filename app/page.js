@@ -93,6 +93,7 @@ export default async function Home() {
         <a
           href="https://wa.me/923346202291?text=Hi%2C%20I%20have%20a%20custom%20design%20request.%20I%27d%20like%20to%20send%20a%20photo%20for%20a%20quote."
           target="_blank"
+          rel="noopener noreferrer"
           className={styles.ctaButton}
         >
           Get a Custom Quote

@@ -215,7 +215,7 @@ ProductSchema.statics.getByBusinessType = async function (businessType) {
         businessType,
         isActive: true
     })
-        .populate('collection')
+        .populate('collectionRef')
         .sort({ order: 1 });
 };
 
@@ -225,7 +225,7 @@ ProductSchema.statics.getFeatured = async function (limit = 6) {
         isFeatured: true,
         isActive: true
     })
-        .populate('collection')
+        .populate('collectionRef')
         .sort({ order: 1 })
         .limit(limit);
 };

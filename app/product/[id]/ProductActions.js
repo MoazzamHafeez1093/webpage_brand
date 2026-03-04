@@ -54,7 +54,7 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
             {isOutOfStock ? (
                 <span className={styles.disabledCta}>Currently Unavailable</span>
             ) : (
-                <a href={buildWaUrl()} target="_blank" className={styles.cta}>
+                <a href={buildWaUrl()} target="_blank" rel="noopener noreferrer" className={styles.cta}>
                     {ctaLabel}
                 </a>
             )}
@@ -64,7 +64,7 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
                 {isOutOfStock ? (
                     <span className={styles.disabledCtaText}>Currently Unavailable</span>
                 ) : (
-                    <a href={buildWaUrl()} target="_blank">
+                    <a href={buildWaUrl()} target="_blank" rel="noopener noreferrer">
                         {ctaLabel}
                     </a>
                 )}

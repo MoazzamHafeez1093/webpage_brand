@@ -76,7 +76,6 @@ const CollectionSchema = new mongoose.Schema({
 
 // Indexes for performance
 CollectionSchema.index({ parentCollection: 1, order: 1 });
-CollectionSchema.index({ slug: 1 });
 CollectionSchema.index({ isActive: 1 });
 
 // Virtual for getting child collections
@@ -126,29 +125,7 @@ CollectionSchema.statics.getTree = async function (parentId = null) {
     return tree;
 };
 
-// Prevent deletion if has children or products
-CollectionSchema.pre('remove', async function (next) {
-    const Product = mongoose.model('Product');
-
-    // Check for child collections
-    const childCount = await mongoose.model('Collection').countDocuments({
-        parentCollection: this._id
-    });
-
-    if (childCount > 0) {
-        throw new Error('Cannot delete collection with subcollections. Delete children first.');
-    }
-
-    // Check for products
-    const productCount = await Product.countDocuments({
-        collectionRef: this._id
-    });
-
-    if (productCount > 0) {
-        throw new Error('Cannot delete collection with products. Move or delete products first.');
-    }
-
-    next();
-});
+// Pre-remove hook REMOVED: We use deleteMany() for cascading deletes in actions.js,
+// which bypasses document middleware. This hook is dead code.
 
 export default mongoose.models.Collection || mongoose.model('Collection', CollectionSchema);

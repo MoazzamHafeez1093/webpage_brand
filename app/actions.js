@@ -8,6 +8,18 @@ import mongoose from 'mongoose';
 import '@/models/Collection';
 import '@/models/Product';
 
+// Helper: revalidate all storefront paths after any data mutation
+function revalidateStorefront() {
+    try {
+        revalidatePath('/', 'layout');
+        revalidatePath('/shop', 'layout');
+        revalidatePath('/product', 'layout');
+        revalidatePath('/admin/secret-login');
+    } catch (e) {
+        console.warn('Revalidate warning:', e);
+    }
+}
+
 // ============================================
 // COLLECTION ACTIONS
 // ============================================
@@ -47,8 +59,7 @@ export async function createCollectionAction(formData) {
         });
 
         try {
-            revalidatePath('/');
-            revalidatePath('/admin/secret-login');
+            revalidateStorefront();
         } catch (e) {
             console.warn('Revalidate warning:', e);
         }
@@ -133,8 +144,7 @@ export async function updateCollectionAction(id, formData) {
             parentCollection
         });
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[UpdateCollection] Error:', error);
@@ -167,8 +177,7 @@ export async function deleteCollectionAction(id) {
         // Delete all descendant collections + the target collection
         const collectionResult = await Collection.deleteMany({ _id: { $in: allCollectionIds } });
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return {
             success: true,
             deletedProducts: productResult.deletedCount || 0,
@@ -225,8 +234,7 @@ export async function updateProductAction(id, formData) {
             tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
         });
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[UpdateProduct] Error:', error);
@@ -240,8 +248,7 @@ export async function deleteProductAction(id) {
         const Product = mongoose.models.Product;
         await Product.findByIdAndDelete(id);
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[DeleteProduct] Error:', error);
@@ -291,8 +298,7 @@ export async function createProductAction(formData) {
             tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
         });
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
 
         return { success: true, product: JSON.parse(JSON.stringify(product)) };
     } catch (error) {
@@ -324,8 +330,7 @@ export async function archiveProductAction(id) {
         await dbConnect();
         const Product = mongoose.models.Product;
         await Product.findByIdAndUpdate(id, { isArchived: true, archivedAt: new Date() });
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[ArchiveProduct] Error:', error);
@@ -338,8 +343,7 @@ export async function unarchiveProductAction(id) {
         await dbConnect();
         const Product = mongoose.models.Product;
         await Product.findByIdAndUpdate(id, { isArchived: false, archivedAt: null });
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[UnarchiveProduct] Error:', error);
@@ -352,8 +356,7 @@ export async function archiveCollectionAction(id) {
         await dbConnect();
         const Collection = mongoose.models.Collection;
         await Collection.findByIdAndUpdate(id, { isArchived: true, archivedAt: new Date() });
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[ArchiveCollection] Error:', error);
@@ -366,8 +369,7 @@ export async function unarchiveCollectionAction(id) {
         await dbConnect();
         const Collection = mongoose.models.Collection;
         await Collection.findByIdAndUpdate(id, { isArchived: false, archivedAt: null });
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[UnarchiveCollection] Error:', error);
@@ -423,8 +425,7 @@ export async function reorderCollectionAction(id, direction) {
 
         await Promise.all(updates);
 
-        revalidatePath('/');
-        revalidatePath('/admin/secret-login');
+        revalidateStorefront();
         return { success: true };
     } catch (error) {
         console.error('[ReorderCollection] Error:', error);

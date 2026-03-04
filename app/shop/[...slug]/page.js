@@ -5,6 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
 
+// Force dynamic rendering so collection data is always fresh
+export const dynamic = 'force-dynamic';
+
 export default async function CategoryPage({ params }) {
     const resolvedParams = await params;
     const slugArray = resolvedParams.slug;
@@ -148,15 +151,12 @@ export default async function CategoryPage({ params }) {
                 <a
                     href="https://wa.me/923346202291?text=Hi%2C%20I%20have%20a%20custom%20design%20request.%20I%27d%20like%20to%20send%20a%20photo%20for%20a%20quote."
                     target="_blank"
+                    rel="noopener noreferrer"
                     className={styles.ctaButton}
                 >
                     Get a Custom Quote
                 </a>
             </section>
-
-            <footer className={styles.footer}>
-                <p>&copy; 2025 House of Aslam. All Rights Reserved.</p>
-            </footer>
         </main>
     );
 }

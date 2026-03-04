@@ -11,9 +11,7 @@ import '@/models/Product';
 // Helper: revalidate all storefront paths after any data mutation
 function revalidateStorefront() {
     try {
-        revalidatePath('/', 'layout');
-        revalidatePath('/shop', 'layout');
-        revalidatePath('/product', 'layout');
+        revalidatePath('/');
         revalidatePath('/admin/secret-login');
     } catch (e) {
         console.warn('Revalidate warning:', e);

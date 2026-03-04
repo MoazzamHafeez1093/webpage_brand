@@ -7,8 +7,7 @@ import InteractiveImage from './InteractiveImage';
 import ProductCard from '@/components/ProductCard';
 import ProductActions from './ProductActions';
 
-// Force dynamic rendering so stock data is always fresh
-export const dynamic = 'force-dynamic';
+
 
 // Detailed Product View
 export default async function ProductPage({ params }) {

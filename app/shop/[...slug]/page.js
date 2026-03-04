@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
 
-// Force dynamic rendering so collection data is always fresh
-export const dynamic = 'force-dynamic';
+
 
 export default async function CategoryPage({ params }) {
     const resolvedParams = await params;

@@ -51,7 +51,6 @@ export default async function ProductPage({ params }) {
     // Enhanced description fields
     const colorName = product.colorName || '';
     const priceInclude = product.priceInclude || '';
-    const detailedDescription = product.detailedDescription || '';
     const fabricDetails = product.fabricDetails || [];
     const productDetailsArr = product.productDetails || [];
     const careInstructions = product.careInstructions || [];
@@ -141,10 +140,6 @@ export default async function ProductPage({ params }) {
                             <div className={styles.divider} />
                             <p className={styles.description}>{description}</p>
                         </>
-                    )}
-
-                    {detailedDescription && (
-                        <p className={styles.description}>{detailedDescription}</p>
                     )}
 
                     {/* Fabric Details */}

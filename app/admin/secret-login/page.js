@@ -83,7 +83,6 @@ export default function AdminDashboard() {
         metaTitle: '',
         metaDescription: '',
         tags: '',
-        detailedDescription: '',
         colorName: '',
         priceInclude: '',
         fabricDetails: '',
@@ -254,7 +253,6 @@ export default function AdminDashboard() {
             metaTitle: p.metaTitle || '',
             metaDescription: p.metaDescription || '',
             tags: (p.tags || []).join(', '),
-            detailedDescription: p.detailedDescription || '',
             colorName: p.colorName || '',
             priceInclude: p.priceInclude || '',
             fabricDetails: (p.fabricDetails || []).join('\n'),
@@ -425,7 +423,6 @@ export default function AdminDashboard() {
             formData.append('metaTitle', productForm.metaTitle.trim());
             formData.append('metaDescription', productForm.metaDescription.trim());
             formData.append('tags', productForm.tags);
-            formData.append('detailedDescription', productForm.detailedDescription.trim());
             formData.append('colorName', productForm.colorName.trim());
             formData.append('priceInclude', productForm.priceInclude.trim());
             formData.append('fabricDetails', productForm.fabricDetails.trim());
@@ -1035,15 +1032,6 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            <div className={styles.formGroup}>
-                                <label>Description</label>
-                                <textarea
-                                    value={productForm.description}
-                                    onChange={e => setProductForm({ ...productForm, description: e.target.value })}
-                                    placeholder="Product description"
-                                />
-                            </div>
-
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div className={styles.formGroup}>
                                     <label>Business Type</label>
@@ -1340,7 +1328,17 @@ export default function AdminDashboard() {
 
                             {/* ============ ENHANCED DESCRIPTION FIELDS ============ */}
                             <div style={{ borderTop: '2px solid #c9a961', paddingTop: '20px', marginTop: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '16px', fontWeight: '700', color: '#2c2c2c', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Enhanced Product Details</label>
+                                <label style={{ display: 'block', marginBottom: '16px', fontWeight: '700', color: '#2c2c2c', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Product Description</label>
+
+                                <div className={styles.formGroup}>
+                                    <label>Description</label>
+                                    <textarea
+                                        value={productForm.description}
+                                        onChange={e => setProductForm({ ...productForm, description: e.target.value })}
+                                        placeholder="Brief product overview (shown at the top of the product page)"
+                                        rows={3}
+                                    />
+                                </div>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                     <div className={styles.formGroup}>
@@ -1361,16 +1359,6 @@ export default function AdminDashboard() {
                                             placeholder="e.g. Shirt, Trouser & Dupatta"
                                         />
                                     </div>
-                                </div>
-
-                                <div className={styles.formGroup}>
-                                    <label>Detailed Description</label>
-                                    <textarea
-                                        value={productForm.detailedDescription}
-                                        onChange={e => setProductForm({ ...productForm, detailedDescription: e.target.value })}
-                                        placeholder="Extended product description (shown below main description)"
-                                        rows={3}
-                                    />
                                 </div>
 
                                 <div className={styles.formGroup}>

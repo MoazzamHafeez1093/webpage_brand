@@ -15,10 +15,6 @@ const ProductSchema = new mongoose.Schema({
     },
 
     // Enhanced description fields
-    detailedDescription: {
-        type: String,
-        default: ''
-    },
     colorName: {
         type: String,
         default: ''

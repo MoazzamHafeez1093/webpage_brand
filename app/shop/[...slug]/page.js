@@ -102,13 +102,18 @@ export default async function CategoryPage({ params }) {
 
     const categoryType = products.length > 0 ? products[0].businessType : null;
 
-    // Enrich children with product counts (parallel fetch)
+    // Enrich children with product counts + fallback cover images (parallel fetch)
     let enrichedChildren = [];
     if (hasChildren) {
         enrichedChildren = await Promise.all(
             category.children.map(async (child) => {
                 const count = await db.getProductCountByCategory(child._id);
-                return { ...child, productCount: count };
+                // If no cover image, use the first product image as fallback
+                let fallbackImage = null;
+                if (!child.coverImage) {
+                    fallbackImage = await db.getFirstProductImage(child._id);
+                }
+                return { ...child, productCount: count, coverImage: child.coverImage || fallbackImage || '' };
             })
         );
     }

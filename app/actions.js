@@ -209,6 +209,13 @@ export async function updateProductAction(id, formData) {
             try { sizeOptions = JSON.parse(sizeOptionsRaw); } catch (e) { sizeOptions = []; }
         }
 
+        // Parse availableColors JSON
+        let availableColors = [];
+        const availableColorsRaw = formData.get('availableColors');
+        if (availableColorsRaw) {
+            try { availableColors = JSON.parse(availableColorsRaw); } catch (e) { availableColors = []; }
+        }
+
         await Product.findByIdAndUpdate(id, {
             name: formData.get('name'),
             description: formData.get('description'),
@@ -230,6 +237,14 @@ export async function updateProductAction(id, formData) {
             metaTitle: formData.get('metaTitle') || '',
             metaDescription: formData.get('metaDescription') || '',
             tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
+            detailedDescription: formData.get('detailedDescription') || '',
+            colorName: formData.get('colorName') || '',
+            priceInclude: formData.get('priceInclude') || '',
+            fabricDetails: (formData.get('fabricDetails') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            productDetails: (formData.get('productDetails') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            careInstructions: (formData.get('careInstructions') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            disclaimer: formData.get('disclaimer') || 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.',
+            availableColors
         });
 
         revalidateStorefront();
@@ -273,6 +288,13 @@ export async function createProductAction(formData) {
             try { sizeOptions = JSON.parse(sizeOptionsRaw); } catch (e) { sizeOptions = []; }
         }
 
+        // Parse availableColors JSON
+        let availableColors = [];
+        const availableColorsRaw = formData.get('availableColors');
+        if (availableColorsRaw) {
+            try { availableColors = JSON.parse(availableColorsRaw); } catch (e) { availableColors = []; }
+        }
+
         const product = await Product.create({
             name,
             description: formData.get('description'),
@@ -294,6 +316,14 @@ export async function createProductAction(formData) {
             metaTitle: formData.get('metaTitle') || '',
             metaDescription: formData.get('metaDescription') || '',
             tags: (formData.get('tags') || '').split(',').map(t => t.trim()).filter(Boolean),
+            detailedDescription: formData.get('detailedDescription') || '',
+            colorName: formData.get('colorName') || '',
+            priceInclude: formData.get('priceInclude') || '',
+            fabricDetails: (formData.get('fabricDetails') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            productDetails: (formData.get('productDetails') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            careInstructions: (formData.get('careInstructions') || '').split('\n').map(t => t.trim()).filter(Boolean),
+            disclaimer: formData.get('disclaimer') || 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.',
+            availableColors
         });
 
         revalidateStorefront();

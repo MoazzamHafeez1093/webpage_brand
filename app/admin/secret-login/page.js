@@ -48,6 +48,7 @@ export default function AdminDashboard() {
     const [uploadingImages, setUploadingImages] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
     const [uploadProgress, setUploadProgress] = useState([]); // [{name, status: 'compressing'|'uploading'|'done'|'error'}]
+    const collectionImageInputRef = useRef(null);
     const productImageInputRef = useRef(null);
     const inspirationImageInputRef = useRef(null);
 
@@ -58,6 +59,7 @@ export default function AdminDashboard() {
     const [collectionForm, setCollectionForm] = useState({
         name: '',
         description: '',
+        coverImage: '',
         parentCollection: ''
     });
 
@@ -80,7 +82,15 @@ export default function AdminDashboard() {
         isFeatured: false,
         metaTitle: '',
         metaDescription: '',
-        tags: ''
+        tags: '',
+        detailedDescription: '',
+        colorName: '',
+        priceInclude: '',
+        fabricDetails: '',
+        productDetails: '',
+        careInstructions: '',
+        disclaimer: 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.',
+        availableColors: []
     });
 
     // ============ LOAD DATA ============
@@ -128,6 +138,7 @@ export default function AdminDashboard() {
         setCollectionForm({
             name: col.name,
             description: col.description || '',
+            coverImage: col.coverImage || '',
             parentCollection: col.parentCollection || ''
         });
         window.scrollTo(0, 0);
@@ -153,6 +164,7 @@ export default function AdminDashboard() {
             if (collectionForm.parentCollection) {
                 formData.append('parentCollection', collectionForm.parentCollection);
             }
+            formData.append('coverImage', collectionForm.coverImage);
 
             let result;
             if (editingCollectionId) {
@@ -181,6 +193,7 @@ export default function AdminDashboard() {
         setCollectionForm({
             name: '',
             description: '',
+            coverImage: '',
             parentCollection: ''
         });
     };
@@ -240,7 +253,15 @@ export default function AdminDashboard() {
             isFeatured: p.isFeatured || false,
             metaTitle: p.metaTitle || '',
             metaDescription: p.metaDescription || '',
-            tags: (p.tags || []).join(', ')
+            tags: (p.tags || []).join(', '),
+            detailedDescription: p.detailedDescription || '',
+            colorName: p.colorName || '',
+            priceInclude: p.priceInclude || '',
+            fabricDetails: (p.fabricDetails || []).join('\n'),
+            productDetails: (p.productDetails || []).join('\n'),
+            careInstructions: (p.careInstructions || []).join('\n'),
+            disclaimer: p.disclaimer || 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.',
+            availableColors: p.availableColors || []
         });
         setActiveTab('products');
         window.scrollTo(0, 0);
@@ -404,6 +425,14 @@ export default function AdminDashboard() {
             formData.append('metaTitle', productForm.metaTitle.trim());
             formData.append('metaDescription', productForm.metaDescription.trim());
             formData.append('tags', productForm.tags);
+            formData.append('detailedDescription', productForm.detailedDescription.trim());
+            formData.append('colorName', productForm.colorName.trim());
+            formData.append('priceInclude', productForm.priceInclude.trim());
+            formData.append('fabricDetails', productForm.fabricDetails.trim());
+            formData.append('productDetails', productForm.productDetails.trim());
+            formData.append('careInstructions', productForm.careInstructions.trim());
+            formData.append('disclaimer', productForm.disclaimer.trim());
+            formData.append('availableColors', JSON.stringify(productForm.availableColors));
 
             let result;
             if (editingProductId) {
@@ -447,7 +476,15 @@ export default function AdminDashboard() {
             isFeatured: false,
             metaTitle: '',
             metaDescription: '',
-            tags: ''
+            tags: '',
+            detailedDescription: '',
+            colorName: '',
+            priceInclude: '',
+            fabricDetails: '',
+            productDetails: '',
+            careInstructions: '',
+            disclaimer: 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.',
+            availableColors: []
         });
     };
 
@@ -876,6 +913,52 @@ export default function AdminDashboard() {
                                 />
                             </div>
                             <div className={styles.formGroup}>
+                                <label>Cover Image (Optional)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    ref={collectionImageInputRef}
+                                    onChange={() => handleImageUpload(collectionImageInputRef, (url) => setCollectionForm(prev => ({ ...prev, coverImage: url })), false)}
+                                    style={{ display: 'none' }}
+                                />
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => collectionImageInputRef.current?.click()}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        📁 {collectionForm.coverImage ? 'Change Image' : 'Upload'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const url = prompt('Enter image URL:');
+                                            if (url) handleUrlUpload(url, (uploadedUrl) => setCollectionForm(prev => ({ ...prev, coverImage: uploadedUrl })));
+                                        }}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingImages}
+                                    >
+                                        🔗 From URL
+                                    </button>
+                                </div>
+                                {collectionForm.coverImage && (
+                                    <div style={{ position: 'relative', display: 'inline-block', marginTop: '10px' }}>
+                                        <img src={collectionForm.coverImage} alt="Cover" style={{ height: '100px', borderRadius: '4px' }} />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCollectionForm(prev => ({ ...prev, coverImage: '' }))}
+                                            style={{ position: 'absolute', top: -5, right: -5, background: '#e53e3e', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
+                                )}
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Upload a cover image. Leave blank to use a solid color placeholder.
+                                </small>
+                            </div>
+                            <div className={styles.formGroup}>
                                 <label>Parent Collection (for nesting)</label>
                                 <select
                                     value={collectionForm.parentCollection}
@@ -1253,6 +1336,160 @@ export default function AdminDashboard() {
                                 <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
                                     Comma-separated tags for filtering and display on product page.
                                 </small>
+                            </div>
+
+                            {/* ============ ENHANCED DESCRIPTION FIELDS ============ */}
+                            <div style={{ borderTop: '2px solid #c9a961', paddingTop: '20px', marginTop: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '16px', fontWeight: '700', color: '#2c2c2c', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Enhanced Product Details</label>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div className={styles.formGroup}>
+                                        <label>Color Name</label>
+                                        <input
+                                            type="text"
+                                            value={productForm.colorName}
+                                            onChange={e => setProductForm({ ...productForm, colorName: e.target.value })}
+                                            placeholder="e.g. Burgundy, Emerald Green"
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Price Includes</label>
+                                        <input
+                                            type="text"
+                                            value={productForm.priceInclude}
+                                            onChange={e => setProductForm({ ...productForm, priceInclude: e.target.value })}
+                                            placeholder="e.g. Shirt, Trouser & Dupatta"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label>Detailed Description</label>
+                                    <textarea
+                                        value={productForm.detailedDescription}
+                                        onChange={e => setProductForm({ ...productForm, detailedDescription: e.target.value })}
+                                        placeholder="Extended product description (shown below main description)"
+                                        rows={3}
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label>Fabric Details (one per line)</label>
+                                    <textarea
+                                        value={productForm.fabricDetails}
+                                        onChange={e => setProductForm({ ...productForm, fabricDetails: e.target.value })}
+                                        placeholder={"Fabric: Chiffon\nInner: Silk\nDupatta: Organza"}
+                                        rows={4}
+                                    />
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Each line becomes a bullet point on the product page.
+                                    </small>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label>Product Details (one per line)</label>
+                                    <textarea
+                                        value={productForm.productDetails}
+                                        onChange={e => setProductForm({ ...productForm, productDetails: e.target.value })}
+                                        placeholder={"Embroidered front\nEmbroidered sleeves\nPrinted back"}
+                                        rows={4}
+                                    />
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Each line becomes a bullet point on the product page.
+                                    </small>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label>Care Instructions (one per line)</label>
+                                    <textarea
+                                        value={productForm.careInstructions}
+                                        onChange={e => setProductForm({ ...productForm, careInstructions: e.target.value })}
+                                        placeholder={"Dry clean only\nDo not bleach\nIron on low heat"}
+                                        rows={3}
+                                    />
+                                    <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                        Each line becomes a bullet point on the product page.
+                                    </small>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label>Disclaimer</label>
+                                    <input
+                                        type="text"
+                                        value={productForm.disclaimer}
+                                        onChange={e => setProductForm({ ...productForm, disclaimer: e.target.value })}
+                                        placeholder="Product Color May Vary..."
+                                    />
+                                </div>
+                            </div>
+
+                            {/* ============ AVAILABLE COLORS ============ */}
+                            <div style={{ borderTop: '2px solid #c9a961', paddingTop: '20px', marginTop: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '16px', fontWeight: '700', color: '#2c2c2c', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Available Colors</label>
+                                <small style={{ color: '#888', display: 'block', marginBottom: '12px' }}>
+                                    Add alternative colors for this product. They will appear as circular swatches on the product page.
+                                </small>
+
+                                {/* Existing Colors */}
+                                {productForm.availableColors.length > 0 && (
+                                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                        {productForm.availableColors.map((color, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f9f9f9', borderRadius: '6px', border: '1px solid #eee' }}>
+                                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: color.hexCode || '#ccc', border: '2px solid #ddd', flexShrink: 0 }} />
+                                                <span style={{ fontSize: '13px', fontWeight: '500', color: '#333' }}>{color.name || 'Unnamed'}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setProductForm(prev => ({
+                                                        ...prev,
+                                                        availableColors: prev.availableColors.filter((_, i) => i !== idx)
+                                                    }))}
+                                                    style={{ background: 'none', border: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '16px', padding: '0 4px', lineHeight: 1 }}
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Add New Color */}
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <div className={styles.formGroup} style={{ marginBottom: 0, flex: '1 1 150px' }}>
+                                        <label style={{ fontSize: '12px' }}>Color Name</label>
+                                        <input
+                                            type="text"
+                                            id="newColorName"
+                                            placeholder="e.g. Maroon"
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup} style={{ marginBottom: 0, flex: '0 0 80px' }}>
+                                        <label style={{ fontSize: '12px' }}>Color</label>
+                                        <input
+                                            type="color"
+                                            id="newColorHex"
+                                            defaultValue="#800020"
+                                            style={{ width: '100%', height: '38px', padding: '2px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer' }}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const nameEl = document.getElementById('newColorName');
+                                            const hexEl = document.getElementById('newColorHex');
+                                            const name = nameEl?.value?.trim();
+                                            const hexCode = hexEl?.value;
+                                            if (!name) { alert('Please enter a color name'); return; }
+                                            setProductForm(prev => ({
+                                                ...prev,
+                                                availableColors: [...prev.availableColors, { name, hexCode, image: '', relatedProductId: null }]
+                                            }));
+                                            if (nameEl) nameEl.value = '';
+                                        }}
+                                        style={{ padding: '10px 20px', background: '#2c2c2c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', height: '42px' }}
+                                    >
+                                        + Add Color
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Order + Toggles */}

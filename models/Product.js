@@ -14,6 +14,41 @@ const ProductSchema = new mongoose.Schema({
         maxLength: [2000, 'Description cannot exceed 2000 characters']
     },
 
+    // Enhanced description fields
+    detailedDescription: {
+        type: String,
+        default: ''
+    },
+    colorName: {
+        type: String,
+        default: ''
+    },
+    priceInclude: {
+        type: String,
+        default: ''
+    },
+    fabricDetails: [{
+        type: String
+    }],
+    productDetails: [{
+        type: String
+    }],
+    careInstructions: [{
+        type: String
+    }],
+    disclaimer: {
+        type: String,
+        default: 'Product Color May Vary Slightly Due To Photographic Lighting Or Your Device Setting.'
+    },
+
+    // Alternative Colors
+    availableColors: [{
+        name: String,
+        hexCode: String,
+        image: String,
+        relatedProductId: mongoose.Schema.Types.ObjectId
+    }],
+
     // Main product images (can be multiple)
     images: [{
         type: String,

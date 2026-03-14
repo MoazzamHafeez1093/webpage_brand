@@ -671,3 +671,131 @@
   color: #888;
   font-size: 1rem;
 }
+
+/* ============ PRODUCT META (Color & Price Includes) ============ */
+.productMeta {
+  margin-bottom: 1rem;
+}
+
+.metaItem {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.8;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.metaLabel {
+  font-weight: 500;
+  color: #444;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  margin-right: 0.4rem;
+}
+
+/* ============ STRUCTURED DETAIL SECTIONS ============ */
+.detailSection {
+  margin: 1.5rem 0;
+  padding: 1.5rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detailHeading {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: #999;
+  margin: 0 0 1rem;
+}
+
+.detailList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detailItem {
+  position: relative;
+  padding-left: 1.2rem;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 2;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.detailItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.85em;
+  width: 5px;
+  height: 5px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+/* ============ DISCLAIMER ============ */
+.disclaimer {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: #aaa;
+  font-style: italic;
+  line-height: 1.6;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  letter-spacing: 0.02em;
+}
+
+/* ============ COLOR SWATCHES ============ */
+.colorsSection {
+  margin-bottom: 2rem;
+}
+
+.colorSwatches {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.colorSwatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  position: relative;
+  padding: 0;
+  outline: none;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.activeColorSwatch {
+  border-color: #111;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #111;
+}
+
+.activeColorSwatch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}

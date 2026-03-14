@@ -48,6 +48,16 @@ export default async function ProductPage({ params }) {
     const isFeatured = product.isFeatured || false;
     const customizationNotes = product.customizationNotes || '';
 
+    // Enhanced description fields
+    const colorName = product.colorName || '';
+    const priceInclude = product.priceInclude || '';
+    const detailedDescription = product.detailedDescription || '';
+    const fabricDetails = product.fabricDetails || [];
+    const productDetailsArr = product.productDetails || [];
+    const careInstructions = product.careInstructions || [];
+    const disclaimer = product.disclaimer || '';
+    const availableColors = product.availableColors || [];
+
     // WhatsApp config
     const phoneNumber = '923346202291';
     const currentImgUrl = product.images?.[0] || '';
@@ -114,11 +124,68 @@ export default async function ProductPage({ params }) {
                         <p className={styles.price}>Rs. {typeof price === 'number' ? price.toLocaleString() : price}</p>
                     )}
 
+                    {/* Color Name & Price Includes */}
+                    {(colorName || priceInclude) && (
+                        <div className={styles.productMeta}>
+                            {colorName && (
+                                <p className={styles.metaItem}><span className={styles.metaLabel}>Color:</span> {colorName}</p>
+                            )}
+                            {priceInclude && (
+                                <p className={styles.metaItem}><span className={styles.metaLabel}>Price Includes:</span> {priceInclude}</p>
+                            )}
+                        </div>
+                    )}
+
                     {description && (
                         <>
                             <div className={styles.divider} />
                             <p className={styles.description}>{description}</p>
                         </>
+                    )}
+
+                    {detailedDescription && (
+                        <p className={styles.description}>{detailedDescription}</p>
+                    )}
+
+                    {/* Fabric Details */}
+                    {fabricDetails.length > 0 && (
+                        <div className={styles.detailSection}>
+                            <h3 className={styles.detailHeading}>Fabric Details</h3>
+                            <ul className={styles.detailList}>
+                                {fabricDetails.map((item, i) => (
+                                    <li key={i} className={styles.detailItem}>{item}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Product Details */}
+                    {productDetailsArr.length > 0 && (
+                        <div className={styles.detailSection}>
+                            <h3 className={styles.detailHeading}>Product Details</h3>
+                            <ul className={styles.detailList}>
+                                {productDetailsArr.map((item, i) => (
+                                    <li key={i} className={styles.detailItem}>{item}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Care Instructions */}
+                    {careInstructions.length > 0 && (
+                        <div className={styles.detailSection}>
+                            <h3 className={styles.detailHeading}>Care Instructions</h3>
+                            <ul className={styles.detailList}>
+                                {careInstructions.map((item, i) => (
+                                    <li key={i} className={styles.detailItem}>{item}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Disclaimer */}
+                    {disclaimer && (
+                        <p className={styles.disclaimer}>{disclaimer}</p>
                     )}
 
                     {/* Customization Notes (custom items) */}
@@ -157,6 +224,8 @@ export default async function ProductPage({ params }) {
                         phoneNumber={phoneNumber}
                         currentImgUrl={currentImgUrl}
                         inStock={inStock}
+                        availableColors={availableColors}
+                        colorName={colorName}
                     />
                 </div>
             </div>

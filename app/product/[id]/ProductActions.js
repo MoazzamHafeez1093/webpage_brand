@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, currentImgUrl, inStock }) {
+export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, currentImgUrl, inStock, availableColors = [], colorName = '' }) {
     const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedColor, setSelectedColor] = useState(colorName || null);
 
     // Merge sizeOptions (new schema) with sizes (legacy) for display
     const effectiveSizes = sizeOptions && sizeOptions.length > 0
@@ -18,7 +19,8 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
             message = `Hi, I'm interested in a price estimate for a design like "${title}".\nRef Image: ${currentImgUrl}`;
         } else {
             const sizeText = selectedSize ? ` in size ${selectedSize}` : '';
-            message = `Hi, I would like to check size availability for "${title}"${sizeText} (${category}).\nRef Image: ${currentImgUrl}`;
+            const colorText = selectedColor ? ` in color ${selectedColor}` : '';
+            message = `Hi, I would like to check size availability for "${title}"${sizeText}${colorText} (${category}).\nRef Image: ${currentImgUrl}`;
         }
         return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     };
@@ -28,6 +30,26 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
 
     return (
         <>
+            {/* Available Colors */}
+            {availableColors.length > 0 && (
+                <div className={styles.colorsSection}>
+                    <span className={styles.label}>
+                        {selectedColor ? `Color: ${selectedColor}` : 'Available Colors'}
+                    </span>
+                    <div className={styles.colorSwatches}>
+                        {availableColors.map((color, idx) => (
+                            <button
+                                key={idx}
+                                className={`${styles.colorSwatch} ${selectedColor === color.name ? styles.activeColorSwatch : ''}`}
+                                onClick={() => setSelectedColor(selectedColor === color.name ? null : color.name)}
+                                title={color.name}
+                                style={{ '--swatch-color': color.hexCode || '#ccc' }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Sizes (for retail products) */}
             {!isCustom && effectiveSizes.length > 0 && (
                 <div className={styles.sizesSection}>

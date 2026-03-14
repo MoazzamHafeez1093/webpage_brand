@@ -55,7 +55,11 @@ export default async function ProductPage({ params }) {
     const productDetailsArr = product.productDetails || [];
     const careInstructions = product.careInstructions || [];
     const disclaimer = product.disclaimer || '';
-    const availableColors = product.availableColors || [];
+    const availableColors = (product.availableColors || []).map(c => ({
+        name: c.name || '',
+        hexCode: c.hexCode || '#ccc',
+        image: c.image || '',
+    }));
 
     // WhatsApp config
     const phoneNumber = '923346202291';

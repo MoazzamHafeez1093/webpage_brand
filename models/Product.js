@@ -39,10 +39,11 @@ const ProductSchema = new mongoose.Schema({
 
     // Alternative Colors
     availableColors: [{
-        name: String,
-        hexCode: String,
-        image: String,
-        relatedProductId: mongoose.Schema.Types.ObjectId
+        _id: false,
+        name: { type: String, default: '' },
+        hexCode: { type: String, default: '#ccc' },
+        image: { type: String, default: '' },
+        relatedProductId: { type: mongoose.Schema.Types.ObjectId, default: null }
     }],
 
     // Main product images (can be multiple)

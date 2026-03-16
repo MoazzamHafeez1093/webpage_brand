@@ -309,6 +309,10 @@
 
 /* ============ MOBILE RESPONSIVE FIXES ============ */
 @media (max-width: 600px) {
+    .placeholder {
+        object-position: top;
+    }
+
     .category {
         font-size: 0.5rem;
         letter-spacing: 0.2em;

@@ -225,6 +225,7 @@ export default async function ProductPage({ params }) {
                         inStock={inStock}
                         availableColors={availableColors}
                         colorName={colorName}
+                        productId={resolvedParams.id}
                     />
                 </div>
             </div>

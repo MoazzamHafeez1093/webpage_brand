@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, inStock, availableColors = [], colorName = '' }) {
+export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, inStock, availableColors = [], colorName = '', productId = '' }) {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedColor, setSelectedColor] = useState(colorName || null);
 
@@ -14,7 +14,7 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
 
     // Build WhatsApp URL dynamically based on selected size
     const buildWaUrl = () => {
-        const productUrl = typeof window !== 'undefined' ? window.location.href : '';
+        const productUrl = (typeof window !== 'undefined' ? window.location.origin : '') + `/product/${productId}`;
         let message = '';
         if (isCustom) {
             message = `Hi, I'd like to order a custom piece.\n\n` +

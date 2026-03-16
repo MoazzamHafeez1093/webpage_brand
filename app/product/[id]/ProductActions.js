@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
-export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, currentImgUrl, inStock, availableColors = [], colorName = '' }) {
+export default function ProductActions({ sizes, sizeOptions, isCustom, title, category, phoneNumber, inStock, availableColors = [], colorName = '' }) {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedColor, setSelectedColor] = useState(colorName || null);
 
@@ -14,19 +14,28 @@ export default function ProductActions({ sizes, sizeOptions, isCustom, title, ca
 
     // Build WhatsApp URL dynamically based on selected size
     const buildWaUrl = () => {
+        const productUrl = typeof window !== 'undefined' ? window.location.href : '';
         let message = '';
         if (isCustom) {
-            message = `Hi, I'm interested in a price estimate for a design like "${title}".\nRef Image: ${currentImgUrl}`;
+            message = `Hi, I'd like to order a custom piece.\n\n` +
+                `Product: "${title}"\n` +
+                `Category: ${category}\n` +
+                `Link: ${productUrl}`;
         } else {
-            const sizeText = selectedSize ? ` in size ${selectedSize}` : '';
-            const colorText = selectedColor ? ` in color ${selectedColor}` : '';
-            message = `Hi, I would like to check size availability for "${title}"${sizeText}${colorText} (${category}).\nRef Image: ${currentImgUrl}`;
+            const sizeText = selectedSize ? `\nSize: ${selectedSize}` : '';
+            const colorText = selectedColor ? `\nColor: ${selectedColor}` : '';
+            message = `Hi, I'd like to place an order.\n\n` +
+                `Product: "${title}"\n` +
+                `Category: ${category}` +
+                `${sizeText}` +
+                `${colorText}\n` +
+                `Link: ${productUrl}`;
         }
         return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     };
 
     const isOutOfStock = !isCustom && inStock === false;
-    const ctaLabel = isCustom ? 'Get a Price Estimate' : 'Check Size Availability';
+    const ctaLabel = isCustom ? 'Get a Price Estimate' : 'Order Via Whatsapp';
 
     return (
         <>

@@ -4,8 +4,8 @@ import Link from 'next/link';
 export default function Footer() {
     const phoneNumber = '923346202291';
     const waUrl = `https://wa.me/${phoneNumber}`;
-    const instagramUrl = 'https://www.instagram.com/houseoaslam';
-    const shopAddress = '123 Main Boulevard, Gulberg III, Lahore, Pakistan';
+    const instagramUrl = 'https://www.instagram.com/houseofaslam';
+    const shopAddress = 'Aslam Cloth House, Cheema Market, opposite Allied Bank, Aqsa Road, Rabwah';
 
     return (
         <footer className={styles.footer}>

@@ -327,14 +327,17 @@
   flex: 0 0 auto;
   width: clamp(200px, 55vw, 380px);
   scroll-snap-align: start;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   min-width: 0;
 }
 
-/* Remove bottom margin from product cards inside horizontal scroll */
+/* Remove bottom margin from product cards inside horizontal scroll
+   and ensure cards fill the full scroll item height */
 .productScrollItem>* {
   margin-bottom: 0;
+  flex: 1;
 }
 
 .emptyCollection {

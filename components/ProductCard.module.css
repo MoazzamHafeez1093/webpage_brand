@@ -69,6 +69,7 @@
     aspect-ratio: 3 / 4;
     overflow: hidden;
     background-color: var(--highlight-bg);
+    --card-img-fit: cover;
 }
 
 .placeholder {
@@ -308,10 +309,9 @@
 }
 
 /* ============ MOBILE RESPONSIVE FIXES ============ */
-@media (max-width: 600px) {
-    .placeholder {
-        object-fit: contain;
-        object-position: center;
+@media (max-width: 767px) {
+    .imageWrapper {
+        --card-img-fit: contain;
     }
 
     .category {
@@ -332,12 +332,9 @@
     }
 
     .whatsappBtn {
-        padding: 0.7rem 0.3rem;
+        padding: 0.7rem 0.5rem;
         font-size: 0.58rem;
-        letter-spacing: 0.1em;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        letter-spacing: 0.08em;
     }
 
     .card {

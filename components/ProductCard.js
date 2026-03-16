@@ -90,6 +90,7 @@ export default function ProductCard({ product, categoryType }) {
                         onError={() => setImgLoaded(true)}
                         style={{
                             opacity: imgLoaded ? 1 : 0,
+                            objectFit: 'var(--card-img-fit, cover)',
                             transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                         }}
                     />
@@ -133,7 +134,7 @@ export default function ProductCard({ product, categoryType }) {
                     </div>
 
                     <button onClick={handleWhatsApp} className={styles.whatsappBtn}>
-                        <span>{isCustom ? "Get a Price Estimate" : "Check Size Availability"}</span>
+                        <span>{isCustom ? "Get a Price Estimate" : "Order Via Whatsapp"}</span>
                     </button>
                 </div>
             </article>

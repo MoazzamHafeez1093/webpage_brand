@@ -310,7 +310,8 @@
 /* ============ MOBILE RESPONSIVE FIXES ============ */
 @media (max-width: 600px) {
     .placeholder {
-        object-position: top;
+        object-fit: contain;
+        object-position: center;
     }
 
     .category {

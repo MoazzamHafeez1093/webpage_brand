@@ -90,7 +90,6 @@ export default function ProductCard({ product, categoryType }) {
                         onError={() => setImgLoaded(true)}
                         style={{
                             opacity: imgLoaded ? 1 : 0,
-                            objectFit: 'cover',
                             transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
                         }}
                     />

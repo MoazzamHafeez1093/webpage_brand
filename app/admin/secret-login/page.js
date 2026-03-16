@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     // ============ AUTH HANDLER ============
     const handleLogin = (e) => {
         e.preventDefault();
-        if (pin === '1234') {
+        if (pin === '6944') {
             setIsAuthenticated(true);
             setAuthError('');
         } else {

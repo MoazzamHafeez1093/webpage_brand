@@ -325,7 +325,7 @@
 
 .productScrollItem {
   flex: 0 0 auto;
-  width: clamp(160px, 40vw, 380px);
+  width: clamp(200px, 55vw, 380px);
   scroll-snap-align: start;
   display: grid;
   overflow: hidden;

@@ -263,6 +263,11 @@
     overflow: hidden;
 }
 
+/* Compensate for trailing letter-spacing so text appears exactly centred */
+.whatsappBtn span {
+    padding-left: 0.2em;
+}
+
 .whatsappBtn::before {
     content: '';
     position: absolute;
@@ -337,6 +342,10 @@
         letter-spacing: 0.02em;
         white-space: nowrap;
         overflow: visible;
+    }
+
+    .whatsappBtn span {
+        padding-left: 0.02em;
     }
 
     .card {

@@ -1464,16 +1464,23 @@ export default function AdminDashboard() {
                                                     let val = e.target.value;
                                                     if (val && !val.startsWith('#')) val = '#' + val;
                                                     e.target.value = val;
-                                                    const preview = document.getElementById('newColorPreview');
-                                                    if (preview && /^#[0-9A-Fa-f]{6}$/.test(val)) {
-                                                        preview.style.background = val;
+                                                    const picker = document.getElementById('newColorPicker');
+                                                    if (picker && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+                                                        picker.value = val;
                                                     }
                                                 }}
                                                 style={{ flex: 1, fontFamily: 'monospace', fontSize: '14px', letterSpacing: '0.05em' }}
                                             />
-                                            <div
-                                                id="newColorPreview"
-                                                style={{ width: '38px', height: '38px', borderRadius: '6px', background: '#800020', border: '1px solid #ddd', flexShrink: 0 }}
+                                            <input
+                                                type="color"
+                                                id="newColorPicker"
+                                                defaultValue="#800020"
+                                                onChange={(e) => {
+                                                    const hexInput = document.getElementById('newColorHex');
+                                                    if (hexInput) hexInput.value = e.target.value;
+                                                }}
+                                                style={{ width: '42px', height: '42px', padding: '2px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', flexShrink: 0, background: 'transparent' }}
+                                                title="Pick a color"
                                             />
                                         </div>
                                     </div>

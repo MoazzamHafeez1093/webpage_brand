@@ -19,6 +19,9 @@ const montserrat = Montserrat({
 export const metadata = {
   title: 'House of Aslam | Since 1998',
   description: 'Explore curated collections from House of Aslam. Premium apparel crafted with tradition and elegance.',
+  verification: {
+    google: '_BgSaz3TrCfLm_zMMx_KI_c45wpRowbOtOjizTLPnUA',
+  },
 };
 
 export default function RootLayout({ children }) {

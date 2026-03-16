@@ -44,6 +44,7 @@ export default function AdminDashboard() {
     const [products, setProducts] = useState([]);
     const [editingProductId, setEditingProductId] = useState(null);
     const [productFilter, setProductFilter] = useState('active'); // 'active' | 'archived' | 'out_of_stock'
+    const [productCollectionFilter, setProductCollectionFilter] = useState(''); // '' = all collections
     const [collectionFilter, setCollectionFilter] = useState('active'); // 'active' | 'archived'
     const [uploadingImages, setUploadingImages] = useState(false);
     const [uploadStatus, setUploadStatus] = useState('');
@@ -1450,14 +1451,31 @@ export default function AdminDashboard() {
                                             placeholder="e.g. Maroon"
                                         />
                                     </div>
-                                    <div className={styles.formGroup} style={{ marginBottom: 0, flex: '0 0 80px' }}>
-                                        <label style={{ fontSize: '12px' }}>Color</label>
-                                        <input
-                                            type="color"
-                                            id="newColorHex"
-                                            defaultValue="#800020"
-                                            style={{ width: '100%', height: '38px', padding: '2px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer' }}
-                                        />
+                                    <div className={styles.formGroup} style={{ marginBottom: 0, flex: '1 1 150px' }}>
+                                        <label style={{ fontSize: '12px' }}>Hex Code</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <input
+                                                type="text"
+                                                id="newColorHex"
+                                                defaultValue="#800020"
+                                                placeholder="#800020"
+                                                maxLength={7}
+                                                onChange={(e) => {
+                                                    let val = e.target.value;
+                                                    if (val && !val.startsWith('#')) val = '#' + val;
+                                                    e.target.value = val;
+                                                    const preview = document.getElementById('newColorPreview');
+                                                    if (preview && /^#[0-9A-Fa-f]{6}$/.test(val)) {
+                                                        preview.style.background = val;
+                                                    }
+                                                }}
+                                                style={{ flex: 1, fontFamily: 'monospace', fontSize: '14px', letterSpacing: '0.05em' }}
+                                            />
+                                            <div
+                                                id="newColorPreview"
+                                                style={{ width: '38px', height: '38px', borderRadius: '6px', background: '#800020', border: '1px solid #ddd', flexShrink: 0 }}
+                                            />
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
@@ -1465,8 +1483,10 @@ export default function AdminDashboard() {
                                             const nameEl = document.getElementById('newColorName');
                                             const hexEl = document.getElementById('newColorHex');
                                             const name = nameEl?.value?.trim();
-                                            const hexCode = hexEl?.value;
+                                            let hexCode = hexEl?.value?.trim() || '';
+                                            if (hexCode && !hexCode.startsWith('#')) hexCode = '#' + hexCode;
                                             if (!name) { alert('Please enter a color name'); return; }
+                                            if (!/^#[0-9A-Fa-f]{6}$/.test(hexCode)) { alert('Please enter a valid 6-digit hex code (e.g. #800020)'); return; }
                                             setProductForm(prev => ({
                                                 ...prev,
                                                 availableColors: [...prev.availableColors, { name, hexCode, image: '', relatedProductId: null }]
@@ -1563,31 +1583,46 @@ export default function AdminDashboard() {
                         </form>
 
                         <h2>Existing Products</h2>
-                        <div className={styles.filterTabs}>
-                            <button
-                                onClick={() => setProductFilter('active')}
-                                className={productFilter === 'active' ? styles.filterTabActive : styles.filterTabInactive}
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '15px' }}>
+                            <div className={styles.filterTabs} style={{ marginBottom: 0 }}>
+                                <button
+                                    onClick={() => setProductFilter('active')}
+                                    className={productFilter === 'active' ? styles.filterTabActive : styles.filterTabInactive}
+                                >
+                                    Active ({products.filter(p => !p.isArchived && p.inStock !== false).length})
+                                </button>
+                                <button
+                                    onClick={() => setProductFilter('out_of_stock')}
+                                    className={productFilter === 'out_of_stock' ? styles.filterTabOutOfStock : styles.filterTabInactive}
+                                >
+                                    Out of Stock ({products.filter(p => !p.isArchived && p.inStock === false).length})
+                                </button>
+                                <button
+                                    onClick={() => setProductFilter('archived')}
+                                    className={productFilter === 'archived' ? styles.filterTabArchived : styles.filterTabInactive}
+                                >
+                                    Archived ({products.filter(p => p.isArchived).length})
+                                </button>
+                            </div>
+                            <select
+                                value={productCollectionFilter}
+                                onChange={e => setProductCollectionFilter(e.target.value)}
+                                style={{ padding: '6px 12px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '13px', fontWeight: '500', background: productCollectionFilter ? '#2c2c2c' : '#f5f5f5', color: productCollectionFilter ? 'white' : '#333', cursor: 'pointer' }}
                             >
-                                Active ({products.filter(p => !p.isArchived && p.inStock !== false).length})
-                            </button>
-                            <button
-                                onClick={() => setProductFilter('out_of_stock')}
-                                className={productFilter === 'out_of_stock' ? styles.filterTabOutOfStock : styles.filterTabInactive}
-                            >
-                                Out of Stock ({products.filter(p => !p.isArchived && p.inStock === false).length})
-                            </button>
-                            <button
-                                onClick={() => setProductFilter('archived')}
-                                className={productFilter === 'archived' ? styles.filterTabArchived : styles.filterTabInactive}
-                            >
-                                Archived ({products.filter(p => p.isArchived).length})
-                            </button>
+                                <option value="">All Collections</option>
+                                {nestedCollectionOptions.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            </select>
                         </div>
                         <div className={styles.productList}>
                             {products.filter(p => {
-                                if (productFilter === 'archived') return p.isArchived;
-                                if (productFilter === 'out_of_stock') return !p.isArchived && p.inStock === false;
-                                return !p.isArchived && p.inStock !== false;
+                                if (productFilter === 'archived') { if (!p.isArchived) return false; }
+                                else if (productFilter === 'out_of_stock') { if (p.isArchived || p.inStock !== false) return false; }
+                                else { if (p.isArchived || p.inStock === false) return false; }
+                                if (productCollectionFilter) {
+                                    const colId = p.collectionRef?._id || p.collectionRef;
+                                    if (colId !== productCollectionFilter) return false;
+                                }
+                                return true;
                             }).map(p => (
                                 <div key={p._id} className={styles.productRow}>
                                     <img
@@ -1633,9 +1668,14 @@ export default function AdminDashboard() {
                                 </div>
                             ))}
                             {products.filter(p => {
-                                if (productFilter === 'archived') return p.isArchived;
-                                if (productFilter === 'out_of_stock') return !p.isArchived && p.inStock === false;
-                                return !p.isArchived && p.inStock !== false;
+                                if (productFilter === 'archived') { if (!p.isArchived) return false; }
+                                else if (productFilter === 'out_of_stock') { if (p.isArchived || p.inStock !== false) return false; }
+                                else { if (p.isArchived || p.inStock === false) return false; }
+                                if (productCollectionFilter) {
+                                    const colId = p.collectionRef?._id || p.collectionRef;
+                                    if (colId !== productCollectionFilter) return false;
+                                }
+                                return true;
                             }).length === 0 && <p style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>{productFilter === 'archived' ? 'No archived products.' : productFilter === 'out_of_stock' ? 'No out-of-stock products.' : 'No products found. Create your first product above.'}</p>}
                         </div>
                     </div>

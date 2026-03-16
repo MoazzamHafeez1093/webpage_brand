@@ -22,6 +22,9 @@ export const metadata = {
   verification: {
     google: '_BgSaz3TrCfLm_zMMx_KI_c45wpRowbOtOjizTLPnUA',
   },
+  icons: {
+    icon: '/hoa-logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {

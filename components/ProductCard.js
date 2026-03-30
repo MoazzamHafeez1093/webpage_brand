@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getCloudinaryUrl } from '@/lib/cloudinary';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product, categoryType }) {
@@ -80,18 +81,22 @@ export default function ProductCard({ product, categoryType }) {
                     )}
                     {/* Main Image OR Inspiration Image */}
                     <Image
-                        src={showInspiration ? inspirationImage : activeImage.thumbnail}
+                        src={getCloudinaryUrl(
+                            showInspiration ? inspirationImage : activeImage.thumbnail,
+                            { width: 600, quality: 75 }
+                        )}
                         alt={title || 'Product image'}
                         fill
                         sizes="(max-width: 600px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         className={styles.placeholder}
                         draggable={false}
+                        loading="lazy"
                         onLoad={() => setImgLoaded(true)}
                         onError={() => setImgLoaded(true)}
                         style={{
                             opacity: imgLoaded ? 1 : 0,
                             objectFit: 'var(--card-img-fit, cover)',
-                            transition: 'opacity 0.6s ease-in-out, transform 1.2s cubic-bezier(0.19, 1, 0.22, 1)'
+                            transition: 'opacity 0.4s ease-in-out'
                         }}
                     />
 

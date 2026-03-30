@@ -3,6 +3,7 @@ import ProductCard from '@/components/ProductCard';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getCloudinaryUrl } from '@/lib/cloudinary';
 import styles from './page.module.css';
 
 
@@ -45,7 +46,7 @@ export default async function CategoryPage({ params }) {
                                 <div
                                     key={product._id}
                                     className={styles.productItem}
-                                    style={{ animationDelay: `${index * 60}ms` }}
+                                    style={{ animationDelay: `${index * 30}ms` }}
                                 >
                                     <ProductCard product={product} />
                                 </div>
@@ -102,20 +103,10 @@ export default async function CategoryPage({ params }) {
 
     const categoryType = products.length > 0 ? products[0].businessType : null;
 
-    // Enrich children with product counts + fallback cover images (parallel fetch)
+    // Enrich children with product counts + fallback cover images in a single batched query
     let enrichedChildren = [];
     if (hasChildren) {
-        enrichedChildren = await Promise.all(
-            category.children.map(async (child) => {
-                const count = await db.getProductCountByCategory(child._id);
-                // If no cover image, use the first product image as fallback
-                let fallbackImage = null;
-                if (!child.coverImage) {
-                    fallbackImage = await db.getFirstProductImage(child._id);
-                }
-                return { ...child, productCount: count, coverImage: child.coverImage || fallbackImage || '' };
-            })
-        );
+        enrichedChildren = await db.enrichChildren(category.children);
     }
 
     return (
@@ -145,7 +136,7 @@ export default async function CategoryPage({ params }) {
                         Explore {category.name}
                     </h3>
                     <div className={styles.subcollectionsGrid}>
-                        {enrichedChildren.map(child => (
+                        {enrichedChildren.map((child, idx) => (
                             <Link
                                 href={`/shop/${slugArray.join('/')}/${child.slug}`}
                                 key={child._id}
@@ -154,11 +145,13 @@ export default async function CategoryPage({ params }) {
                                 <div className={styles.subcollectionImageWrap}>
                                     {child.coverImage ? (
                                         <Image
-                                            src={child.coverImage}
+                                            src={getCloudinaryUrl(child.coverImage, { width: 800, quality: 75 })}
                                             alt={child.name}
                                             fill
                                             sizes="(max-width: 600px) 100vw, 50vw"
                                             style={{ objectFit: 'cover' }}
+                                            priority={idx === 0}
+                                            loading={idx === 0 ? undefined : 'lazy'}
                                         />
                                     ) : (
                                         <div className={styles.subcollectionPlaceholder}>
@@ -193,7 +186,7 @@ export default async function CategoryPage({ params }) {
                             <div
                                 key={product._id}
                                 className={styles.productItem}
-                                style={{ animationDelay: `${index * 60}ms` }}
+                                style={{ animationDelay: `${index * 30}ms` }}
                             >
                                 <ProductCard product={product} categoryType={categoryType} />
                             </div>

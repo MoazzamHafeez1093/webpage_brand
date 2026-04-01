@@ -18,7 +18,6 @@ export async function GET() {
         const params = {
             timestamp,
             folder: 'house-of-aslam/videos',
-            resource_type: 'video',
         };
 
         const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);

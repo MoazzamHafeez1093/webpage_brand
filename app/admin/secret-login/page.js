@@ -527,7 +527,7 @@ export default function AdminDashboard() {
     };
 
     // ============ CLOUDINARY (OPTIMIZED PARALLEL UPLOADS) ============
-    const CLOUDINARY_CLOUD_NAME = 'Root';
+    const CLOUDINARY_CLOUD_NAME = 'dk9pid4ec';
     const CLOUDINARY_UPLOAD_PRESET = 'my_unsigned_preset';
     const CLOUDINARY_FOLDER = 'digital-atelier';
 

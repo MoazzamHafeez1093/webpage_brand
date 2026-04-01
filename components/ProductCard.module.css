@@ -313,6 +313,24 @@
     border-radius: 2px;
 }
 
+/* Video Badge */
+.videoBadge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 30;
+    background: rgba(0, 0, 0, 0.65);
+    color: var(--accent-gold);
+    padding: 4px 10px;
+    font-family: var(--font-body);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    border-radius: 2px;
+}
+
 /* ============ MOBILE RESPONSIVE FIXES ============ */
 @media (max-width: 767px) {
     .imageWrapper {

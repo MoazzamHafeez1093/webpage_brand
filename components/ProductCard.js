@@ -79,6 +79,10 @@ export default function ProductCard({ product, categoryType }) {
                     {outOfStock && (
                         <span className={styles.outOfStockBadge}>Out of Stock</span>
                     )}
+                    {/* Video badge */}
+                    {product?.videos?.length > 0 && (
+                        <span className={styles.videoBadge}>▶ Video</span>
+                    )}
                     {/* Main Image OR Inspiration Image */}
                     <Image
                         src={getCloudinaryUrl(

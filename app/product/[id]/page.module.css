@@ -198,6 +198,58 @@
   z-index: 5;
 }
 
+.videoLabel {
+  color: var(--accent-gold);
+  font-weight: 500;
+}
+
+/* Video player inside main view */
+.mainVideo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Video thumbnail in strip */
+.videoThumb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+}
+
+.videoThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+}
+
+/* Play icon overlay on video thumbs */
+.playOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  transition: background 0.3s ease;
+}
+
+.thumbnail:hover .playOverlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.playOverlay svg {
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+}
+
+
+
 /* ============ PRODUCT DETAILS ============ */
 .details {
   padding-top: 0.5rem;

@@ -265,6 +265,45 @@
     font-size: 11px;
 }
 
+/* Video Gallery */
+.videoGallery {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.videoItem {
+    position: relative;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #000;
+}
+
+.removeVideoBtn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+.removeVideoBtn:hover {
+    background: #c53030;
+    transform: scale(1.1);
+}
+
 /* Collection Tree */
 .collectionTree {
     background: #f9f9f9;

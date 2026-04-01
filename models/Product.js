@@ -57,6 +57,26 @@ const ProductSchema = new mongoose.Schema({
         }
     }],
 
+    // Product videos — Cloudinary video URLs
+    videos: [{
+        type: String
+    }],
+
+    // Controls where videos appear in the gallery relative to images
+    // 'after'  = images first, then videos (default)
+    // 'first'  = videos first, then images
+    videoPosition: {
+        type: String,
+        enum: ['after', 'first'],
+        default: 'after'
+    },
+
+    // Whether video autoplays silently when selected in gallery
+    videoAutoplay: {
+        type: Boolean,
+        default: true
+    },
+
     // Optional price (may not be needed for custom items)
     price: {
         type: Number,

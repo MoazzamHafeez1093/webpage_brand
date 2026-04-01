@@ -70,6 +70,9 @@ export default function AdminDashboard() {
         description: '',
         price: '',
         images: [],
+        videos: [],
+        videoPosition: 'after',
+        videoAutoplay: true,
         collection: '',
         businessType: 'retail',
         inspirationImage: '',
@@ -236,6 +239,9 @@ export default function AdminDashboard() {
             description: p.description || '',
             price: p.price || '',
             images: p.images || [],
+            videos: p.videos || [],
+            videoPosition: p.videoPosition || 'after',
+            videoAutoplay: p.videoAutoplay !== false,
             collection: p.collectionRef?._id || p.collectionRef || '',
             businessType: p.businessType || 'retail',
             inspirationImage: p.inspirationImage || '',
@@ -401,6 +407,9 @@ export default function AdminDashboard() {
             formData.append('description', productForm.description.trim());
             formData.append('price', productForm.price || '0');
             formData.append('images', productForm.images.join(','));
+            formData.append('videos', (productForm.videos || []).join(','));
+            formData.append('videoPosition', productForm.videoPosition || 'after');
+            formData.append('videoAutoplay', String(productForm.videoAutoplay !== false));
             formData.append('collection', productForm.collection);
             formData.append('businessType', productForm.businessType);
             formData.append('inspirationImage', productForm.inspirationImage);
@@ -461,6 +470,9 @@ export default function AdminDashboard() {
             description: '',
             price: '',
             images: [],
+            videos: [],
+            videoPosition: 'after',
+            videoAutoplay: true,
             collection: '',
             businessType: 'retail',
             inspirationImage: '',
@@ -515,7 +527,7 @@ export default function AdminDashboard() {
     };
 
     // ============ CLOUDINARY (OPTIMIZED PARALLEL UPLOADS) ============
-    const CLOUDINARY_CLOUD_NAME = 'dk9pid4ec';
+    const CLOUDINARY_CLOUD_NAME = 'Root';
     const CLOUDINARY_UPLOAD_PRESET = 'my_unsigned_preset';
     const CLOUDINARY_FOLDER = 'digital-atelier';
 
@@ -601,6 +613,61 @@ export default function AdminDashboard() {
             setUploadStatus('');
             setUploadProgress([]);
             if (inputRef.current) inputRef.current.value = '';
+        }
+    };
+
+    // ============ VIDEO UPLOAD (direct signed upload to Cloudinary) ============
+    const [uploadingVideo, setUploadingVideo] = useState(false);
+    const [videoUploadStatus, setVideoUploadStatus] = useState('');
+    const productVideoInputRef = useRef(null);
+
+    const handleVideoUpload = async () => {
+        const files = productVideoInputRef.current?.files;
+        if (!files || files.length === 0) return;
+
+        setUploadingVideo(true);
+        setVideoUploadStatus('Getting upload credentials...');
+
+        try {
+            // Get a signed upload signature from our server (avoids exposing API secret)
+            const sigRes = await fetch('/api/upload-video');
+            const sigData = await sigRes.json();
+            if (!sigData.success) throw new Error(sigData.error || 'Failed to get signature');
+
+            const { timestamp, signature, apiKey, cloudName, folder } = sigData;
+
+            const uploadedUrls = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                setVideoUploadStatus(`Uploading video ${i + 1}/${files.length}...`);
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('api_key', apiKey);
+                formData.append('timestamp', timestamp);
+                formData.append('signature', signature);
+                formData.append('folder', folder);
+                formData.append('resource_type', 'video');
+
+                const res = await fetch(
+                    `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+                    { method: 'POST', body: formData }
+                );
+                const data = await res.json();
+                if (!data.secure_url) throw new Error(data.error?.message || 'Video upload failed');
+                uploadedUrls.push(data.secure_url);
+            }
+
+            setProductForm(prev => ({ ...prev, videos: [...prev.videos, ...uploadedUrls] }));
+            setVideoUploadStatus(`✓ ${uploadedUrls.length} video${uploadedUrls.length > 1 ? 's' : ''} uploaded!`);
+            setTimeout(() => setVideoUploadStatus(''), 3000);
+            if (productVideoInputRef.current) productVideoInputRef.current.value = '';
+        } catch (err) {
+            console.error('Video upload error:', err);
+            setError('Video upload failed: ' + err.message);
+            setVideoUploadStatus('');
+        } finally {
+            setUploadingVideo(false);
         }
     };
 
@@ -1245,6 +1312,77 @@ export default function AdminDashboard() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* ====== VIDEOS SECTION ====== */}
+                            <div className={styles.formGroup}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <label style={{ margin: 0 }}>Product Videos</label>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 'normal' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={productForm.videoAutoplay}
+                                                onChange={(e) => setProductForm(prev => ({ ...prev, videoAutoplay: e.target.checked }))}
+                                                style={{ margin: 0 }}
+                                            />
+                                            Autoplay (silent)
+                                        </label>
+                                        <select
+                                            value={productForm.videoPosition}
+                                            onChange={(e) => setProductForm(prev => ({ ...prev, videoPosition: e.target.value }))}
+                                            style={{ padding: '2px 6px', fontSize: '11px', height: 'auto', width: 'auto' }}
+                                        >
+                                            <option value="after">Show after photos</option>
+                                            <option value="first">Show before photos</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <input
+                                    type="file"
+                                    accept="video/mp4,video/quicktime,video/webm"
+                                    multiple
+                                    ref={productVideoInputRef}
+                                    onChange={handleVideoUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => productVideoInputRef.current?.click()}
+                                        className={styles.uploadBtn}
+                                        disabled={uploadingVideo || uploadingImages}
+                                    >
+                                        🎬 Upload Video
+                                    </button>
+                                </div>
+
+                                {uploadingVideo && (
+                                    <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                                        {videoUploadStatus}
+                                    </div>
+                                )}
+
+                                {productForm.videos.length > 0 && (
+                                    <div className={styles.videoGallery}>
+                                        {productForm.videos.map((vid, i) => (
+                                            <div key={i} className={styles.videoItem}>
+                                                <video src={vid} style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '4px', background: '#000' }} />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setProductForm(prev => ({ ...prev, videos: prev.videos.filter((_, idx) => idx !== i) }))}
+                                                    className={styles.removeVideoBtn}
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <small style={{ color: '#888', marginTop: '4px', display: 'block' }}>
+                                    Videos will appear alongside photos in the product gallery. Max ~100MB per video.
+                                </small>
                             </div>
 
                             {/* Inspiration Image - only show for custom */}
